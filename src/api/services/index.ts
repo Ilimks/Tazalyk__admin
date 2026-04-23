@@ -1,0 +1,8 @@
+export { BaseService } from './base.service';
+export { authService } from './auth.service';
+export { videosService } from './videos.service';
+export { photosService } from './photos.service';
+export { newsService } from './news.service';
+export { procurementsService } from './procurements.service';
+export { localActsService } from './localActs.service';
+export { legislationService } from './legislation.service';

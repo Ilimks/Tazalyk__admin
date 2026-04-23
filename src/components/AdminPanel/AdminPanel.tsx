@@ -1,93 +1,29 @@
-'use client'
-import { useState, useEffect } from 'react';
+import React, { useEffect } from 'react';
 import styles from './AdminPanel.module.scss';
-import { Sidebar } from './components/Sidebar';
-import { Header } from './components/Header';
-import { Dashboard } from './components/Dashboard';
-import { VideosManager } from './components/VideosManager';
-import { PhotosManager } from './components/PhotosManager';
-import { NewsManager } from './components/NewsManager';
-import { ProcurementsManager } from './components/ProcurementsManager';
-import { VacanciesManager } from './components/VacanciesManager';
-import { Login } from './components/Login';
-import type { ActiveTab } from './types';
-import { api } from '../../api/api';
+import { Sidebar } from '@/layout/Sidebar/Sidebar';
+import { Header } from '@/layout/Header/Header';
+import { Dashboard } from '@/features/Dashboard/Dashboard';
+import { VideosManager } from '@/features/Videos/VideosManager';
+import { PhotosManager } from '@/features/Photos/PhotosManager';
+import { NewsManager } from '@/features/News/NewsManager';
+import { LocalActsManager } from '@/features/LocalActs/LocalActsManager';
+import { LegislationManager } from '@/features/Legislation/LegislationManager';
+import { ProcurementsManager } from '@/features/Procurements/ProcurementsManager';
+import { Login } from '@/features/Auth/Login';
+import { useAuthStore } from '@/store';
+import { ProtectedRoute } from '../common/Protected/ProtectedRoute';
+import type { ActiveTab } from '@/types';
 
 export const AdminPanel: React.FC = () => {
-  const [isAuthenticated, setIsAuthenticated] = useState(false);
-  const [activeTab, setActiveTab] = useState<ActiveTab>('dashboard');
-  const [serverStatus, setServerStatus] = useState<'checking' | 'online' | 'offline'>('checking');
+  const { isAuthenticated, setServerStatus, canView } = useAuthStore();
+  const [activeTab, setActiveTab] = React.useState<ActiveTab>('dashboard');
 
   useEffect(() => {
-    checkServerConnection();
+    setServerStatus('online');
   }, []);
-
-  const checkServerConnection = async () => {
-    try {
-      const response = await fetch('http://127.0.0.1:8000/api/videos/');
-      if (response.ok) {
-        setServerStatus('online');
-      } else {
-        setServerStatus('offline');
-      }
-    } catch (error) {
-      setServerStatus('offline');
-    }
-  };
-
-  // Убираем сохранение в localStorage - только проверяем подключение
-  const loadDataFromServer = async () => {
-    try {
-      // Просто проверяем, что сервер отвечает
-      await Promise.all([
-        api.getVideos(),
-        api.getPhotos(),
-        api.getNews(),
-        api.getProcurements(),
-        api.getVacancies()
-      ]);
-      return true;
-    } catch (error) {
-      console.error('Ошибка загрузки данных:', error);
-      throw error;
-    }
-  };
-
-  useEffect(() => {
-    const auth = localStorage.getItem('admin_auth');
-    if (auth === 'true') {
-      setIsAuthenticated(true);
-      loadDataFromServer().catch(console.error);
-    }
-  }, []);
-
-  const handleLogin = async (password: string) => {
-    if (serverStatus === 'offline') {
-      alert('❌ Сервер недоступен!');
-      return;
-    }
-    
-    try {
-      const response = await api.login(password);
-      if (response.success) {
-        localStorage.setItem('admin_auth', 'true');
-        setIsAuthenticated(true);
-        await loadDataFromServer();
-      } else {
-        alert('Неверный пароль');
-      }
-    } catch (error) {
-      alert('Ошибка подключения к серверу');
-    }
-  };
-
-  const handleLogout = () => {
-    localStorage.removeItem('admin_auth');
-    setIsAuthenticated(false);
-  };
 
   if (!isAuthenticated) {
-    return <Login onLogin={handleLogin} serverStatus={serverStatus} />;
+    return <Login />;
   }
 
   const renderContent = () => {
@@ -95,28 +31,68 @@ export const AdminPanel: React.FC = () => {
       case 'dashboard':
         return <Dashboard />;
       case 'videos':
-        return <VideosManager />;
+        return (
+          <ProtectedRoute section="videos" action="view" fallback={<div>Нет доступа к видео</div>}>
+            <VideosManager />
+          </ProtectedRoute>
+        );
       case 'photos':
-        return <PhotosManager />;
+        return (
+          <ProtectedRoute section="photos" action="view" fallback={<div>Нет доступа к фото</div>}>
+            <PhotosManager />
+          </ProtectedRoute>
+        );
       case 'news':
-        return <NewsManager />;
+        return (
+          <ProtectedRoute section="news" action="view" fallback={<div>Нет доступа к новостям</div>}>
+            <NewsManager />
+          </ProtectedRoute>
+        );
       case 'procurements':
-        return <ProcurementsManager />;
-      case 'vacancies':
-        return <VacanciesManager />;
+        return (
+          <ProtectedRoute section="procurements" action="view" fallback={<div>Нет доступа к закупкам</div>}>
+            <ProcurementsManager />
+          </ProtectedRoute>
+        );
+      case 'local_acts':
+        return (
+          <ProtectedRoute section="local_acts" action="view" fallback={<div>Нет доступа к локальным актам</div>}>
+            <LocalActsManager />
+          </ProtectedRoute>
+        );
+      case 'legislation':
+        return (
+          <ProtectedRoute section="legislation" action="view" fallback={<div>Нет доступа к законодательству</div>}>
+            <LegislationManager />
+          </ProtectedRoute>
+        );
       default:
         return <Dashboard />;
     }
   };
 
+  const availableTabs: ActiveTab[] = ['dashboard'];
+  if (canView('videos')) availableTabs.push('videos');
+  if (canView('photos')) availableTabs.push('photos');
+  if (canView('news')) availableTabs.push('news');
+  if (canView('procurements')) availableTabs.push('procurements');
+  if (canView('local_acts')) availableTabs.push('local_acts');
+  if (canView('legislation')) availableTabs.push('legislation');
+  
+  if (!availableTabs.includes(activeTab)) {
+    setActiveTab('dashboard');
+  }
+
   return (
     <div className={styles.adminPanel}>
-      <Sidebar activeTab={activeTab} onTabChange={setActiveTab} />
+      <Sidebar 
+        activeTab={activeTab} 
+        onTabChange={setActiveTab}
+        availableTabs={availableTabs}
+      />
       <div className={styles.mainContent}>
-        <Header onLogout={handleLogout} serverStatus={serverStatus} />
-        <div className={styles.content}>
-          {renderContent()}
-        </div>
+        <Header />
+        <div className={styles.content}>{renderContent()}</div>
       </div>
     </div>
   );

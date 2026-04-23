@@ -1,0 +1,90 @@
+.formGroup {
+  margin-bottom: 20px;
+}
+
+.label {
+  display: block;
+  font-size: 14px;
+  font-weight: 500;
+  color: #0f172a;
+  margin-bottom: 8px;
+}
+
+.required {
+  color: #ef4444;
+  margin-left: 4px;
+}
+
+.inputWrapper {
+  position: relative;
+}
+
+.input {
+  width: 100%;
+  padding: 12px 16px;
+  border: 1px solid #e2e8f0;
+  border-radius: 12px;
+  font-size: 14px;
+  font-family: inherit;
+  transition: all 0.2s ease;
+  background: white;
+
+  &:focus {
+    outline: none;
+    border-color: #22c55e;
+    box-shadow: 0 0 0 3px rgba(34, 197, 94, 0.1);
+  }
+
+  &.error {
+    border-color: #ef4444;
+
+    &:focus {
+      box-shadow: 0 0 0 3px rgba(239, 68, 68, 0.1);
+    }
+  }
+
+  &.withIcon {
+    padding-left: 40px;
+  }
+
+  &:disabled {
+    background: #f8fafc;
+    cursor: not-allowed;
+  }
+}
+
+.icon {
+  position: absolute;
+  left: 12px;
+  top: 50%;
+  transform: translateY(-50%);
+  color: #94a3b8;
+  font-size: 18px;
+}
+
+textarea.input {
+  resize: vertical;
+  min-height: 100px;
+}
+
+select.input {
+  cursor: pointer;
+  appearance: none;
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='16' height='16' viewBox='0 0 24 24' fill='none' stroke='%2364748b' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpolyline points='6 9 12 15 18 9'%3E%3C/polyline%3E%3C/svg%3E");
+  background-repeat: no-repeat;
+  background-position: right 12px center;
+}
+
+.errorMessage {
+  display: block;
+  font-size: 12px;
+  color: #ef4444;
+  margin-top: 6px;
+}
+
+.hint {
+  display: block;
+  font-size: 12px;
+  color: #94a3b8;
+  margin-top: 6px;
+}

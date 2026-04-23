@@ -1,0 +1,63 @@
+.badge {
+  display: inline-flex;
+  align-items: center;
+  padding: 4px 12px;
+  border-radius: 20px;
+  font-size: 12px;
+  font-weight: 500;
+  line-height: 1.5;
+  white-space: nowrap;
+
+  &.active,
+  &.open {
+    background: #dcfce7;
+    color: #22c55e;
+  }
+
+  &.completed {
+    background: #e2e8f0;
+    color: #475569;
+  }
+
+  &.cancelled,
+  &.closed {
+    background: #fee2e2;
+    color: #ef4444;
+  }
+
+  &.pending {
+    background: #fef3c7;
+    color: #f59e0b;
+  }
+
+  &.info {
+    background: #dbeafe;
+    color: #3b82f6;
+  }
+}
+
+.dot {
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+  margin-right: 6px;
+  display: inline-block;
+
+  &.active,
+  &.open {
+    background: #22c55e;
+  }
+
+  &.completed {
+    background: #475569;
+  }
+
+  &.cancelled,
+  &.closed {
+    background: #ef4444;
+  }
+
+  &.pending {
+    background: #f59e0b;
+  }
+}

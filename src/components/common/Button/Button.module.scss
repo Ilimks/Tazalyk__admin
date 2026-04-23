@@ -1,0 +1,104 @@
+.button {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  border: none;
+  border-radius: 12px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  font-family: inherit;
+
+  &:disabled {
+    opacity: 0.6;
+    cursor: not-allowed;
+  }
+
+  &.primary {
+    background: #22c55e;
+    color: white;
+
+    &:hover:not(:disabled) {
+      background: #16a34a;
+      transform: translateY(-1px);
+    }
+  }
+
+  &.secondary {
+    background: #f1f5f9;
+    color: #475569;
+
+    &:hover:not(:disabled) {
+      background: #e2e8f0;
+      transform: translateY(-1px);
+    }
+  }
+
+  &.danger {
+    background: #ef4444;
+    color: white;
+
+    &:hover:not(:disabled) {
+      background: #dc2626;
+      transform: translateY(-1px);
+    }
+  }
+
+  &.success {
+    background: #22c55e;
+    color: white;
+  }
+
+  &.outline {
+    background: transparent;
+    border: 1px solid #e2e8f0;
+    color: #475569;
+
+    &:hover:not(:disabled) {
+      background: #f8fafc;
+      border-color: #cbd5e1;
+    }
+  }
+
+  &.sm {
+    padding: 6px 12px;
+    font-size: 12px;
+    border-radius: 8px;
+  }
+
+  &.md {
+    padding: 10px 20px;
+    font-size: 14px;
+  }
+
+  &.lg {
+    padding: 14px 28px;
+    font-size: 16px;
+  }
+
+  &.fullWidth {
+    width: 100%;
+  }
+}
+
+.spinner {
+  width: 16px;
+  height: 16px;
+  border: 2px solid rgba(255, 255, 255, 0.3);
+  border-top-color: white;
+  border-radius: 50%;
+  animation: spin 0.6s linear infinite;
+}
+
+@keyframes spin {
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+.icon {
+  display: inline-flex;
+  align-items: center;
+  font-size: 18px;
+}

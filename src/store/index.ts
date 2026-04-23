@@ -1,0 +1,7 @@
+export { useAuthStore } from './slices/auth.slice';
+export { useVideosStore } from './slices/videos.slice';
+export { usePhotosStore } from './slices/photos.slice';
+export { useNewsStore } from './slices/news.slice';
+export { useProcurementsStore } from './slices/procurements.slice';
+export { useLocalActsStore } from './slices/localActs.slice';
+export { useLegislationStore } from './slices/legislation.slice';

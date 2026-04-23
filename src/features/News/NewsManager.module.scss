@@ -1,0 +1,234 @@
+.manager {
+  background: white;
+  border-radius: 24px;
+  padding: 24px;
+  border: 1px solid #e2e8f0;
+}
+
+.header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 24px;
+
+  h2 {
+    font-size: 20px;
+    color: #0f172a;
+    margin: 0;
+  }
+}
+
+.tableWrapper {
+  overflow-x: auto;
+}
+
+.dataTable {
+  width: 100%;
+  border-collapse: collapse;
+
+  th,
+  td {
+    padding: 12px;
+    text-align: left;
+    border-bottom: 1px solid #e2e8f0;
+  }
+
+  th {
+    font-weight: 600;
+    color: #0f172a;
+    background: #f8fafc;
+  }
+
+  td {
+    color: #475569;
+  }
+
+  tr:hover td {
+    background: #f8fafc;
+  }
+}
+
+.imageCell {
+  width: 70px;
+
+  .thumbnail {
+    width: 50px;
+    height: 50px;
+    object-fit: cover;
+    border-radius: 8px;
+    border: 1px solid #e2e8f0;
+  }
+}
+
+.titleCell {
+  max-width: 200px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.descriptionCell {
+  max-width: 300px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.emptyCell {
+  text-align: center;
+  padding: 40px !important;
+  color: #94a3b8;
+}
+
+.editBtn,
+.deleteBtn {
+  background: none;
+  border: none;
+  cursor: pointer;
+  font-size: 18px;
+  padding: 4px 8px;
+  border-radius: 6px;
+  transition: all 0.2s ease;
+
+  &:hover {
+    background: #f1f5f9;
+  }
+}
+
+.deleteBtn {
+  color: #ef4444;
+
+  &:hover {
+    background: #fee2e2;
+  }
+}
+
+.form {
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
+}
+
+.formActions {
+  display: flex;
+  gap: 12px;
+  justify-content: flex-end;
+  margin-top: 8px;
+}
+
+.progressBar {
+  position: relative;
+  height: 40px;
+  background: #f1f5f9;
+  border-radius: 8px;
+  overflow: hidden;
+  margin: 16px 0;
+}
+
+.progressFill {
+  height: 100%;
+  background: linear-gradient(90deg, #22c55e, #16a34a);
+  transition: width 0.3s ease;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.progressText {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  font-size: 12px;
+  font-weight: 500;
+  color: #1e293b;
+  z-index: 1;
+}
+
+@media (max-width: 768px) {
+  .manager {
+    padding: 16px;
+  }
+
+  .header {
+    flex-direction: column;
+    gap: 12px;
+    align-items: stretch;
+
+    h2 {
+      text-align: center;
+    }
+  }
+
+  .dataTable {
+    th,
+    td {
+      padding: 8px;
+      font-size: 12px;
+    }
+  }
+
+  .titleCell,
+  .descriptionCell {
+    max-width: 100px;
+  }
+}
+
+// Добавьте в конец файла
+
+.languageTabs {
+    display: flex;
+    gap: 8px;
+    margin-bottom: 20px;
+    border-bottom: 1px solid #e2e8f0;
+    padding-bottom: 12px;
+}
+
+.langTabActive {
+    padding: 8px 16px;
+    background: #22c55e;
+    color: white;
+    border-radius: 8px;
+    font-size: 14px;
+    font-weight: 500;
+}
+
+.langTab {
+    padding: 8px 16px;
+    background: #f1f5f9;
+    border: none;
+    border-radius: 8px;
+    cursor: pointer;
+    font-size: 14px;
+    transition: all 0.2s ease;
+    
+    &:hover {
+        background: #e2e8f0;
+    }
+}
+
+.languageSection {
+    margin-bottom: 24px;
+    padding: 16px;
+    background: #f8fafc;
+    border-radius: 12px;
+}
+
+.kyLanguage {
+    background: #f0fdf4;
+    border-left: 4px solid #22c55e;
+}
+
+.sectionHeader {
+    font-size: 14px;
+    font-weight: 600;
+    color: #166534;
+    margin-bottom: 16px;
+    padding-bottom: 8px;
+    border-bottom: 1px solid #dcfce7;
+}
+
+.required {
+    color: #ef4444;
+    margin-left: 4px;
+}
