@@ -1,4 +1,3 @@
-// src/api/services/auth.service.ts
 import type { LoginResponse, User } from '@/types';
 import { config } from '@/config';
 
