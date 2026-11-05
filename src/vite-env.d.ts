@@ -3,15 +3,6 @@
 interface ImportMetaEnv {
   readonly VITE_API_URL: string;
   readonly VITE_API_TIMEOUT: string;
-
-  readonly VITE_ADMIN_USERNAME: string;
-  readonly VITE_ADMIN_PASSWORD: string;
-  readonly VITE_CONTENT_USERNAME: string;
-  readonly VITE_CONTENT_PASSWORD: string;
-  readonly VITE_PROCUREMENT_USERNAME: string;
-  readonly VITE_PROCUREMENT_PASSWORD: string;
-  readonly VITE_VIEWER_USERNAME: string;
-  readonly VITE_VIEWER_PASSWORD: string;
 }
 
 interface ImportMeta {

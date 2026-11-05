@@ -6,3 +6,6 @@ export { newsService } from './news.service';
 export { procurementsService } from './procurements.service';
 export { localActsService } from './localActs.service';
 export { legislationService } from './legislation.service';
+export { productsService } from './products.service';
+export { vacanciesService } from './vacancies.service';
+export { ordersService } from './orders.service';

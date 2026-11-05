@@ -1,3 +1,5 @@
+import { createPortal } from 'react-dom';
+import { Info, TriangleAlert, Trash2, X } from 'lucide-react';
 import { Button } from '../Button';
 import styles from './ConfirmModal.module.scss';
 
@@ -13,6 +15,12 @@ interface ConfirmModalProps {
     type?: 'danger' | 'warning' | 'info';
 }
 
+const typeIcons = {
+    danger: Trash2,
+    warning: TriangleAlert,
+    info: Info,
+};
+
 export const ConfirmModal: React.FC<ConfirmModalProps> = ({
     isOpen,
     title,
@@ -26,45 +34,37 @@ export const ConfirmModal: React.FC<ConfirmModalProps> = ({
 }) => {
     if (!isOpen) return null;
 
-    const getTypeStyles = () => {
-        switch (type) {
-            case 'danger':
-                return styles.danger;
-            case 'warning':
-                return styles.warning;
-            case 'info':
-                return styles.info;
-            default:
-                return styles.danger;
-        }
-    };
+    const Icon = typeIcons[type];
 
-    return (
+    return createPortal(
         <div className={styles.overlay} onClick={onCancel}>
-            <div className={styles.modal} onClick={(e) => e.stopPropagation()}>
-                <div className={styles.header}>
-                    <h3>{title}</h3>
-                    <button className={styles.closeBtn} onClick={onCancel}>×</button>
-                </div>
-                
+            <div className={styles.modal} onClick={(e) => e.stopPropagation()} role="alertdialog" aria-modal="true">
+                <button className={styles.closeBtn} onClick={onCancel} aria-label="Закрыть">
+                    <X size={20} />
+                </button>
+
                 <div className={styles.body}>
+                    <div className={`${styles.iconCircle} ${styles[type]}`}>
+                        <Icon size={26} />
+                    </div>
+                    <h3>{title}</h3>
                     <p>{message}</p>
                 </div>
-                
+
                 <div className={styles.footer}>
-                    <Button variant="secondary" onClick={onCancel}>
+                    <Button variant="outline" onClick={onCancel} disabled={isLoading}>
                         {cancelText}
                     </Button>
-                    <Button 
-                        variant="danger" 
+                    <Button
+                        variant={type === 'danger' ? 'danger' : 'primary'}
                         onClick={onConfirm}
                         loading={isLoading}
-                        className={getTypeStyles()}
                     >
                         {confirmText}
                     </Button>
                 </div>
             </div>
-        </div>
+        </div>,
+        document.body
     );
 };

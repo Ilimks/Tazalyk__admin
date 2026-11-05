@@ -1,23 +1,29 @@
 import { create } from 'zustand';
 import { persist } from 'zustand/middleware';
 import { authService } from '@/api/services/auth.service';
-import type { User, UserPermissions } from '@/types';
+import { config } from '@/config';
+import type { PermissionSection, User, UserPermissions } from '@/types';
 
 interface AuthState {
   isAuthenticated: boolean;
   user: User | null;
   serverStatus: 'checking' | 'online' | 'offline';
   isLoading: boolean;
+  // текст ошибки входа для формы (вместо alert)
+  loginError: string | null;
+  clearLoginError: () => void;
   permissions: UserPermissions;
   login: (username: string, password: string) => Promise<boolean>;
   logout: () => void;
   checkServer: () => Promise<void>;
   setServerStatus: (status: 'checking' | 'online' | 'offline') => void;
+  // перечитать роль и права с сервера (GET /me/) после перезагрузки страницы
+  refreshPermissions: () => Promise<void>;
   hasPermission: (permission: string) => boolean;
-  canView: (section: 'videos' | 'photos' | 'news' | 'procurements' | 'local_acts' | 'legislation') => boolean;
-  canCreate: (section: 'videos' | 'photos' | 'news' | 'procurements' | 'local_acts' | 'legislation') => boolean;
-  canEdit: (section: 'videos' | 'photos' | 'news' | 'procurements' | 'local_acts' | 'legislation') => boolean;
-  canDelete: (section: 'videos' | 'photos' | 'news' | 'procurements' | 'local_acts' | 'legislation') => boolean;
+  canView: (section: PermissionSection) => boolean;
+  canCreate: (section: PermissionSection) => boolean;
+  canEdit: (section: PermissionSection) => boolean;
+  canDelete: (section: PermissionSection) => boolean;
 }
 
 const getPermissionsForUser = (role: string, customPermissions?: string[]): UserPermissions => {
@@ -46,6 +52,18 @@ const getPermissionsForUser = (role: string, customPermissions?: string[]): User
     canCreateLegislation: false,
     canEditLegislation: false,
     canDeleteLegislation: false,
+    canViewProducts: false,
+    canCreateProducts: false,
+    canEditProducts: false,
+    canDeleteProducts: false,
+    canViewOrders: false,
+    canCreateOrders: false,
+    canEditOrders: false,
+    canDeleteOrders: false,
+    canViewVacancies: false,
+    canCreateVacancies: false,
+    canEditVacancies: false,
+    canDeleteVacancies: false,
     canManageUsers: false,
   };
 
@@ -75,6 +93,18 @@ const getPermissionsForUser = (role: string, customPermissions?: string[]): User
       canCreateLegislation: true,
       canEditLegislation: true,
       canDeleteLegislation: true,
+      canViewProducts: true,
+      canCreateProducts: true,
+      canEditProducts: true,
+      canDeleteProducts: true,
+      canViewOrders: true,
+      canCreateOrders: true,
+      canEditOrders: true,
+      canDeleteOrders: true,
+      canViewVacancies: true,
+      canCreateVacancies: true,
+      canEditVacancies: true,
+      canDeleteVacancies: true,
       canManageUsers: true,
     };
   }
@@ -112,6 +142,20 @@ const getPermissionsForUser = (role: string, customPermissions?: string[]): User
       case 'create_legislation': perms.canCreateLegislation = true; break;
       case 'edit_legislation': perms.canEditLegislation = true; break;
       case 'delete_legislation': perms.canDeleteLegislation = true; break;
+
+      case 'view_products': perms.canViewProducts = true; break;
+      case 'create_products': perms.canCreateProducts = true; break;
+      case 'edit_products': perms.canEditProducts = true; break;
+      case 'delete_products': perms.canDeleteProducts = true; break;
+
+      case 'view_orders': perms.canViewOrders = true; break;
+      case 'edit_orders': perms.canEditOrders = true; break;
+      case 'delete_orders': perms.canDeleteOrders = true; break;
+
+      case 'view_vacancies': perms.canViewVacancies = true; break;
+      case 'create_vacancies': perms.canCreateVacancies = true; break;
+      case 'edit_vacancies': perms.canEditVacancies = true; break;
+      case 'delete_vacancies': perms.canDeleteVacancies = true; break;
       
       case 'manage_users': perms.canManageUsers = true; break;
     }
@@ -125,12 +169,13 @@ export const useAuthStore = create<AuthState>()(
     (set, get) => ({
       isAuthenticated: false,
       user: null,
-      serverStatus: 'online',
+      serverStatus: 'checking',
       isLoading: false,
+      loginError: null,
       permissions: getPermissionsForUser('viewer', []),
 
       login: async (username: string, password: string) => {
-        set({ isLoading: true });
+        set({ isLoading: true, loginError: null });
         
         try {
           const response = await authService.login(username, password);
@@ -144,14 +189,12 @@ export const useAuthStore = create<AuthState>()(
             });
             return true;
           } else {
-            alert(response.message || 'Неверный логин или пароль');
-            set({ isLoading: false });
+            set({ isLoading: false, loginError: response.message || 'Неверный логин или пароль' });
             return false;
           }
         } catch (error) {
           console.error('Login error:', error);
-          alert('Ошибка при входе');
-          set({ isLoading: false });
+          set({ isLoading: false, loginError: 'Не удалось войти. Проверьте подключение к интернету.' });
           return false;
         }
       },
@@ -165,11 +208,34 @@ export const useAuthStore = create<AuthState>()(
         });
       },
 
+      // любой ответ сервера (даже 401) значит, что он доступен; сетевая ошибка — недоступен
       checkServer: async () => {
-        set({ serverStatus: 'online' });
+        set({ serverStatus: 'checking' });
+        try {
+          await fetch(`${config.api.baseUrl}/health/`, { signal: AbortSignal.timeout(8000) });
+          set({ serverStatus: 'online' });
+        } catch {
+          set({ serverStatus: 'offline' });
+        }
       },
 
+      clearLoginError: () => set({ loginError: null }),
+
       setServerStatus: (status) => set({ serverStatus: status }),
+
+      refreshPermissions: async () => {
+        const result = await authService.refreshCurrentUser();
+        // пока шёл запрос, сотрудник мог выйти
+        if (!result || !get().isAuthenticated) return;
+        // сохранённый вход больше не действует (например, сменился ключ сервера) — входим заново,
+        // иначе остались бы права старой версии админки без новых разделов
+        if (result === 'expired') {
+          get().logout();
+          set({ loginError: 'Сессия истекла — войдите снова.' });
+          return;
+        }
+        set({ user: result, permissions: getPermissionsForUser(result.role, result.permissions) });
+      },
 
       hasPermission: (permission: string) => {
         const { permissions } = get();
@@ -178,54 +244,67 @@ export const useAuthStore = create<AuthState>()(
 
       canView: (section) => {
         const { permissions } = get();
-        const map = {
+        const map: Record<PermissionSection, boolean> = {
           videos: permissions.canViewVideos,
           photos: permissions.canViewPhotos,
           news: permissions.canViewNews,
           procurements: permissions.canViewProcurements,
           local_acts: permissions.canViewLocalActs,
           legislation: permissions.canViewLegislation,
+          products: permissions.canViewProducts,
+          orders: permissions.canViewOrders,
+          vacancies: permissions.canViewVacancies,
         };
-        return map[section];
+        // в сохранённых старой версией правах новых ключей может не быть
+        return Boolean(map[section]);
       },
 
       canCreate: (section) => {
         const { permissions } = get();
-        const map = {
+        const map: Record<PermissionSection, boolean> = {
           videos: permissions.canCreateVideos,
           photos: permissions.canCreatePhotos,
           news: permissions.canCreateNews,
           procurements: permissions.canCreateProcurements,
           local_acts: permissions.canCreateLocalActs,
           legislation: permissions.canCreateLegislation,
+          products: permissions.canCreateProducts,
+          orders: permissions.canCreateOrders,
+          vacancies: permissions.canCreateVacancies,
         };
-        return map[section];
+        return Boolean(map[section]);
       },
 
       canEdit: (section) => {
         const { permissions } = get();
-        const map = {
+        const map: Record<PermissionSection, boolean> = {
           videos: permissions.canEditVideos,
           photos: permissions.canEditPhotos,
           news: permissions.canEditNews,
           procurements: permissions.canEditProcurements,
           local_acts: permissions.canEditLocalActs,
           legislation: permissions.canEditLegislation,
+          products: permissions.canEditProducts,
+          orders: permissions.canEditOrders,
+          vacancies: permissions.canEditVacancies,
         };
-        return map[section];
+        return Boolean(map[section]);
       },
 
       canDelete: (section) => {
         const { permissions } = get();
-        const map = {
+        const map: Record<PermissionSection, boolean> = {
           videos: permissions.canDeleteVideos,
           photos: permissions.canDeletePhotos,
           news: permissions.canDeleteNews,
           procurements: permissions.canDeleteProcurements,
           local_acts: permissions.canDeleteLocalActs,
           legislation: permissions.canDeleteLegislation,
+          products: permissions.canDeleteProducts,
+          orders: permissions.canDeleteOrders,
+          vacancies: permissions.canDeleteVacancies,
         };
-        return map[section];
+        return Boolean(map[section]);
       },
     }),
     {

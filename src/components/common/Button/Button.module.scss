@@ -3,78 +3,91 @@
   align-items: center;
   justify-content: center;
   gap: 8px;
-  border: none;
-  border-radius: 12px;
+  border: 1px solid transparent;
+  border-radius: var(--radius-md);
   font-weight: 600;
+  line-height: 1;
+  white-space: nowrap;
   cursor: pointer;
-  transition: all 0.2s ease;
-  font-family: inherit;
+  transition: background-color 0.15s ease, border-color 0.15s ease, color 0.15s ease, box-shadow 0.15s ease;
+
+  &:focus-visible {
+    outline: none;
+    box-shadow: var(--focus-ring);
+  }
 
   &:disabled {
-    opacity: 0.6;
+    opacity: 0.55;
     cursor: not-allowed;
   }
 
   &.primary {
-    background: #22c55e;
+    background: var(--color-brand);
     color: white;
 
     &:hover:not(:disabled) {
-      background: #16a34a;
-      transform: translateY(-1px);
-    }
-  }
-
-  &.secondary {
-    background: #f1f5f9;
-    color: #475569;
-
-    &:hover:not(:disabled) {
-      background: #e2e8f0;
-      transform: translateY(-1px);
-    }
-  }
-
-  &.danger {
-    background: #ef4444;
-    color: white;
-
-    &:hover:not(:disabled) {
-      background: #dc2626;
-      transform: translateY(-1px);
+      background: var(--color-brand-hover);
     }
   }
 
   &.success {
-    background: #22c55e;
+    background: var(--color-accent);
     color: white;
+
+    &:hover:not(:disabled) {
+      background: var(--color-accent-hover);
+    }
+  }
+
+  &.secondary {
+    background: var(--color-surface-muted);
+    border-color: var(--color-border);
+    color: var(--color-text-secondary);
+
+    &:hover:not(:disabled) {
+      background: #eef1f6;
+      color: var(--color-text);
+    }
+  }
+
+  &.danger {
+    background: var(--color-danger);
+    color: white;
+
+    &:hover:not(:disabled) {
+      background: var(--color-danger-hover);
+    }
   }
 
   &.outline {
-    background: transparent;
-    border: 1px solid #e2e8f0;
-    color: #475569;
+    background: var(--color-surface);
+    border-color: var(--color-border);
+    color: var(--color-text-secondary);
 
     &:hover:not(:disabled) {
-      background: #f8fafc;
-      border-color: #cbd5e1;
+      border-color: var(--color-border-strong);
+      color: var(--color-text);
+      background: var(--color-surface-muted);
     }
   }
 
   &.sm {
-    padding: 6px 12px;
-    font-size: 12px;
-    border-radius: 8px;
+    height: 32px;
+    padding: 0 12px;
+    font-size: 13px;
+    border-radius: var(--radius-sm);
   }
 
   &.md {
-    padding: 10px 20px;
+    height: 40px;
+    padding: 0 16px;
     font-size: 14px;
   }
 
   &.lg {
-    padding: 14px 28px;
-    font-size: 16px;
+    height: 48px;
+    padding: 0 24px;
+    font-size: 15px;
   }
 
   &.fullWidth {
@@ -85,9 +98,10 @@
 .spinner {
   width: 16px;
   height: 16px;
-  border: 2px solid rgba(255, 255, 255, 0.3);
-  border-top-color: white;
+  border: 2px solid currentColor;
+  border-right-color: transparent;
   border-radius: 50%;
+  opacity: 0.8;
   animation: spin 0.6s linear infinite;
 }
 
@@ -100,5 +114,25 @@
 .icon {
   display: inline-flex;
   align-items: center;
-  font-size: 18px;
+
+  svg {
+    width: 18px;
+    height: 18px;
+  }
+}
+
+.sm .icon svg {
+  width: 16px;
+  height: 16px;
+}
+
+// текст кнопки может содержать иконку справа («Вперёд →»)
+.children {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+}
+
+.children:empty {
+  display: none;
 }

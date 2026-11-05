@@ -1,4 +1,5 @@
 import React, { useEffect } from 'react';
+import { CircleAlert, CircleCheck, Info, TriangleAlert, X } from 'lucide-react';
 import styles from './Notification.module.scss';
 
 interface NotificationProps {
@@ -8,6 +9,13 @@ interface NotificationProps {
   duration?: number;
   onClose: () => void;
 }
+
+const icons = {
+  success: CircleCheck,
+  error: CircleAlert,
+  warning: TriangleAlert,
+  info: Info,
+};
 
 export const Notification: React.FC<NotificationProps> = ({
   type,
@@ -20,19 +28,16 @@ export const Notification: React.FC<NotificationProps> = ({
     return () => clearTimeout(timer);
   }, [duration, onClose]);
 
-  const icons = {
-    success: '✅',
-    error: '❌',
-    warning: '⚠️',
-    info: 'ℹ️',
-  };
+  const Icon = icons[type];
 
   return (
-    <div className={`${styles.notification} ${styles[type]}`}>
-      <span className={styles.icon}>{icons[type]}</span>
+    <div className={`${styles.notification} ${styles[type]}`} role={type === 'error' ? 'alert' : 'status'}>
+      <span className={styles.icon}>
+        <Icon size={20} />
+      </span>
       <span className={styles.message}>{message}</span>
-      <button className={styles.closeBtn} onClick={onClose}>
-        ×
+      <button className={styles.closeBtn} onClick={onClose} aria-label="Закрыть">
+        <X size={16} />
       </button>
     </div>
   );

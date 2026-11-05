@@ -69,7 +69,8 @@ export const PhotoForm: React.FC<PhotoFormProps> = ({
       />
 
       <Input
-        label="Дата"
+        className={styles.formRow}
+        label="Дата публикации"
         type="date"
         value={formData.date}
         onChange={(e) => setFormData({ ...formData, date: e.target.value })}
@@ -77,7 +78,7 @@ export const PhotoForm: React.FC<PhotoFormProps> = ({
       />
 
       <div className={styles.formActions}>
-        <Button type="button" variant="secondary" onClick={onCancel}>
+        <Button type="button" variant="outline" onClick={onCancel}>
           Отмена
         </Button>
         <Button type="submit" loading={loading}>

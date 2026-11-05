@@ -1,39 +1,49 @@
 import React, { useState, useEffect } from 'react';
+import { Clapperboard, Plus } from 'lucide-react';
 import styles from './VideosManager.module.scss';
-import { useVideosStore } from '@/store';
+import { useAuthStore, useVideosStore } from '@/store';
 import { useNotificationStore } from '@/store/notification.store';
 import { Button } from '@/components/common/Button';
 import { Modal } from '@/components/common/Modal';
 import { Pagination } from '@/components/common/Pagination';
 import { ConfirmModal } from '@/components/common/ConfirmModal';
+import { PageHeader } from '@/components/common/PageHeader';
+import { EmptyState } from '@/components/common/EmptyState';
+import { MediaCard, mediaCardStyles } from '@/components/common/MediaCard';
 import { VideoForm } from './components/VideoForm';
-import { VideoCard } from './components/VideoCard';
 import { Loader } from '@/components/common/Loader';
 import type { Video } from '@/types';
 
+const PAGE_SIZE = 8;
+
 export const VideosManager: React.FC = () => {
-  const { 
+  const {
     videos,
-    loading, 
+    loading,
     totalCount,
     currentPage,
     pageSize,
-    fetchPage, 
+    fetchPage,
     deleteVideo,
     goToPage,
-    changePageSize
   } = useVideosStore();
-  
+  const { canCreate, canEdit, canDelete } = useAuthStore();
+
   const { showNotification } = useNotificationStore();
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [editingVideo, setEditingVideo] = useState<Video | null>(null);
-  
   const [deleteModalOpen, setDeleteModalOpen] = useState(false);
   const [videoToDelete, setVideoToDelete] = useState<Video | null>(null);
   const [isDeleting, setIsDeleting] = useState(false);
+  // просмотр: видео создаётся только здесь, а в сетке — лишь картинка-превью
+  const [viewing, setViewing] = useState<{ video: Video; index: number } | null>(null);
+
+  const allowCreate = canCreate('videos');
+  const allowEdit = canEdit('videos');
+  const allowDelete = canDelete('videos');
 
   useEffect(() => {
-    fetchPage(1, 8);
+    fetchPage(1, PAGE_SIZE);
   }, []);
 
   const totalPages = Math.ceil(totalCount / pageSize);
@@ -45,17 +55,17 @@ export const VideosManager: React.FC = () => {
 
   const handleConfirmDelete = async () => {
     if (!videoToDelete) return;
-    
+
     setIsDeleting(true);
     const success = await deleteVideo(videoToDelete.id);
     setIsDeleting(false);
     setDeleteModalOpen(false);
     setVideoToDelete(null);
-    
+
     if (success) {
-      showNotification('Видео успешно удалено!', 'success');
+      showNotification('Видео удалено', 'success');
     } else {
-      showNotification('Ошибка при удалении видео', 'error');
+      showNotification('Не удалось удалить видео', 'error');
     }
   };
 
@@ -75,53 +85,82 @@ export const VideosManager: React.FC = () => {
   };
 
   const handleSuccess = () => {
+    const wasEditing = Boolean(editingVideo);
     handleCloseModal();
     fetchPage(1, pageSize);
-    showNotification(
-      editingVideo ? 'Видео успешно обновлено!' : 'Видео успешно добавлено!',
-      'success'
-    );
+    showNotification(wasEditing ? 'Видео обновлено' : 'Видео добавлено', 'success');
   };
 
-  const handlePageChange = (page: number) => {
-    goToPage(page);
+  const openCreate = () => {
+    setEditingVideo(null);
+    setIsModalOpen(true);
   };
 
   if (loading && videos.length === 0) {
     return <Loader />;
   }
 
+  const viewingSources = viewing ? [viewing.video.main_video_url, ...(viewing.video.gallery_videos || [])] : [];
+  const withoutThumbnail = videos.filter((video) => !video.thumbnail).length;
+
   return (
     <div className={styles.manager}>
-      <div className={styles.header}>
-        <h2>Управление видео</h2>
-        <Button onClick={() => setIsModalOpen(true)}>+ Добавить видео</Button>
-      </div>
-
-      <div className={styles.videosGrid}>
-        {videos.map((video) => (
-          <VideoCard
-            key={video.id}
-            video={video}
-            onEdit={() => handleEdit(video)}
-            onDelete={() => handleDeleteClick(video)}
-          />
-        ))}
-        {videos.length === 0 && !loading && (
-          <div className={styles.emptyState}>
-            <p>Нет добавленных видео</p>
-            <Button onClick={() => setIsModalOpen(true)} variant="outline">
-              Добавить первое видео
+      <PageHeader
+        icon={Clapperboard}
+        title="Видео"
+        description={`Видеогалерея сайта · всего ${totalCount}`}
+        actions={
+          allowCreate && (
+            <Button icon={<Plus />} onClick={openCreate}>
+              Добавить видео
             </Button>
-          </div>
-        )}
-      </div>
+          )
+        }
+      />
 
-      {totalCount > 0 && (
+      {withoutThumbnail > 0 && allowEdit && (
+        <div className={styles.notice}>
+          Видео без превью на этой странице: {withoutThumbnail}. На сайте вместо картинки у них показывается заглушка —
+          откройте такое видео на редактирование и нажмите «Сохранить», превью создастся автоматически.
+        </div>
+      )}
+
+      {videos.length === 0 && !loading ? (
+        <EmptyState
+          icon={Clapperboard}
+          title="Видео пока нет"
+          description="Добавьте первое видео — оно появится в разделе «Медиа» на сайте."
+          action={
+            allowCreate && (
+              <Button icon={<Plus />} onClick={openCreate}>
+                Добавить видео
+              </Button>
+            )
+          }
+        />
+      ) : (
+        <div className={mediaCardStyles.grid}>
+          {videos.map((video) => (
+            <MediaCard
+              key={video.id}
+              kind="video"
+              previewSrc={video.thumbnail}
+              extraCount={video.gallery_videos?.length || 0}
+              date={video.date}
+              onOpen={() => setViewing({ video, index: 0 })}
+              onEdit={allowEdit ? () => handleEdit(video) : undefined}
+              onDelete={allowDelete ? () => handleDeleteClick(video) : undefined}
+            />
+          ))}
+        </div>
+      )}
+
+      {totalPages > 1 && (
         <Pagination
           currentPage={currentPage}
           totalPages={totalPages}
-          onPageChange={handlePageChange}
+          totalItems={totalCount}
+          onPageChange={goToPage}
         />
       )}
 
@@ -138,10 +177,45 @@ export const VideosManager: React.FC = () => {
         />
       </Modal>
 
+      <Modal
+        isOpen={Boolean(viewing)}
+        onClose={() => setViewing(null)}
+        title={viewing ? new Date(viewing.video.date).toLocaleDateString('ru-RU') : ''}
+        size="xl"
+      >
+        {viewing && (
+          <div className={styles.viewer}>
+            <video
+              key={viewing.index}
+              src={viewingSources[viewing.index]}
+              poster={viewing.index === 0 ? viewing.video.thumbnail || undefined : undefined}
+              className={styles.viewerVideo}
+              controls
+              autoPlay
+              playsInline
+            />
+            {viewingSources.length > 1 && (
+              <div className={styles.viewerParts}>
+                {viewingSources.map((_, index) => (
+                  <button
+                    key={index}
+                    type="button"
+                    className={`${styles.viewerPart} ${index === viewing.index ? styles.viewerPartActive : ''}`}
+                    onClick={() => setViewing({ ...viewing, index })}
+                  >
+                    {index === 0 ? 'Главное' : `Часть ${index + 1}`}
+                  </button>
+                ))}
+              </div>
+            )}
+          </div>
+        )}
+      </Modal>
+
       <ConfirmModal
         isOpen={deleteModalOpen}
-        title="Удаление видео"
-        message={`Вы уверены, что хотите удалить это видео?`}
+        title="Удалить видео?"
+        message="Видео исчезнет с сайта. Это действие нельзя отменить."
         confirmText="Удалить"
         cancelText="Отмена"
         onConfirm={handleConfirmDelete}

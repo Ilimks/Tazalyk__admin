@@ -5,3 +5,6 @@ export { useNewsStore } from './slices/news.slice';
 export { useProcurementsStore } from './slices/procurements.slice';
 export { useLocalActsStore } from './slices/localActs.slice';
 export { useLegislationStore } from './slices/legislation.slice';
+export { useProductsStore } from './slices/products.slice';
+export { useOrdersStore } from './slices/orders.slice';
+export { useVacanciesStore } from './slices/vacancies.slice';

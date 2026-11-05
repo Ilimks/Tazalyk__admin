@@ -1,8 +1,9 @@
 import { useAuthStore } from '@/store';
+import type { PermissionSection } from '@/types';
 
 interface ProtectedRouteProps {
   children: React.ReactNode;
-  section: 'videos' | 'photos' | 'news' | 'procurements' | 'local_acts' | 'legislation';
+  section: PermissionSection;
   action: 'view' | 'create' | 'edit' | 'delete';
   fallback?: React.ReactNode;
 }

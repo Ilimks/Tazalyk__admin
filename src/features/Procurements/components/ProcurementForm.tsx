@@ -1,4 +1,5 @@
 import React, { useState } from 'react';
+import { Banknote, Building, FilePenLine, Hash, SlidersHorizontal } from 'lucide-react';
 import styles from '../ProcurementsManager.module.scss';
 import { useProcurementsStore } from '@/store';
 import { Button } from '@/components/common/Button';
@@ -79,67 +80,100 @@ export const ProcurementForm: React.FC<ProcurementFormProps> = ({
 
   return (
     <form onSubmit={handleSubmit} className={styles.form}>
-      <Input
-        label="Номер контракта"
-        value={formData.contractNumber}
-        onChange={(e) => setFormData({ ...formData, contractNumber: e.target.value })}
-        required
-        placeholder="Введите номер контракта"
-      />
+      {/* Контракт: номер, поставщик, сумма */}
+      <section className={styles.formSection}>
+        <div className={styles.formSectionHead}>
+          <span className={styles.sectionIcon}>
+            <FilePenLine size={16} />
+          </span>
+          <div className={styles.formSectionText}>
+            <h4 className={styles.formSectionTitle}>Контракт</h4>
+            <p className={styles.formSectionHint}>Номер договора, поставщик и сумма</p>
+          </div>
+        </div>
 
-      <Input
-        label="Поставщик"
-        value={formData.supplier}
-        onChange={(e) => setFormData({ ...formData, supplier: e.target.value })}
-        required
-        placeholder="Введите название поставщика"
-      />
+        <div className={styles.formGrid}>
+          <Input
+            label="Номер контракта"
+            value={formData.contractNumber}
+            onChange={(e) => setFormData({ ...formData, contractNumber: e.target.value })}
+            required
+            placeholder="Введите номер контракта"
+            icon={<Hash />}
+          />
 
-      <div className={styles.formRow}>
-        <Select
-          label="Тип закупки"
-          value={formData.type}
-          onChange={(e) => setFormData({ ...formData, type: e.target.value as any })}
-          options={typeOptions}
-          required
-        />
+          <Input
+            label="Сумма договора"
+            type="text"
+            inputMode="decimal"
+            value={formData.amount}
+            onChange={(e) => setFormData({ ...formData, amount: e.target.value })}
+            required
+            placeholder="Введите сумму в сомах"
+            icon={<Banknote />}
+          />
 
-        <Select
-          label="Способ закупки"
-          value={formData.method}
-          onChange={(e) => setFormData({ ...formData, method: e.target.value as any })}
-          options={methodOptions}
-          required
-        />
-      </div>
+          <Input
+            className={styles.formGridFull}
+            label="Поставщик"
+            value={formData.supplier}
+            onChange={(e) => setFormData({ ...formData, supplier: e.target.value })}
+            required
+            placeholder="Введите название поставщика"
+            icon={<Building />}
+          />
+        </div>
+      </section>
 
-      <Select
-        label="Статус"
-        value={formData.status}
-        onChange={(e) => setFormData({ ...formData, status: e.target.value as any })}
-        options={statusOptions}
-        required
-      />
+      {/* Параметры закупки: короткие поля в две колонки */}
+      <section className={styles.formSection}>
+        <div className={styles.formSectionHead}>
+          <span className={styles.sectionIcon}>
+            <SlidersHorizontal size={16} />
+          </span>
+          <div className={styles.formSectionText}>
+            <h4 className={styles.formSectionTitle}>Параметры закупки</h4>
+            <p className={styles.formSectionHint}>Тип, способ, статус и дата</p>
+          </div>
+        </div>
 
-      <Input
-        label="Дата"
-        type="date"
-        value={formData.date}
-        onChange={(e) => setFormData({ ...formData, date: e.target.value })}
-        required
-      />
+        <div className={styles.formGrid}>
+          <Select
+            label="Тип закупки"
+            value={formData.type}
+            onChange={(e) => setFormData({ ...formData, type: e.target.value as Procurement['type'] })}
+            options={typeOptions}
+            required
+          />
 
-      <Input
-        label="Сумма договора"
-        type="text"
-        value={formData.amount}
-        onChange={(e) => setFormData({ ...formData, amount: e.target.value })}
-        required
-        placeholder="Введите сумму в сомах"
-      />
+          <Select
+            label="Способ закупки"
+            value={formData.method}
+            onChange={(e) => setFormData({ ...formData, method: e.target.value as Procurement['method'] })}
+            options={methodOptions}
+            required
+          />
+
+          <Select
+            label="Статус"
+            value={formData.status}
+            onChange={(e) => setFormData({ ...formData, status: e.target.value as Procurement['status'] })}
+            options={statusOptions}
+            required
+          />
+
+          <Input
+            label="Дата"
+            type="date"
+            value={formData.date}
+            onChange={(e) => setFormData({ ...formData, date: e.target.value })}
+            required
+          />
+        </div>
+      </section>
 
       <div className={styles.formActions}>
-        <Button type="button" variant="secondary" onClick={onCancel}>
+        <Button type="button" variant="outline" onClick={onCancel}>
           Отмена
         </Button>
         <Button type="submit" loading={loading}>

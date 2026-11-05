@@ -1,5 +1,6 @@
 import React, { useEffect } from 'react';
 import { createPortal } from 'react-dom';
+import { X } from 'lucide-react';
 import styles from './Modal.module.scss';
 import { Button } from '../Button';
 
@@ -53,8 +54,8 @@ export const Modal: React.FC<ModalProps> = ({
         <div className={styles.header}>
           <h3>{title}</h3>
           {showCloseButton && (
-            <button className={styles.closeBtn} onClick={onClose}>
-              ×
+            <button className={styles.closeBtn} onClick={onClose} aria-label="Закрыть">
+              <X size={20} />
             </button>
           )}
         </div>

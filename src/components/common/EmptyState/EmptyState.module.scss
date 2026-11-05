@@ -1,0 +1,40 @@
+.emptyState {
+  grid-column: 1 / -1;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  text-align: center;
+  padding: 56px 24px;
+  background: var(--color-surface);
+  border: 1px dashed var(--color-border-strong);
+  border-radius: var(--radius-lg);
+
+  h3 {
+    font-size: 16px;
+    font-weight: 700;
+    color: var(--color-text);
+  }
+
+  p {
+    margin-top: 4px;
+    max-width: 360px;
+    font-size: 13px;
+    color: var(--color-text-secondary);
+  }
+}
+
+.icon {
+  width: 56px;
+  height: 56px;
+  margin-bottom: 14px;
+  border-radius: 50%;
+  background: var(--color-brand-soft);
+  color: var(--color-brand);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.action {
+  margin-top: 18px;
+}

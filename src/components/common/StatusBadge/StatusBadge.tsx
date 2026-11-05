@@ -17,6 +17,8 @@ interface StatusBadgeProps {
   showDot?: boolean;
   className?: string;
   size?: 'sm' | 'md' | 'lg';
+  // своя подпись, например в женском роде для «закупки»
+  label?: string;
 }
 
 const statusLabels: Record<StatusType, string> = {
@@ -37,11 +39,12 @@ export const StatusBadge: React.FC<StatusBadgeProps> = ({
   showDot = true,
   className = '',
   size = 'md',
+  label,
 }) => {
   return (
     <span className={`${styles.badge} ${styles[status]} ${styles[size]} ${className}`}>
       {showDot && <span className={`${styles.dot} ${styles[status]}`}></span>}
-      {statusLabels[status] || status}
+      {label || statusLabels[status] || status}
     </span>
   );
 };

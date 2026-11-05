@@ -1,166 +1,415 @@
+// Раздел «Локальные акты»: таблица документов и форма в модальном окне.
+// Шапка, пустое состояние, пагинация и модалки — общие компоненты.
+
 .manager {
-    background: white;
-    border-radius: 24px;
-    padding: 24px;
-    border: 1px solid #e2e8f0;
+    min-width: 0;
+    animation: fadeIn 0.2s ease;
 }
 
-.header {
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-    margin-bottom: 24px;
-
-    h2 {
-        font-size: 20px;
-        color: #0f172a;
-        margin: 0;
-    }
+.loaderCard {
+    background: var(--color-surface);
+    border: 1px solid var(--color-border);
+    border-radius: var(--radius-lg);
+    box-shadow: var(--shadow-sm);
 }
 
-.tableWrapper {
+.srOnly {
+    position: absolute;
+    width: 1px;
+    height: 1px;
+    padding: 0;
+    margin: -1px;
+    overflow: hidden;
+    clip: rect(0, 0, 0, 0);
+    white-space: nowrap;
+    border: 0;
+}
+
+// ---------- таблица ----------
+
+.tableCard {
+    position: relative;
+    background: var(--color-surface);
+    border: 1px solid var(--color-border);
+    border-radius: var(--radius-lg);
+    box-shadow: var(--shadow-sm);
+    overflow: hidden;
+    transition: opacity 0.15s ease;
+}
+
+// список перезагружается — приглушаем и блокируем клики
+.busy {
+    opacity: 0.6;
+    pointer-events: none;
+}
+
+// width: 0 + min-width: 100% — широкая таблица прокручивается внутри карточки
+// и не растягивает страницу по горизонтали
+.tableScroll {
+    width: 0;
+    min-width: 100%;
     overflow-x: auto;
-    border-radius: 12px;
-    border: 1px solid #e2e8f0;
 }
 
-.dataTable {
+.table {
     width: 100%;
-    border-collapse: collapse;
-    min-width: 600px;
-
-    th, td {
-        padding: 14px 16px;
-        text-align: left;
-        border-bottom: 1px solid #e2e8f0;
-    }
+    min-width: 560px;
+    border-collapse: separate;
+    border-spacing: 0;
 
     th {
+        padding: 11px 16px;
+        background: var(--color-surface-muted);
+        border-bottom: 1px solid var(--color-border);
+        font-size: 11px;
         font-weight: 600;
-        color: #0f172a;
-        background: #f8fafc;
-        font-size: 14px;
+        letter-spacing: 0.06em;
+        text-transform: uppercase;
+        text-align: left;
+        white-space: nowrap;
+        color: var(--color-text-secondary);
     }
 
     td {
-        color: #475569;
+        height: 64px;
+        padding: 12px 16px;
+        border-bottom: 1px solid var(--color-border);
         font-size: 14px;
+        color: var(--color-text-secondary);
+        vertical-align: middle;
     }
 
-    tr:last-child td {
-        border-bottom: none;
+    tbody tr {
+        transition: background-color 0.12s ease;
+
+        &:hover {
+            background: var(--color-surface-muted);
+        }
+
+        &:last-child td {
+            border-bottom: none;
+        }
     }
 
-    tr:hover td {
-        background: #f8fafc;
+    // ширина 100% + max-width 0: колонка занимает остаток строки, а длинный текст обрезается
+    .docCell {
+        width: 100%;
+        max-width: 0;
+    }
+
+    .sizeCell,
+    .dateCell {
+        width: 1%;
+        white-space: nowrap;
+        font-variant-numeric: tabular-nums;
+    }
+
+    .actionsCell {
+        width: 1%;
+        padding-left: 8px;
+        text-align: right;
+        white-space: nowrap;
     }
 }
 
-.titleCell {
-    max-width: 300px;
+.doc {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    min-width: 0;
+}
+
+.docText {
+    display: flex;
+    flex-direction: column;
+    min-width: 0;
+}
+
+.title,
+.subtitle {
     overflow: hidden;
     text-overflow: ellipsis;
     white-space: nowrap;
 }
 
-.downloadLink {
-    color: #22c55e;
-    text-decoration: none;
+.title {
+    font-weight: 600;
+    color: var(--color-text);
+}
+
+.subtitle {
+    margin-top: 2px;
+    font-size: 13px;
+    color: var(--color-text-secondary);
+}
+
+// плашка с иконкой файла; цвет — по расширению
+.fileIcon {
+    width: 36px;
+    height: 36px;
+    flex-shrink: 0;
     display: inline-flex;
     align-items: center;
-    gap: 6px;
-    
+    justify-content: center;
+    border-radius: var(--radius-sm);
+    background: var(--color-brand-soft);
+    color: var(--color-brand);
+}
+
+.filePdf {
+    background: var(--color-danger-soft);
+    color: var(--color-danger-hover);
+}
+
+.fileDoc {
+    background: var(--color-info-soft);
+    color: var(--color-info);
+}
+
+.fileXls {
+    background: var(--color-accent-soft);
+    color: var(--color-accent-hover);
+}
+
+.actions {
+    display: flex;
+    justify-content: flex-end;
+    gap: 4px;
+}
+
+.iconBtn {
+    width: 32px;
+    height: 32px;
+    flex-shrink: 0;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    border: none;
+    border-radius: var(--radius-sm);
+    background: none;
+    color: var(--color-text-secondary);
+    text-decoration: none;
+    cursor: pointer;
+    transition: background-color 0.15s ease, color 0.15s ease;
+
     &:hover {
-        text-decoration: underline;
-        color: #16a34a;
+        background: var(--color-brand-soft);
+        color: var(--color-brand);
+    }
+
+    &:focus-visible {
+        outline: none;
+        box-shadow: var(--focus-ring);
+    }
+
+    &.danger:hover {
+        background: var(--color-danger-soft);
+        color: var(--color-danger);
     }
 }
 
-.emptyState {
-    text-align: center;
-    padding: 60px 20px;
-    background: #f8fafc;
-    border-radius: 16px;
-    border: 1px dashed #e2e8f0;
+// телефоны: строка — карточка «документ / размер · дата + действия»
+@media (max-width: 767px) {
+    .table {
+        display: block;
+        min-width: 0;
 
-    p {
-        font-size: 14px;
-        color: #94a3b8;
-        margin: 0;
+        thead {
+            position: absolute;
+            width: 1px;
+            height: 1px;
+            overflow: hidden;
+            clip: rect(0, 0, 0, 0);
+            white-space: nowrap;
+        }
+
+        tbody {
+            display: block;
+        }
+
+        tbody tr {
+            display: grid;
+            grid-template-columns: auto auto minmax(0, 1fr);
+            grid-template-areas:
+                'doc doc doc'
+                'size date actions';
+            align-items: center;
+            column-gap: 10px;
+            row-gap: 8px;
+            padding: 14px 16px;
+            border-bottom: 1px solid var(--color-border);
+
+            &:last-child {
+                border-bottom: none;
+            }
+        }
+
+        td {
+            display: block;
+            height: auto;
+            padding: 0;
+            border-bottom: none;
+        }
+
+        .docCell,
+        .sizeCell,
+        .dateCell,
+        .actionsCell {
+            width: auto;
+            max-width: none;
+            min-width: 0;
+            padding: 0;
+        }
+
+        .docCell {
+            grid-area: doc;
+        }
+
+        .sizeCell {
+            grid-area: size;
+            padding-left: 48px; // выравнивание по тексту, а не по плашке
+            font-size: 13px;
+        }
+
+        .dateCell {
+            grid-area: date;
+            font-size: 13px;
+
+            &::before {
+                content: '·';
+                margin-right: 10px;
+                color: var(--color-text-muted);
+            }
+        }
+
+        .actionsCell {
+            grid-area: actions;
+        }
     }
 }
+
+// ---------- форма ----------
 
 .form {
     display: flex;
     flex-direction: column;
-    gap: 20px;
+    gap: 16px;
 }
 
-.formActions {
+.formSection {
+    padding: 16px 18px 0;
+    background: var(--color-surface);
+    border: 1px solid var(--color-border);
+    border-radius: var(--radius-lg);
+}
+
+// секция без полей Input в конце — нижний отступ задаём сами
+.formSectionPadded {
+    padding-bottom: 18px;
+}
+
+.formSectionHead {
     display: flex;
+    align-items: center;
     gap: 12px;
-    justify-content: flex-end;
-    margin-top: 8px;
+    margin-bottom: 16px;
 }
 
-.fileUploadSection {
-    margin-bottom: 20px;
+.formSectionText {
+    display: flex;
+    flex-direction: column;
+    min-width: 0;
 }
 
-.fileUploadLabel {
-    display: block;
+.formSectionTitle {
     font-size: 14px;
-    font-weight: 500;
-    color: #0f172a;
-    margin-bottom: 8px;
+    font-weight: 700;
+    line-height: 1.3;
+    color: var(--color-text);
+}
+
+.formSectionHint {
+    margin-top: 1px;
+    font-size: 12px;
+    color: var(--color-text-secondary);
 }
 
 .required {
-    color: #ef4444;
+    margin-left: 2px;
+    color: var(--color-danger);
 }
 
-.fileUploadArea {
-    border: 2px dashed #e2e8f0;
-    border-radius: 16px;
-    padding: 40px 24px;
-    text-align: center;
-    cursor: pointer;
-    transition: all 0.3s ease;
-    background: #f8fafc;
-
-    &:hover {
-        border-color: #22c55e;
-        background: #f0fdf4;
-    }
-
-    &.dragging {
-        border-color: #22c55e;
-        background: #f0fdf4;
-        transform: scale(1.02);
-    }
+.sectionIcon {
+    width: 32px;
+    height: 32px;
+    flex-shrink: 0;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    border-radius: var(--radius-sm);
+    background: var(--color-brand-soft);
+    color: var(--color-brand);
 }
 
-.fileUploadContent {
+// короткие поля — в две колонки, длинные — на всю ширину
+.formGrid {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    column-gap: 16px;
+}
+
+.formGridFull {
+    grid-column: 1 / -1;
+}
+
+.dropzone {
     display: flex;
     flex-direction: column;
     align-items: center;
-    gap: 12px;
+    gap: 6px;
+    padding: 28px 20px;
+    text-align: center;
+    background: var(--color-surface-muted);
+    border: 2px dashed var(--color-border-strong);
+    border-radius: var(--radius-md);
+    cursor: pointer;
+    transition: border-color 0.15s ease, background-color 0.15s ease;
 
-    svg {
-        stroke: #94a3b8;
-        transition: all 0.3s ease;
+    &:hover,
+    &.dragging {
+        border-color: var(--color-brand);
+        background: var(--color-brand-soft);
+    }
+
+    &:focus-visible {
+        outline: none;
+        border-color: var(--color-brand);
+        box-shadow: var(--focus-ring);
     }
 }
 
-.fileUploadTitle {
-    font-size: 16px;
-    font-weight: 500;
-    color: #0f172a;
+.dropzoneIcon {
+    width: 44px;
+    height: 44px;
+    margin-bottom: 4px;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    border-radius: 50%;
+    background: var(--color-surface);
+    border: 1px solid var(--color-border);
+    color: var(--color-brand);
 }
 
-.fileUploadHint {
+.dropzoneTitle {
+    font-size: 14px;
+    font-weight: 600;
+    color: var(--color-text);
+}
+
+.dropzoneHint {
     font-size: 12px;
-    color: #94a3b8;
+    color: var(--color-text-secondary);
 }
 
 .hiddenFileInput {
@@ -168,89 +417,70 @@
 }
 
 .filePreview {
-    border: 1px solid #e2e8f0;
-    border-radius: 12px;
-    background: #f8fafc;
-    overflow: hidden;
-}
-
-.filePreviewContent {
     display: flex;
     align-items: center;
     gap: 12px;
-    padding: 12px 16px;
-    background: white;
-}
-
-.fileIcon {
-    font-size: 32px;
+    padding: 12px 12px 12px 14px;
+    background: var(--color-surface-muted);
+    border: 1px solid var(--color-border);
+    border-radius: var(--radius-md);
 }
 
 .fileInfo {
     flex: 1;
+    min-width: 0;
 }
 
 .fileName {
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
     font-size: 14px;
-    font-weight: 500;
-    color: #0f172a;
-    margin-bottom: 4px;
+    font-weight: 600;
+    color: var(--color-text);
 }
 
 .fileSize {
+    margin-top: 2px;
     font-size: 12px;
-    color: #94a3b8;
+    color: var(--color-text-secondary);
 }
 
-.removeFileBtn {
-    width: 28px;
-    height: 28px;
-    border-radius: 50%;
-    background: #ef4444;
-    color: white;
-    border: none;
-    cursor: pointer;
-    font-size: 18px;
+.formActions {
     display: flex;
-    align-items: center;
-    justify-content: center;
-    transition: all 0.2s ease;
+    justify-content: flex-end;
+    gap: 12px;
+    padding-top: 16px;
+    border-top: 1px solid var(--color-border);
+}
 
-    &:hover {
-        background: #dc2626;
-        transform: scale(1.1);
+@media (max-width: 640px) {
+    .formSection {
+        padding: 14px 14px 0;
+    }
+
+    .formSectionPadded {
+        padding-bottom: 14px;
+    }
+
+    .formGrid {
+        grid-template-columns: minmax(0, 1fr);
+    }
+
+    .dropzone {
+        padding: 20px 16px;
+    }
+
+    .formActions > * {
+        flex: 1;
     }
 }
 
-@media (max-width: 768px) {
-    .manager {
-        padding: 16px;
+@keyframes fadeIn {
+    from {
+        opacity: 0;
     }
-
-    .header {
-        flex-direction: column;
-        gap: 12px;
-        align-items: stretch;
-
-        h2 {
-            text-align: center;
-        }
-    }
-
-    .titleCell {
-        max-width: 180px;
-    }
-
-    th, td {
-        padding: 10px 12px;
-        font-size: 12px;
-    }
-
-    .fileUploadArea {
-        padding: 24px 16px;
-    }
-
-    .fileUploadTitle {
-        font-size: 14px;
+    to {
+        opacity: 1;
     }
 }

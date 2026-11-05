@@ -3,13 +3,11 @@ import { config } from '@/config';
 class ApiClient {
   private baseUrl: string;
   private timeout: number;
-  private isRefreshing = false;
-  private refreshSubscribers: ((token: string) => void)[] = [];
+  private refreshPromise: Promise<string | null> | null = null;
 
   constructor() {
     this.baseUrl = config.api.baseUrl;
     this.timeout = config.api.timeout;
-    console.log('ApiClient initialized with baseUrl:', this.baseUrl);
   }
 
   private getAccessToken(): string | null {
@@ -44,13 +42,14 @@ class ApiClient {
     return headers;
   }
 
-  private onRefreshed(token: string): void {
-    this.refreshSubscribers.forEach(cb => cb(token));
-    this.refreshSubscribers = [];
-  }
-
-  private addRefreshSubscriber(cb: (token: string) => void): void {
-    this.refreshSubscribers.push(cb);
+  // одно обновление токена на все запросы, получившие 401 одновременно
+  private refreshAccessToken(): Promise<string | null> {
+    if (!this.refreshPromise) {
+      this.refreshPromise = this.refreshToken().finally(() => {
+        this.refreshPromise = null;
+      });
+    }
+    return this.refreshPromise;
   }
 
   private async refreshToken(): Promise<string | null> {
@@ -67,6 +66,8 @@ class ApiClient {
       if (response.ok) {
         const data = await response.json();
         localStorage.setItem('access_token', data.access);
+        // при ROTATE_REFRESH_TOKENS сервер выдаёт и новый refresh
+        if (data.refresh) localStorage.setItem('refresh_token', data.refresh);
         return data.access;
       }
       return null;
@@ -83,7 +84,6 @@ class ApiClient {
     const timeoutId = setTimeout(() => controller.abort(), this.timeout);
 
     const url = `${this.baseUrl}${endpoint}`;
-    console.log(`Making request to: ${url}`);
 
     const makeRequest = async (token?: string): Promise<Response> => {
       const headers: HeadersInit = {
@@ -108,48 +108,41 @@ class ApiClient {
 
       // Если токен истек (401), пробуем обновить
       if (response.status === 401 && token) {
-        if (!this.isRefreshing) {
-          this.isRefreshing = true;
-          const newToken = await this.refreshToken();
-          this.isRefreshing = false;
-          
-          if (newToken) {
-            this.onRefreshed(newToken);
-            token = newToken;
-          } else {
-            this.clearTokens();
-            window.location.href = '/login';
-            throw new Error('Session expired');
-          }
+        const newToken = await this.refreshAccessToken();
+
+        if (!newToken) {
+          // AdminPanel ловит событие и возвращает на экран входа
+          this.clearTokens();
+          window.dispatchEvent(new Event('auth:expired'));
+          throw new ApiError(401, 'Сессия истекла, войдите снова');
         }
 
-        // Ждем обновления токена
-        await new Promise<void>((resolve) => {
-          this.addRefreshSubscriber((newToken) => {
-            token = newToken;
-            resolve();
-          });
-        });
-
-        response = await makeRequest(token);
+        response = await makeRequest(newToken);
       }
 
       clearTimeout(timeoutId);
 
       if (!response.ok) {
         let errorMessage = `HTTP ${response.status}`;
+        let errorData: unknown;
+        // тело читается один раз: сначала текстом, потом пробуем разобрать JSON
+        const text = await response.text().catch(() => '');
         try {
-          const errorData = await response.json();
-          errorMessage = errorData.message || errorData.error || errorMessage;
+          errorData = JSON.parse(text);
+          if (errorData && typeof errorData === 'object') {
+            const data = errorData as Record<string, unknown>;
+            const message = data.message || data.error || data.detail;
+            if (typeof message === 'string') errorMessage = message;
+          }
         } catch {
-          const text = await response.text();
           if (text.includes('RuntimeError')) {
             errorMessage = 'Ошибка сервера. Проверьте URL и настройки Django.';
-          } else {
+          } else if (text) {
             errorMessage = text.substring(0, 200);
           }
         }
-        throw new ApiError(response.status, errorMessage);
+        // errorData — ответ сервера целиком: для 400 там ошибки по полям {поле: [текст]}
+        throw new ApiError(response.status, errorMessage, errorData);
       }
 
       if (response.status === 204) {
@@ -227,13 +220,20 @@ class ApiClient {
     });
   }
 
+  patch<T>(endpoint: string, data?: any): Promise<T> {
+    return this.request<T>(endpoint, {
+      method: 'PATCH',
+      body: JSON.stringify(data),
+    });
+  }
+
   delete<T>(endpoint: string): Promise<T> {
     return this.request<T>(endpoint, { method: 'DELETE' });
   }
 }
 
 export class ApiError extends Error {
-  constructor(public status: number, message: string) {
+  constructor(public status: number, message: string, public data?: unknown) {
     super(message);
     this.name = 'ApiError';
   }

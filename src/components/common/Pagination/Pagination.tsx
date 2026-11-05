@@ -1,4 +1,5 @@
 import styles from './Pagination.module.scss';
+import { ChevronLeft, ChevronRight } from 'lucide-react';
 import { Button } from '../Button';
 
 interface PaginationProps {
@@ -80,8 +81,10 @@ export const Pagination: React.FC<PaginationProps> = ({
           size="sm"
           onClick={() => onPageChange(currentPage - 1)}
           disabled={currentPage === 1}
+          icon={<ChevronLeft />}
+          aria-label="Предыдущая страница"
         >
-          ← Назад
+          Назад
         </Button>
 
         <div className={styles.pageNumbers}>
@@ -90,6 +93,7 @@ export const Pagination: React.FC<PaginationProps> = ({
               <button
                 key={index}
                 className={`${styles.pageBtn} ${currentPage === page ? styles.active : ''}`}
+                aria-current={currentPage === page ? 'page' : undefined}
                 onClick={() => onPageChange(page)}
               >
                 {page}
@@ -105,8 +109,10 @@ export const Pagination: React.FC<PaginationProps> = ({
           size="sm"
           onClick={() => onPageChange(currentPage + 1)}
           disabled={currentPage === totalPages}
+          aria-label="Следующая страница"
         >
-          Вперед →
+          Вперёд
+          <ChevronRight size={16} />
         </Button>
       </div>
     </div>

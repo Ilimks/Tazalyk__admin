@@ -1,0 +1,581 @@
+// Раздел «Товары»: поиск и фильтр, таблица-карточка и форма в модальном окне.
+// Шапка, пустое состояние, пагинация, статусы и модалки — общие компоненты.
+
+.manager {
+  min-width: 0;
+  animation: fadeIn 0.2s ease;
+}
+
+.loaderCard {
+  background: var(--color-surface);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-lg);
+  box-shadow: var(--shadow-sm);
+}
+
+.srOnly {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  padding: 0;
+  margin: -1px;
+  overflow: hidden;
+  clip: rect(0, 0, 0, 0);
+  white-space: nowrap;
+  border: 0;
+}
+
+// ---------- поиск и фильтр ----------
+
+.toolbar {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 12px;
+  margin-bottom: 16px;
+
+  // два класса — сильнее отступа .formGroup из общих полей
+  .toolbarSearch {
+    flex: 1 1 280px;
+    margin-bottom: 0;
+  }
+
+  .toolbarSelect {
+    flex: 0 0 240px;
+    margin-bottom: 0;
+  }
+}
+
+// ---------- таблица ----------
+
+.tableCard {
+  position: relative;
+  background: var(--color-surface);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-lg);
+  box-shadow: var(--shadow-sm);
+  overflow: hidden;
+  transition: opacity 0.15s ease;
+}
+
+// список перезагружается — приглушаем и блокируем клики
+.busy {
+  opacity: 0.6;
+  pointer-events: none;
+}
+
+// width: 0 + min-width: 100% — широкая таблица прокручивается внутри карточки
+// и не растягивает страницу по горизонтали
+.tableScroll {
+  width: 0;
+  min-width: 100%;
+  overflow-x: auto;
+}
+
+.table {
+  width: 100%;
+  min-width: 880px;
+  border-collapse: separate;
+  border-spacing: 0;
+
+  th {
+    padding: 11px 16px;
+    background: var(--color-surface-muted);
+    border-bottom: 1px solid var(--color-border);
+    font-size: 11px;
+    font-weight: 600;
+    letter-spacing: 0.06em;
+    text-transform: uppercase;
+    text-align: left;
+    white-space: nowrap;
+    color: var(--color-text-secondary);
+  }
+
+  td {
+    height: 64px;
+    padding: 12px 16px;
+    border-bottom: 1px solid var(--color-border);
+    font-size: 14px;
+    color: var(--color-text-secondary);
+    vertical-align: middle;
+  }
+
+  tbody tr {
+    transition: background-color 0.12s ease;
+
+    &:hover {
+      background: var(--color-surface-muted);
+    }
+
+    &:last-child td {
+      border-bottom: none;
+    }
+  }
+
+  .imageCell {
+    width: 72px;
+    padding-right: 0;
+  }
+
+  // ширина 100% + max-width 0: колонка занимает остаток строки, а длинный текст обрезается
+  .nameCell {
+    width: 100%;
+    max-width: 0;
+  }
+
+  .volumeCell,
+  .materialCell {
+    width: 1%;
+    white-space: nowrap;
+  }
+
+  .volumeCell {
+    font-variant-numeric: tabular-nums;
+    color: var(--color-text);
+  }
+
+  .priceCell {
+    width: 1%;
+    text-align: right;
+    white-space: nowrap;
+  }
+
+  .badgesCell {
+    width: 1%;
+  }
+
+  .actionsCell {
+    width: 1%;
+    padding-left: 8px;
+    text-align: right;
+    white-space: nowrap;
+  }
+}
+
+.thumbnail,
+.thumbnailEmpty {
+  width: 56px;
+  height: 40px;
+  border-radius: var(--radius-sm);
+}
+
+.thumbnail {
+  object-fit: cover;
+  background: var(--color-surface-muted);
+  border: 1px solid var(--color-border);
+}
+
+.thumbnailEmpty {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: var(--color-surface-muted);
+  border: 1px dashed var(--color-border-strong);
+  color: var(--color-text-muted);
+}
+
+.title {
+  display: block;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  font-weight: 600;
+  color: var(--color-text);
+}
+
+// скрытый с сайта товар
+.titleMuted {
+  color: var(--color-text-secondary);
+}
+
+.subtitle {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  min-width: 0;
+  margin-top: 2px;
+  font-size: 13px;
+}
+
+.subtitleText {
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.langTag {
+  flex-shrink: 0;
+  padding: 0 5px;
+  border-radius: 4px;
+  background: var(--color-surface-muted);
+  border: 1px solid var(--color-border);
+  font-size: 10px;
+  font-weight: 700;
+  line-height: 16px;
+  letter-spacing: 0.04em;
+  color: var(--color-text-secondary);
+}
+
+.amount {
+  font-weight: 600;
+  color: var(--color-text);
+  font-variant-numeric: tabular-nums;
+}
+
+.currency {
+  margin-left: 4px;
+  font-size: 12px;
+  color: var(--color-text-secondary);
+}
+
+.badges {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 4px;
+  min-width: 112px;
+  max-width: 220px;
+}
+
+.actions {
+  display: flex;
+  justify-content: flex-end;
+  gap: 4px;
+}
+
+.iconBtn {
+  width: 32px;
+  height: 32px;
+  flex-shrink: 0;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  border: none;
+  border-radius: var(--radius-sm);
+  background: none;
+  color: var(--color-text-secondary);
+  cursor: pointer;
+  transition: background-color 0.15s ease, color 0.15s ease;
+
+  &:hover {
+    background: var(--color-brand-soft);
+    color: var(--color-brand);
+  }
+
+  &:focus-visible {
+    outline: none;
+    box-shadow: var(--focus-ring);
+  }
+
+  &.danger:hover {
+    background: var(--color-danger-soft);
+    color: var(--color-danger);
+  }
+}
+
+// телефоны: строка — карточка «фото | название + действия / объём, материал, цена / статусы»
+@media (max-width: 767px) {
+  .toolbar .toolbarSelect {
+    flex: 1 1 100%;
+  }
+
+  .table {
+    display: block;
+    min-width: 0;
+
+    thead {
+      position: absolute;
+      width: 1px;
+      height: 1px;
+      overflow: hidden;
+      clip: rect(0, 0, 0, 0);
+      white-space: nowrap;
+    }
+
+    tbody {
+      display: block;
+    }
+
+    tbody tr {
+      display: grid;
+      grid-template-columns: 56px auto minmax(0, 1fr) auto;
+      grid-template-areas:
+        'image name name actions'
+        'image volume material price'
+        'image badges badges badges';
+      align-items: center;
+      column-gap: 12px;
+      row-gap: 6px;
+      padding: 12px 14px;
+      border-bottom: 1px solid var(--color-border);
+
+      &:last-child {
+        border-bottom: none;
+      }
+    }
+
+    td {
+      display: block;
+      height: auto;
+      padding: 0;
+      border-bottom: none;
+    }
+
+    .imageCell,
+    .nameCell,
+    .volumeCell,
+    .materialCell,
+    .priceCell,
+    .badgesCell,
+    .actionsCell {
+      width: auto;
+      max-width: none;
+      min-width: 0;
+      padding: 0;
+    }
+
+    .imageCell {
+      grid-area: image;
+      align-self: start;
+    }
+
+    .nameCell {
+      grid-area: name;
+    }
+
+    .volumeCell {
+      grid-area: volume;
+      font-size: 13px;
+    }
+
+    .materialCell {
+      grid-area: material;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      font-size: 13px;
+    }
+
+    .priceCell {
+      grid-area: price;
+    }
+
+    .badgesCell {
+      grid-area: badges;
+    }
+
+    .actionsCell {
+      grid-area: actions;
+    }
+  }
+
+  .badges {
+    min-width: 0;
+    max-width: none;
+  }
+}
+
+// ---------- форма ----------
+
+.form {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+
+.formSection {
+  padding: 16px 18px 0;
+  background: var(--color-surface);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-lg);
+}
+
+.formSectionHead {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  margin-bottom: 16px;
+}
+
+.formSectionText {
+  display: flex;
+  flex-direction: column;
+  min-width: 0;
+}
+
+.formSectionTitle {
+  font-size: 14px;
+  font-weight: 700;
+  line-height: 1.3;
+  color: var(--color-text);
+}
+
+.formSectionHint {
+  margin-top: 1px;
+  font-size: 12px;
+  color: var(--color-text-secondary);
+}
+
+.sectionIcon {
+  width: 32px;
+  height: 32px;
+  flex-shrink: 0;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: var(--radius-sm);
+  background: var(--color-brand-soft);
+  color: var(--color-brand);
+}
+
+// короткие поля — в две/три колонки, длинные — на всю ширину
+.formGrid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  column-gap: 16px;
+}
+
+.formGrid3 {
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+}
+
+.formGridFull {
+  grid-column: 1 / -1;
+}
+
+// ошибка у поля без собственного вывода ошибок (фото)
+.fieldError {
+  display: block;
+  margin: -10px 0 18px;
+  font-size: 12px;
+  color: var(--color-danger);
+}
+
+.restoreImage {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  margin: -8px 0 18px;
+  padding: 0;
+  border: none;
+  background: none;
+  font: inherit;
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--color-brand);
+  cursor: pointer;
+
+  &:hover {
+    text-decoration: underline;
+  }
+
+  &:focus-visible {
+    outline: none;
+    border-radius: 4px;
+    box-shadow: var(--focus-ring);
+  }
+}
+
+// флажки публикации — строки с пояснением
+.checkList {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  margin-bottom: 18px;
+}
+
+.checkRow {
+  display: flex;
+  align-items: flex-start;
+  gap: 12px;
+  padding: 12px 14px;
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-md);
+  cursor: pointer;
+  transition: border-color 0.15s ease, background-color 0.15s ease;
+
+  &:hover {
+    border-color: var(--color-border-strong);
+    background: var(--color-surface-muted);
+  }
+
+  &:focus-within {
+    border-color: var(--color-brand);
+    box-shadow: var(--focus-ring);
+  }
+
+  input {
+    width: 18px;
+    height: 18px;
+    flex-shrink: 0;
+    margin-top: 1px;
+    accent-color: var(--color-brand);
+    cursor: pointer;
+  }
+}
+
+.checkRowOn {
+  border-color: color-mix(in srgb, var(--color-brand) 35%, var(--color-border));
+  background: var(--color-brand-soft);
+
+  &:hover {
+    background: var(--color-brand-soft);
+  }
+}
+
+.checkText {
+  display: flex;
+  flex-direction: column;
+  min-width: 0;
+}
+
+.checkTitle {
+  font-size: 14px;
+  font-weight: 600;
+  line-height: 1.35;
+  color: var(--color-text);
+}
+
+.checkHint {
+  margin-top: 1px;
+  font-size: 12px;
+  color: var(--color-text-secondary);
+}
+
+.sortField {
+  max-width: 260px;
+}
+
+.formActions {
+  display: flex;
+  justify-content: flex-end;
+  gap: 12px;
+  padding-top: 16px;
+  border-top: 1px solid var(--color-border);
+}
+
+@media (max-width: 640px) {
+  .formSection {
+    padding: 14px 14px 0;
+  }
+
+  .formGrid,
+  .formGrid3 {
+    grid-template-columns: minmax(0, 1fr);
+  }
+
+  .sortField {
+    max-width: none;
+  }
+
+  .formActions > * {
+    flex: 1;
+  }
+}
+
+@keyframes fadeIn {
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
+  }
+}

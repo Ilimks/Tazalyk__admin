@@ -1,12 +1,22 @@
+import { Pencil, Trash2 } from 'lucide-react';
 import styles from '../ProcurementsManager.module.scss';
-import { Button } from '@/components/common/Button';
+import { StatusBadge } from '@/components/common/StatusBadge';
 import type { Procurement } from '@/types';
 
 interface ProcurementTableProps {
   procurements: Procurement[];
-  onEdit: (procurement: Procurement) => void;
-  onDelete: (id: string) => void;
+  // идёт перезагрузка списка (смена страницы, удаление) — таблица приглушается
+  busy?: boolean;
+  // без обработчика кнопка не показывается (нет прав)
+  onEdit?: (procurement: Procurement) => void;
+  onDelete?: (id: string) => void;
 }
+
+const statusLabels: Record<Procurement['status'], string> = {
+  active: 'Активна',
+  completed: 'Завершена',
+  cancelled: 'Отменена',
+};
 
 const getTypeLabel = (type: string) => {
   const types: Record<string, string> = {
@@ -27,71 +37,98 @@ const getMethodLabel = (method: string) => {
   return methods[method] || method;
 };
 
-const getStatusBadge = (status: string) => {
-  switch (status) {
-    case 'active':
-      return <span className={styles.statusActive}>Активна</span>;
-    case 'completed':
-      return <span className={styles.statusCompleted}>Завершена</span>;
-    case 'cancelled':
-      return <span className={styles.statusCancelled}>Отменена</span>;
-    default:
-      return null;
-  }
-};
+const formatDate = (date: string) => (date ? new Date(date).toLocaleDateString('ru-RU') : '—');
+
+const formatAmount = (amount: number) => (amount ? amount.toLocaleString('ru-RU') : '0');
 
 export const ProcurementTable: React.FC<ProcurementTableProps> = ({
   procurements,
+  busy = false,
   onEdit,
   onDelete,
 }) => {
-  if (procurements.length === 0) {
-    return (
-      <div className={styles.emptyState}>
-        <p>Нет добавленных закупок</p>
-      </div>
-    );
-  }
+  const hasActions = Boolean(onEdit || onDelete);
 
   return (
-    <div className={styles.tableWrapper}>
-      <table className={styles.dataTable}>
-        <thead>
-          <tr>
-            <th>№ закупки</th>
-            <th>№ контракта</th>
-            <th>Поставщик</th>
-            <th>Тип</th>
-            <th>Способ</th>
-            <th>Статус</th>
-            <th>Дата</th>
-            <th>Сумма</th>
-            <th>Действия</th>
-          </tr>
-        </thead>
-        <tbody>
-          {procurements.map((proc) => (
-            <tr key={proc.id}>
-              <td>{proc.number || '—'}</td>
-              <td>{proc.contractNumber || '—'}</td>
-              <td>{proc.supplier || '—'}</td>
-              <td>{getTypeLabel(proc.type)}</td>
-              <td>{getMethodLabel(proc.method)}</td>
-              <td>{getStatusBadge(proc.status)}</td>
-              <td>{proc.date ? new Date(proc.date).toLocaleDateString('ru-RU') : '—'}</td>
-              <td>{proc.amount ? proc.amount.toLocaleString() : '0'} сом</td>
-              <td>
-                <Button variant="outline" size="sm" onClick={() => onEdit(proc)}>
-                  ✏️
-                </Button>
-                <Button variant="danger" size="sm" onClick={() => onDelete(proc.id)}>
-                  🗑️
-                </Button>
-              </td>
+    <div className={`${styles.tableCard} ${busy ? styles.busy : ''}`} aria-busy={busy}>
+      <div className={styles.tableScroll}>
+        <table className={styles.table}>
+          <thead>
+            <tr>
+              <th className={styles.numberCell}>Закупка</th>
+              <th className={styles.supplierCell}>Поставщик</th>
+              <th className={styles.kindCell}>Тип и способ</th>
+              <th className={styles.statusCell}>Статус</th>
+              <th className={styles.dateCell}>Дата</th>
+              <th className={styles.amountCell}>Сумма</th>
+              {hasActions && (
+                <th className={styles.actionsCell}>
+                  <span className={styles.srOnly}>Действия</span>
+                </th>
+              )}
             </tr>
-          ))}
-        </tbody>
-      </table>
+          </thead>
+          <tbody>
+            {procurements.map((proc) => (
+              <tr key={proc.id}>
+                <td className={styles.numberCell}>
+                  <span className={styles.number}>{proc.number ? `№ ${proc.number}` : '—'}</span>
+                  <span className={styles.secondary} title={proc.contractNumber || undefined}>
+                    Контракт {proc.contractNumber || '—'}
+                  </span>
+                </td>
+                <td className={styles.supplierCell}>
+                  <span className={styles.supplier} title={proc.supplier || undefined}>
+                    {proc.supplier || '—'}
+                  </span>
+                </td>
+                <td className={styles.kindCell}>
+                  <span className={styles.kind}>{getTypeLabel(proc.type)}</span>
+                  <span className={styles.secondary}>{getMethodLabel(proc.method)}</span>
+                </td>
+                <td className={styles.statusCell}>
+                  {proc.status && <StatusBadge status={proc.status} size="sm" label={statusLabels[proc.status]} />}
+                </td>
+                <td className={styles.dateCell}>
+                  {proc.date ? <time dateTime={proc.date}>{formatDate(proc.date)}</time> : '—'}
+                </td>
+                <td className={styles.amountCell}>
+                  <span className={styles.amount}>{formatAmount(proc.amount)}</span>
+                  <span className={styles.currency}>сом</span>
+                </td>
+                {hasActions && (
+                  <td className={styles.actionsCell}>
+                    <div className={styles.actions}>
+                      {onEdit && (
+                        <button
+                          type="button"
+                          className={styles.iconBtn}
+                          onClick={() => onEdit(proc)}
+                          aria-label={`Редактировать закупку № ${proc.number || proc.contractNumber || ''}`}
+                          title="Редактировать"
+                        >
+                          <Pencil size={16} />
+                        </button>
+                      )}
+                      {onDelete && (
+                        <button
+                          type="button"
+                          className={`${styles.iconBtn} ${styles.danger}`}
+                          onClick={() => onDelete(proc.id)}
+                          aria-label={`Удалить закупку № ${proc.number || proc.contractNumber || ''}`}
+                          title="Удалить"
+                        >
+                          <Trash2 size={16} />
+                        </button>
+                      )}
+                    </div>
+                  </td>
+                )}
+              </tr>
+            ))}
+          </tbody>
+        </table>
+      </div>
     </div>
   );
 };

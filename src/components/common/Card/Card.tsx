@@ -32,7 +32,7 @@ export const Card: React.FC<CardProps> = ({
     >
       {image && (
         <div className={styles.image}>
-          <img src={image} alt={title || 'Card image'} />
+          <img src={image} alt={title || ''} loading="lazy" decoding="async" />
         </div>
       )}
       <div className={styles.content}>

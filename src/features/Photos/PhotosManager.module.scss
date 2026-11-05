@@ -1,165 +1,82 @@
 .manager {
-  background: white;
-  border-radius: 24px;
-  padding: 24px;
-  border: 1px solid #e2e8f0;
+  animation: fadeIn 0.2s ease;
 }
 
-.header {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  margin-bottom: 24px;
-
-  h2 {
-    font-size: 20px;
-    color: #0f172a;
-    margin: 0;
-  }
-}
-
-.photosGrid {
-  display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
-  gap: 24px;
-}
-
-.emptyState {
-  grid-column: 1 / -1;
-  text-align: center;
-  padding: 60px 20px;
-  background: #f8fafc;
-  border-radius: 16px;
-  border: 1px dashed #e2e8f0;
-
-  p {
-    font-size: 14px;
-    color: #94a3b8;
-    margin: 0 0 16px;
-  }
-}
-
-.form {
+// окно просмотра: большое фото и лента миниатюр галереи
+.viewer {
   display: flex;
   flex-direction: column;
-  gap: 20px;
+  gap: 14px;
 }
 
-.formActions {
+.viewerImage {
+  width: 100%;
+  max-height: 65vh;
+  object-fit: contain;
+  border-radius: var(--radius-md);
+  background: #0f172a;
+}
+
+.viewerStrip {
   display: flex;
-  gap: 12px;
-  justify-content: flex-end;
-  margin-top: 8px;
+  gap: 8px;
+  overflow-x: auto;
+  padding-bottom: 4px;
 }
 
-.photoCard {
-  background: white;
-  border-radius: 16px;
+.viewerThumb {
+  flex: 0 0 auto;
+  width: 88px;
+  height: 64px;
+  padding: 0;
+  border: 2px solid transparent;
+  border-radius: var(--radius-sm);
   overflow: hidden;
-  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
-  transition: all 0.3s ease;
-
-  &:hover {
-    transform: translateY(-4px);
-    box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.15);
-  }
-}
-
-.photoImage {
-  position: relative;
-  height: 240px;
-  background: #f1f5f9;
-  overflow: hidden;
+  background: #0f172a;
+  cursor: pointer;
+  opacity: 0.7;
+  transition: opacity 0.15s ease, border-color 0.15s ease;
 
   img {
     width: 100%;
     height: 100%;
     object-fit: cover;
-    transition: transform 0.3s ease;
   }
 
-  &:hover img {
-    transform: scale(1.05);
-  }
-}
-
-.photoInfo {
-  padding: 16px;
-  text-align: center;
-
-  .photoDate {
-    font-size: 13px;
-    color: #64748b;
-    display: inline-block;
-    padding: 4px 12px;
-    background: #f1f5f9;
-    border-radius: 20px;
+  &:hover {
+    opacity: 1;
   }
 }
 
-.photoActions {
-  padding: 12px 16px;
-  border-top: 1px solid #e2e8f0;
+.viewerThumbActive {
+  border-color: var(--color-brand);
+  opacity: 1;
+}
+
+// форма добавления/редактирования
+.form {
   display: flex;
-  gap: 8px;
-  justify-content: center;
-  background: #f8fafc;
+  flex-direction: column;
 }
 
-.galleryCount {
-  position: absolute;
-  bottom: 8px;
-  right: 8px;
-  background: rgba(0, 0, 0, 0.7);
-  backdrop-filter: blur(4px);
-  color: white;
-  padding: 4px 8px;
-  border-radius: 20px;
-  font-size: 12px;
-  font-weight: 500;
+.formRow {
+  max-width: 240px;
+}
+
+.formActions {
   display: flex;
-  align-items: center;
-  gap: 4px;
-
-  &::before {
-    content: '📷';
-    font-size: 10px;
-  }
+  justify-content: flex-end;
+  gap: 12px;
+  padding-top: 16px;
+  margin-top: 4px;
+  border-top: 1px solid var(--color-border);
 }
 
-@media (max-width: 768px) {
-  .manager {
-    padding: 16px;
+@keyframes fadeIn {
+  from {
+    opacity: 0;
   }
-
-  .photosGrid {
-    gap: 16px;
-    grid-template-columns: repeat(auto-fill, minmax(260px, 1fr));
-  }
-
-  .header {
-    flex-direction: column;
-    gap: 12px;
-    align-items: stretch;
-
-    h2 {
-      text-align: center;
-    }
-  }
-
-  .photoImage {
-    height: 200px;
-  }
-
-  .photoInfo {
-    padding: 12px;
-
-    .photoDate {
-      font-size: 11px;
-    }
-  }
-
-  .photoActions {
-    padding: 8px 12px;
+  to {
+    opacity: 1;
   }
 }

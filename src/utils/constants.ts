@@ -62,13 +62,12 @@ export const APP_CONSTANTS = {
   },
   
   API_ENDPOINTS: {
-    LOGIN: '/admin-login/',
+    LOGIN: '/token/',
     VIDEOS: '/videos/',
     PHOTOS: '/photos/',
     NEWS: '/news/',
     PROCUREMENTS: '/procurements/',
     VACANCIES: '/vacancies/',
-    IMPORT: '/import-data/',
     HEALTH: '/health/',
   },
 } as const;

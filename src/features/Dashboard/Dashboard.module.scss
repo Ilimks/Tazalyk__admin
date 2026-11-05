@@ -1,73 +1,243 @@
 .dashboard {
+  display: flex;
+  flex-direction: column;
+  gap: 28px;
+  animation: fadeIn 0.2s ease;
+}
+
+.welcome {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  flex-wrap: wrap;
+  gap: 20px;
+  padding: 28px 32px;
+  border-radius: var(--radius-xl);
+  color: white;
+  background:
+    radial-gradient(circle at 90% 10%, rgba(34, 197, 94, 0.3), transparent 45%),
+    linear-gradient(135deg, var(--color-brand) 0%, var(--color-brand-dark) 100%);
+  box-shadow: var(--shadow-md);
+
   h1 {
-    font-size: 28px;
-    color: #0f172a;
-    margin: 0 0 8px;
+    font-size: 26px;
+    font-weight: 800;
+    letter-spacing: -0.01em;
   }
 
   p {
-    color: #64748b;
-    margin: 0 0 32px;
+    margin-top: 6px;
+    font-size: 14px;
+    color: rgba(255, 255, 255, 0.75);
   }
+}
+
+.siteButton {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  height: 42px;
+  padding: 0 18px;
+  border-radius: var(--radius-md);
+  border: 1px solid rgba(255, 255, 255, 0.25);
+  background: rgba(255, 255, 255, 0.1);
+  color: white;
+  font-size: 14px;
+  font-weight: 600;
+  text-decoration: none;
+  transition: background 0.15s ease;
+
+  &:hover {
+    background: rgba(255, 255, 255, 0.18);
+  }
+}
+
+.sectionTitle {
+  margin-bottom: 14px;
+  font-size: 16px;
+  font-weight: 700;
+  color: var(--color-text);
 }
 
 .statsGrid {
   display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
-  gap: 20px;
-  margin-bottom: 32px;
+  grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+  gap: 16px;
 }
 
 .statCard {
-  background: white;
-  border-radius: 20px;
-  padding: 20px;
+  --tone: var(--color-brand);
+  --tone-soft: var(--color-brand-soft);
+
   display: flex;
-  align-items: center;
-  gap: 16px;
-  border: 1px solid #e2e8f0;
-  transition: all 0.3s ease;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 4px;
+  padding: 20px;
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-lg);
+  background: var(--color-surface);
+  text-align: left;
+  cursor: pointer;
+  transition: transform 0.15s ease, box-shadow 0.15s ease, border-color 0.15s ease;
 
   &:hover {
-    transform: translateY(-4px);
-    box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.1);
+    transform: translateY(-2px);
+    border-color: var(--color-border-strong);
+    box-shadow: var(--shadow-md);
+
+    .statArrow {
+      color: var(--tone);
+      transform: translateX(3px);
+    }
   }
+
+  &:focus-visible {
+    outline: none;
+    box-shadow: var(--focus-ring);
+  }
+
+  &.green {
+    --tone: #16a34a;
+    --tone-soft: #dcfce7;
+  }
+  &.blue {
+    --tone: #2563eb;
+    --tone-soft: #dbeafe;
+  }
+  &.rose {
+    --tone: #e11d48;
+    --tone-soft: #ffe4e6;
+  }
+  &.amber {
+    --tone: #d97706;
+    --tone-soft: #fef3c7;
+  }
+  &.violet {
+    --tone: #7c3aed;
+    --tone-soft: #ede9fe;
+  }
+  &.cyan {
+    --tone: #0891b2;
+    --tone-soft: #cffafe;
+  }
+  &.teal {
+    --tone: #0d9488;
+    --tone-soft: #ccfbf1;
+  }
+  &.indigo {
+    --tone: #4f46e5;
+    --tone-soft: #e0e7ff;
+  }
+  &.orange {
+    --tone: #ea580c;
+    --tone-soft: #ffedd5;
+  }
+}
+
+.statTop {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  width: 100%;
+  margin-bottom: 12px;
 }
 
 .statIcon {
-  width: 56px;
-  height: 56px;
-  border-radius: 16px;
+  width: 44px;
+  height: 44px;
+  border-radius: var(--radius-md);
+  background: var(--tone-soft);
+  color: var(--tone);
   display: flex;
   align-items: center;
   justify-content: center;
-  font-size: 28px;
 }
 
-.statInfo {
-  flex: 1;
+.statArrow {
+  color: var(--color-text-muted);
+  transition: transform 0.15s ease, color 0.15s ease;
+}
 
-  h3 {
-    font-size: 28px;
-    font-weight: 700;
-    color: #0f172a;
-    margin: 0;
-  }
+.statValueRow {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 4px 10px;
+}
 
-  p {
-    font-size: 14px;
-    color: #64748b;
-    margin: 4px 0 0;
-  }
+.statValue {
+  font-size: 30px;
+  font-weight: 800;
+  line-height: 1.1;
+  color: var(--color-text);
+}
+
+// например, «3 новых» у заказов
+.statBadge {
+  padding: 3px 10px;
+  border-radius: 999px;
+  background: var(--tone);
+  color: white;
+  font-size: 12px;
+  font-weight: 700;
+  line-height: 1.4;
+  white-space: nowrap;
+}
+
+.statLabel {
+  font-size: 15px;
+  font-weight: 600;
+  color: var(--color-text);
+}
+
+.statDescription {
+  font-size: 13px;
+  color: var(--color-text-secondary);
 }
 
 .skeleton {
-  width: 60px;
-  height: 28px;
-  background: linear-gradient(90deg, #f1f5f9 0%, #e2e8f0 50%, #f1f5f9 100%);
+  width: 56px;
+  height: 33px;
+  border-radius: var(--radius-sm);
+  background: linear-gradient(90deg, #eef1f6 0%, #e2e7f0 50%, #eef1f6 100%);
   background-size: 200% 100%;
-  border-radius: 8px;
-  animation: shimmer 1.5s infinite;
+  animation: shimmer 1.4s infinite;
+}
+
+.tips {
+  padding: 22px 24px;
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-lg);
+  background: var(--color-surface);
+
+  ul {
+    list-style: none;
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
+    gap: 16px;
+  }
+
+  li {
+    display: flex;
+    align-items: flex-start;
+    gap: 12px;
+    font-size: 13px;
+    line-height: 1.55;
+    color: var(--color-text-secondary);
+  }
+}
+
+.tipIcon {
+  width: 34px;
+  height: 34px;
+  flex-shrink: 0;
+  border-radius: var(--radius-sm);
+  background: var(--color-accent-soft);
+  color: #15803d;
+  display: flex;
+  align-items: center;
+  justify-content: center;
 }
 
 @keyframes shimmer {
@@ -79,29 +249,53 @@
   }
 }
 
+@keyframes fadeIn {
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
+  }
+}
+
 @media (max-width: 768px) {
   .dashboard {
+    gap: 22px;
+  }
+
+  .welcome {
+    padding: 22px 20px;
+
     h1 {
-      font-size: 24px;
+      font-size: 21px;
     }
   }
 
+  .siteButton {
+    width: 100%;
+    justify-content: center;
+  }
+
   .statsGrid {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
     gap: 12px;
-    grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
   }
 
   .statCard {
     padding: 16px;
   }
 
-  .statIcon {
-    width: 48px;
-    height: 48px;
-    font-size: 24px;
+  .statDescription {
+    display: none;
   }
 
-  .statInfo h3 {
-    font-size: 24px;
+  .statValue {
+    font-size: 26px;
+  }
+}
+
+@media (max-width: 380px) {
+  .statsGrid {
+    grid-template-columns: 1fr;
   }
 }

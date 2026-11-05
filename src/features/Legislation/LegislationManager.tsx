@@ -1,29 +1,32 @@
 import React, { useState, useEffect } from 'react';
+import { Plus, Scale } from 'lucide-react';
 import styles from './LegislationManager.module.scss';
-import { useLegislationStore } from '@/store';
+import { useAuthStore, useLegislationStore } from '@/store';
 import { useNotificationStore } from '@/store/notification.store';
 import { Button } from '@/components/common/Button';
 import { Modal } from '@/components/common/Modal';
 import { Pagination } from '@/components/common/Pagination';
+import { PageHeader } from '@/components/common/PageHeader';
+import { EmptyState } from '@/components/common/EmptyState';
 import { ConfirmModal } from '@/components/common/ConfirmModal';
+import { Loader } from '@/components/common/Loader';
 import { LegislationForm } from './components/LegislationForm';
 import { LegislationTable } from './components/LegislationTable';
-import { Loader } from '@/components/common/Loader';
 import type { Legislation } from '@/types';
 
 export const LegislationManager: React.FC = () => {
-    const { 
+    const {
         items: documents,
-        loading, 
+        loading,
         totalCount,
         currentPage,
         pageSize,
-        fetchPage, 
+        fetchPage,
         deleteItem,
         goToPage,
-        changePageSize
     } = useLegislationStore();
-    
+    const { canCreate, canEdit, canDelete } = useAuthStore();
+
     const { showNotification } = useNotificationStore();
     const [isModalOpen, setIsModalOpen] = useState(false);
     const [editingDocument, setEditingDocument] = useState<Legislation | null>(null);
@@ -31,9 +34,13 @@ export const LegislationManager: React.FC = () => {
     const [itemToDelete, setItemToDelete] = useState<Legislation | null>(null);
     const [isDeleting, setIsDeleting] = useState(false);
 
+    const allowCreate = canCreate('legislation');
+    const allowEdit = canEdit('legislation');
+    const allowDelete = canDelete('legislation');
+
     useEffect(() => {
         fetchPage(1, 10);
-    }, []);
+    }, [fetchPage]);
 
     const totalPages = Math.ceil(totalCount / pageSize);
 
@@ -65,6 +72,11 @@ export const LegislationManager: React.FC = () => {
         setItemToDelete(null);
     };
 
+    const openCreate = () => {
+        setEditingDocument(null);
+        setIsModalOpen(true);
+    };
+
     const handleEdit = (doc: Legislation) => {
         setEditingDocument(doc);
         setIsModalOpen(true);
@@ -88,27 +100,59 @@ export const LegislationManager: React.FC = () => {
         goToPage(page);
     };
 
-    if (loading && documents.length === 0) {
-        return <Loader />;
-    }
+    const addButton = allowCreate && (
+        <Button icon={<Plus />} onClick={openCreate}>
+            Добавить документ
+        </Button>
+    );
+
+    const renderContent = () => {
+        // первая загрузка: шапка остаётся на месте, спиннер — вместо таблицы
+        if (loading && documents.length === 0) {
+            return (
+                <div className={styles.loaderCard}>
+                    <Loader />
+                </div>
+            );
+        }
+
+        if (documents.length === 0) {
+            return (
+                <EmptyState
+                    icon={Scale}
+                    title="Документов пока нет"
+                    description="Добавьте первый нормативный акт — он появится в разделе «Законодательство КР» на сайте."
+                    action={addButton}
+                />
+            );
+        }
+
+        return (
+            <LegislationTable
+                documents={documents}
+                busy={loading}
+                onEdit={allowEdit ? handleEdit : undefined}
+                onDelete={allowDelete ? handleDeleteClick : undefined}
+            />
+        );
+    };
 
     return (
         <div className={styles.manager}>
-            <div className={styles.header}>
-                <h2>Законодательство КР</h2>
-                <Button onClick={() => setIsModalOpen(true)}>+ Добавить документ</Button>
-            </div>
-
-            <LegislationTable
-                documents={documents}
-                onEdit={handleEdit}
-                onDelete={handleDeleteClick}
+            <PageHeader
+                icon={Scale}
+                title="Законодательство КР"
+                description={`Законы и нормативные акты Кыргызской Республики для публикации на сайте${totalCount > 0 ? ` · всего ${totalCount}` : ''}`}
+                actions={addButton}
             />
 
-            {totalCount > 0 && (
+            {renderContent()}
+
+            {totalPages > 1 && (
                 <Pagination
                     currentPage={currentPage}
                     totalPages={totalPages}
+                    totalItems={totalCount}
                     onPageChange={handlePageChange}
                 />
             )}
@@ -128,8 +172,8 @@ export const LegislationManager: React.FC = () => {
 
             <ConfirmModal
                 isOpen={deleteModalOpen}
-                title="Удаление документа"
-                message={`Вы уверены, что хотите удалить "${itemToDelete?.title}"?`}
+                title="Удалить документ?"
+                message={`Документ «${itemToDelete?.title ?? ''}» исчезнет с сайта. Это действие нельзя отменить.`}
                 confirmText="Удалить"
                 cancelText="Отмена"
                 onConfirm={handleConfirmDelete}

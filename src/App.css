@@ -1,3 +1,50 @@
+/* Дизайн-токены админки: цвета из фирменного стиля сайта МП «Тазалык» */
+:root {
+  --color-brand: #102382;
+  --color-brand-hover: #0b1a66;
+  --color-brand-soft: #e8ebf8;
+  --color-brand-dark: #0a1450;
+
+  --color-accent: #22c55e;
+  --color-accent-hover: #16a34a;
+  --color-accent-soft: #e9f9ef;
+
+  --color-danger: #ef4444;
+  --color-danger-hover: #dc2626;
+  --color-danger-soft: #fdecec;
+  --color-warning: #f59e0b;
+  --color-warning-soft: #fef4e2;
+  --color-info: #3b82f6;
+  --color-info-soft: #e8f1fe;
+
+  --color-bg: #f4f6fb;
+  --color-surface: #ffffff;
+  --color-surface-muted: #f8fafc;
+  --color-border: #e4e8f0;
+  --color-border-strong: #cbd2df;
+
+  --color-text: #0f172a;
+  --color-text-secondary: #475569;
+  --color-text-muted: #94a3b8;
+
+  --radius-sm: 8px;
+  --radius-md: 12px;
+  --radius-lg: 16px;
+  --radius-xl: 20px;
+
+  --shadow-sm: 0 1px 2px rgba(15, 23, 42, 0.06);
+  --shadow-md: 0 4px 16px rgba(15, 23, 42, 0.08);
+  --shadow-lg: 0 20px 48px rgba(15, 23, 42, 0.16);
+
+  --focus-ring: 0 0 0 3px rgba(16, 35, 130, 0.18);
+
+  --sidebar-width: 264px;
+  --sidebar-width-collapsed: 76px;
+  --header-height: 68px;
+
+  --font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
+}
+
 * {
   margin: 0;
   padding: 0;
@@ -5,12 +52,26 @@
 }
 
 body {
-  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Roboto', 'Oxygen',
-    'Ubuntu', 'Cantarell', 'Fira Sans', 'Droid Sans', 'Helvetica Neue',
-    sans-serif;
+  font-family: var(--font-family);
+  font-size: 14px;
+  line-height: 1.5;
+  color: var(--color-text);
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
-  background: #f5f5f5;
+  background: var(--color-bg);
+}
+
+button,
+input,
+select,
+textarea {
+  font-family: inherit;
+}
+
+img,
+video {
+  display: block;
+  max-width: 100%;
 }
 
 .app {
@@ -23,26 +84,25 @@ body {
 }
 
 ::-webkit-scrollbar-track {
-  background: #f1f5f9;
-  border-radius: 4px;
+  background: transparent;
 }
 
 ::-webkit-scrollbar-thumb {
-  background: #cbd5e1;
+  background: var(--color-border-strong);
   border-radius: 4px;
 }
 
 ::-webkit-scrollbar-thumb:hover {
-  background: #94a3b8;
+  background: var(--color-text-muted);
 }
 
 ::selection {
-  background: #22c55e;
+  background: var(--color-brand);
   color: white;
 }
 
 :focus-visible {
-  outline: 2px solid #22c55e;
+  outline: 2px solid var(--color-brand);
   outline-offset: 2px;
 }
 
@@ -57,7 +117,7 @@ body {
 
 @keyframes slideInUp {
   from {
-    transform: translateY(20px);
+    transform: translateY(12px);
     opacity: 0;
   }
   to {
@@ -67,9 +127,18 @@ body {
 }
 
 .fade-in {
-  animation: fadeIn 0.3s ease;
+  animation: fadeIn 0.25s ease;
 }
 
 .slide-in-up {
-  animation: slideInUp 0.3s ease;
+  animation: slideInUp 0.25s ease;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    transition-duration: 0.01ms !important;
+  }
 }

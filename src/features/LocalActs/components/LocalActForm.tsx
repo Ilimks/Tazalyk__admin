@@ -1,4 +1,5 @@
 import React, { useState, useRef } from 'react';
+import { CloudUpload, FileText, Paperclip, X } from 'lucide-react';
 import styles from '../LocalActsManager.module.scss';
 import { Button } from '@/components/common/Button';
 import { Input } from '@/components/common/Form/Input';
@@ -10,6 +11,14 @@ interface LocalActFormProps {
     onSuccess: () => void;
     onCancel: () => void;
 }
+
+const formatFileSize = (bytes: number) => {
+    if (!bytes) return '0 Б';
+    const k = 1024;
+    const sizes = ['Б', 'КБ', 'МБ', 'ГБ'];
+    const i = Math.min(Math.floor(Math.log(bytes) / Math.log(k)), sizes.length - 1);
+    return parseFloat((bytes / Math.pow(k, i)).toFixed(2)) + ' ' + sizes[i];
+};
 
 export const LocalActForm: React.FC<LocalActFormProps> = ({
     initialData,
@@ -56,6 +65,14 @@ export const LocalActForm: React.FC<LocalActFormProps> = ({
         if (file) processFile(file);
     };
 
+    // зона загрузки доступна и с клавиатуры (Enter / пробел)
+    const handleDropzoneKeyDown = (e: React.KeyboardEvent) => {
+        if (e.key === 'Enter' || e.key === ' ') {
+            e.preventDefault();
+            fileInputRef.current?.click();
+        }
+    };
+
     const handleSubmit = async (e: React.FormEvent) => {
         e.preventDefault();
         if (!formData.title || !formData.file_url) {
@@ -75,29 +92,102 @@ export const LocalActForm: React.FC<LocalActFormProps> = ({
 
     return (
         <form onSubmit={handleSubmit} className={styles.form}>
-            <Input label="Название документа" value={formData.title} onChange={(e) => setFormData({ ...formData, title: e.target.value })} required placeholder="Введите название документа" />
-            
-            <div className={styles.fileUploadSection}>
-                <label className={styles.fileUploadLabel}>Файл документа {!initialData && <span className={styles.required}>*</span>}</label>
+            {/* Сведения о документе */}
+            <section className={styles.formSection}>
+                <div className={styles.formSectionHead}>
+                    <span className={styles.sectionIcon}>
+                        <FileText size={16} />
+                    </span>
+                    <div className={styles.formSectionText}>
+                        <h4 className={styles.formSectionTitle}>Сведения о документе</h4>
+                        <p className={styles.formSectionHint}>Название и дата публикации на сайте</p>
+                    </div>
+                </div>
+
+                <div className={styles.formGrid}>
+                    <Input
+                        className={styles.formGridFull}
+                        label="Название документа"
+                        value={formData.title}
+                        onChange={(e) => setFormData({ ...formData, title: e.target.value })}
+                        required
+                        placeholder="Введите название документа"
+                    />
+                    <Input
+                        label="Дата публикации"
+                        type="date"
+                        value={formData.date}
+                        onChange={(e) => setFormData({ ...formData, date: e.target.value })}
+                        required
+                    />
+                </div>
+            </section>
+
+            {/* Файл документа */}
+            <section className={`${styles.formSection} ${styles.formSectionPadded}`}>
+                <div className={styles.formSectionHead}>
+                    <span className={styles.sectionIcon}>
+                        <Paperclip size={16} />
+                    </span>
+                    <div className={styles.formSectionText}>
+                        <h4 className={styles.formSectionTitle}>
+                            Файл документа {!initialData && <span className={styles.required}>*</span>}
+                        </h4>
+                        <p className={styles.formSectionHint}>PDF, DOC, DOCX, XLS, XLSX или TXT</p>
+                    </div>
+                </div>
+
                 {formData.file_url ? (
                     <div className={styles.filePreview}>
-                        <div className={styles.filePreviewContent}>
-                            <div className={styles.fileIcon}>📄</div>
-                            <div className={styles.fileInfo}><div className={styles.fileName}>{formData.file_name}</div><div className={styles.fileSize}>{(formData.file_size / 1024).toFixed(2)} KB</div></div>
-                            <button type="button" className={styles.removeFileBtn} onClick={() => setFormData({ ...formData, file_url: '', file_name: '', file_size: 0 })}>×</button>
+                        <span className={styles.fileIcon}>
+                            <FileText size={20} />
+                        </span>
+                        <div className={styles.fileInfo}>
+                            <div className={styles.fileName} title={formData.file_name}>{formData.file_name}</div>
+                            <div className={styles.fileSize}>{formatFileSize(formData.file_size)}</div>
                         </div>
+                        <button
+                            type="button"
+                            className={`${styles.iconBtn} ${styles.danger}`}
+                            onClick={() => setFormData({ ...formData, file_url: '', file_name: '', file_size: 0 })}
+                            aria-label="Убрать файл"
+                            title="Убрать файл"
+                        >
+                            <X size={16} />
+                        </button>
                     </div>
                 ) : (
-                    <div className={`${styles.fileUploadArea} ${isDragging ? styles.dragging : ''}`} onDragOver={(e) => { e.preventDefault(); setIsDragging(true); }} onDragLeave={() => setIsDragging(false)} onDrop={handleDrop} onClick={() => fileInputRef.current?.click()}>
-                        <input ref={fileInputRef} type="file" accept=".pdf,.doc,.docx,.xls,.xlsx,.txt" onChange={handleFileChange} className={styles.hiddenFileInput} />
-                        <div className={styles.fileUploadContent}><span className={styles.fileUploadTitle}>Нажмите или перетащите файл</span><span className={styles.fileUploadHint}>PDF, DOC, DOCX, XLS, XLSX, TXT до 10MB</span></div>
+                    <div
+                        className={`${styles.dropzone} ${isDragging ? styles.dragging : ''}`}
+                        role="button"
+                        tabIndex={0}
+                        aria-label="Выбрать файл документа"
+                        onKeyDown={handleDropzoneKeyDown}
+                        onDragOver={(e) => { e.preventDefault(); setIsDragging(true); }}
+                        onDragLeave={() => setIsDragging(false)}
+                        onDrop={handleDrop}
+                        onClick={() => fileInputRef.current?.click()}
+                    >
+                        <input
+                            ref={fileInputRef}
+                            type="file"
+                            accept=".pdf,.doc,.docx,.xls,.xlsx,.txt"
+                            onChange={handleFileChange}
+                            className={styles.hiddenFileInput}
+                        />
+                        <span className={styles.dropzoneIcon}>
+                            <CloudUpload size={22} />
+                        </span>
+                        <span className={styles.dropzoneTitle}>Нажмите или перетащите файл</span>
+                        <span className={styles.dropzoneHint}>PDF, DOC, DOCX, XLS, XLSX, TXT до 10 МБ</span>
                     </div>
                 )}
+            </section>
+
+            <div className={styles.formActions}>
+                <Button type="button" variant="outline" onClick={onCancel}>Отмена</Button>
+                <Button type="submit" loading={loading}>{initialData ? 'Сохранить' : 'Добавить'}</Button>
             </div>
-
-            <Input label="Дата публикации" type="date" value={formData.date} onChange={(e) => setFormData({ ...formData, date: e.target.value })} required />
-
-            <div className={styles.formActions}><Button type="button" variant="secondary" onClick={onCancel}>Отмена</Button><Button type="submit" loading={loading}>{initialData ? 'Сохранить' : 'Добавить'}</Button></div>
         </form>
     );
 };

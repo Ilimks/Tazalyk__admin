@@ -1,4 +1,5 @@
 import React, { useState, useRef } from 'react';
+import { CloudUpload, FileText, Paperclip, X } from 'lucide-react';
 import styles from '../LegislationManager.module.scss';
 import { Button } from '@/components/common/Button';
 import { Input } from '@/components/common/Form/Input';
@@ -67,14 +68,22 @@ export const LegislationForm: React.FC<LegislationFormProps> = ({
         setIsDragging(false);
     };
 
+    // зона загрузки доступна и с клавиатуры (Enter / пробел)
+    const handleDropzoneKeyDown = (e: React.KeyboardEvent) => {
+        if (e.key === 'Enter' || e.key === ' ') {
+            e.preventDefault();
+            fileInputRef.current?.click();
+        }
+    };
+
     const handleSubmit = async (e: React.FormEvent) => {
         e.preventDefault();
-        
+
         if (!formData.title) {
             alert('Введите название документа');
             return;
         }
-        
+
         if (!formData.file_url && !initialData) {
             alert('Выберите файл');
             return;
@@ -96,48 +105,87 @@ export const LegislationForm: React.FC<LegislationFormProps> = ({
     };
 
     const formatFileSize = (bytes: number) => {
-        if (bytes === 0) return '0 Bytes';
+        if (!bytes) return '0 Б';
         const k = 1024;
-        const sizes = ['Bytes', 'KB', 'MB', 'GB'];
-        const i = Math.floor(Math.log(bytes) / Math.log(k));
+        const sizes = ['Б', 'КБ', 'МБ', 'ГБ'];
+        const i = Math.min(Math.floor(Math.log(bytes) / Math.log(k)), sizes.length - 1);
         return parseFloat((bytes / Math.pow(k, i)).toFixed(2)) + ' ' + sizes[i];
     };
 
     return (
         <form onSubmit={handleSubmit} className={styles.form}>
-            <Input
-                label="Название документа"
-                value={formData.title}
-                onChange={(e) => setFormData({ ...formData, title: e.target.value })}
-                required
-                placeholder="Введите название документа"
-            />
+            {/* Сведения о документе */}
+            <section className={styles.formSection}>
+                <div className={styles.formSectionHead}>
+                    <span className={styles.sectionIcon}>
+                        <FileText size={16} />
+                    </span>
+                    <div className={styles.formSectionText}>
+                        <h4 className={styles.formSectionTitle}>Сведения о документе</h4>
+                        <p className={styles.formSectionHint}>Название нормативного акта и дата публикации на сайте</p>
+                    </div>
+                </div>
 
-            <div className={styles.fileUploadSection}>
-                <label className={styles.fileUploadLabel}>
-                    Файл документа {!initialData && <span className={styles.required}>*</span>}
-                </label>
-                
+                <div className={styles.formGrid}>
+                    <Input
+                        className={styles.formGridFull}
+                        label="Название документа"
+                        value={formData.title}
+                        onChange={(e) => setFormData({ ...formData, title: e.target.value })}
+                        required
+                        placeholder="Введите название документа"
+                    />
+
+                    <Input
+                        label="Дата публикации"
+                        type="date"
+                        value={formData.date}
+                        onChange={(e) => setFormData({ ...formData, date: e.target.value })}
+                        required
+                    />
+                </div>
+            </section>
+
+            {/* Файл документа */}
+            <section className={`${styles.formSection} ${styles.formSectionPadded}`}>
+                <div className={styles.formSectionHead}>
+                    <span className={styles.sectionIcon}>
+                        <Paperclip size={16} />
+                    </span>
+                    <div className={styles.formSectionText}>
+                        <h4 className={styles.formSectionTitle}>
+                            Файл документа {!initialData && <span className={styles.required}>*</span>}
+                        </h4>
+                        <p className={styles.formSectionHint}>PDF, DOC, DOCX, XLS, XLSX или TXT</p>
+                    </div>
+                </div>
+
                 {formData.file_url ? (
                     <div className={styles.filePreview}>
-                        <div className={styles.filePreviewContent}>
-                            <div className={styles.fileIcon}>📄</div>
-                            <div className={styles.fileInfo}>
-                                <div className={styles.fileName}>{formData.file_name}</div>
-                                <div className={styles.fileSize}>{formatFileSize(formData.file_size)}</div>
-                            </div>
-                            <button
-                                type="button"
-                                className={styles.removeFileBtn}
-                                onClick={() => setFormData({ ...formData, file_url: '', file_name: '', file_size: 0 })}
-                            >
-                                ×
-                            </button>
+                        <span className={styles.fileIcon}>
+                            <FileText size={20} />
+                        </span>
+                        <div className={styles.fileInfo}>
+                            <div className={styles.fileName} title={formData.file_name}>{formData.file_name}</div>
+                            <div className={styles.fileSize}>{formatFileSize(formData.file_size)}</div>
                         </div>
+                        <button
+                            type="button"
+                            className={`${styles.iconBtn} ${styles.danger}`}
+                            onClick={() => setFormData({ ...formData, file_url: '', file_name: '', file_size: 0 })}
+                            aria-label="Убрать файл"
+                            title="Убрать файл"
+                        >
+                            <X size={16} />
+                        </button>
                     </div>
                 ) : (
                     <div
-                        className={`${styles.fileUploadArea} ${isDragging ? styles.dragging : ''}`}
+                        className={`${styles.dropzone} ${isDragging ? styles.dragging : ''}`}
+                        role="button"
+                        tabIndex={0}
+                        aria-label="Выбрать файл документа"
+                        onKeyDown={handleDropzoneKeyDown}
                         onDragOver={handleDragOver}
                         onDragLeave={handleDragLeave}
                         onDrop={handleDrop}
@@ -150,30 +198,17 @@ export const LegislationForm: React.FC<LegislationFormProps> = ({
                             onChange={handleFileChange}
                             className={styles.hiddenFileInput}
                         />
-                        <div className={styles.fileUploadContent}>
-                            <svg width="48" height="48" viewBox="0 0 24 24" fill="none">
-                                <path d="M13 3H6a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V9z" stroke="currentColor" strokeWidth="2"/>
-                                <polyline points="13 3 13 9 19 9" stroke="currentColor" strokeWidth="2"/>
-                                <line x1="8" y1="13" x2="16" y2="13" stroke="currentColor" strokeWidth="2"/>
-                                <line x1="8" y1="17" x2="16" y2="17" stroke="currentColor" strokeWidth="2"/>
-                            </svg>
-                            <span className={styles.fileUploadTitle}>Нажмите или перетащите файл</span>
-                            <span className={styles.fileUploadHint}>PDF, DOC, DOCX, XLS, XLSX, TXT до 10MB</span>
-                        </div>
+                        <span className={styles.dropzoneIcon}>
+                            <CloudUpload size={22} />
+                        </span>
+                        <span className={styles.dropzoneTitle}>Нажмите или перетащите файл</span>
+                        <span className={styles.dropzoneHint}>PDF, DOC, DOCX, XLS, XLSX, TXT до 10 МБ</span>
                     </div>
                 )}
-            </div>
-
-            <Input
-                label="Дата публикации"
-                type="date"
-                value={formData.date}
-                onChange={(e) => setFormData({ ...formData, date: e.target.value })}
-                required
-            />
+            </section>
 
             <div className={styles.formActions}>
-                <Button type="button" variant="secondary" onClick={onCancel}>
+                <Button type="button" variant="outline" onClick={onCancel}>
                     Отмена
                 </Button>
                 <Button type="submit" loading={loading}>

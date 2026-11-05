@@ -1,29 +1,32 @@
 import React, { useState, useEffect } from 'react';
+import { Plus, ScrollText } from 'lucide-react';
 import styles from './LocalActsManager.module.scss';
-import { useLocalActsStore } from '@/store';
+import { useAuthStore, useLocalActsStore } from '@/store';
 import { useNotificationStore } from '@/store/notification.store';
 import { Button } from '@/components/common/Button';
 import { Modal } from '@/components/common/Modal';
 import { Pagination } from '@/components/common/Pagination';
+import { PageHeader } from '@/components/common/PageHeader';
+import { EmptyState } from '@/components/common/EmptyState';
 import { ConfirmModal } from '@/components/common/ConfirmModal';
+import { Loader } from '@/components/common/Loader';
 import { LocalActForm } from './components/LocalActForm';
 import { LocalActTable } from './components/LocalActTable';
-import { Loader } from '@/components/common/Loader';
 import type { LocalAct } from '@/types';
 
 export const LocalActsManager: React.FC = () => {
-    const { 
+    const {
         items: documents,
-        loading, 
+        loading,
         totalCount,
         currentPage,
         pageSize,
-        fetchPage, 
+        fetchPage,
         deleteItem,
         goToPage,
-        changePageSize
     } = useLocalActsStore();
-    
+    const { canCreate, canEdit, canDelete } = useAuthStore();
+
     const { showNotification } = useNotificationStore();
     const [isModalOpen, setIsModalOpen] = useState(false);
     const [editingDocument, setEditingDocument] = useState<LocalAct | null>(null);
@@ -31,9 +34,13 @@ export const LocalActsManager: React.FC = () => {
     const [itemToDelete, setItemToDelete] = useState<LocalAct | null>(null);
     const [isDeleting, setIsDeleting] = useState(false);
 
+    const allowCreate = canCreate('local_acts');
+    const allowEdit = canEdit('local_acts');
+    const allowDelete = canDelete('local_acts');
+
     useEffect(() => {
         fetchPage(1, 10);
-    }, []);
+    }, [fetchPage]);
 
     const totalPages = Math.ceil(totalCount / pageSize);
 
@@ -65,6 +72,11 @@ export const LocalActsManager: React.FC = () => {
         setItemToDelete(null);
     };
 
+    const openCreate = () => {
+        setEditingDocument(null);
+        setIsModalOpen(true);
+    };
+
     const handleEdit = (doc: LocalAct) => {
         setEditingDocument(doc);
         setIsModalOpen(true);
@@ -88,27 +100,59 @@ export const LocalActsManager: React.FC = () => {
         goToPage(page);
     };
 
-    if (loading && documents.length === 0) {
-        return <Loader />;
-    }
+    const addButton = allowCreate && (
+        <Button icon={<Plus />} onClick={openCreate}>
+            Добавить документ
+        </Button>
+    );
+
+    const renderContent = () => {
+        // первая загрузка: шапка остаётся на месте, спиннер — вместо таблицы
+        if (loading && documents.length === 0) {
+            return (
+                <div className={styles.loaderCard}>
+                    <Loader />
+                </div>
+            );
+        }
+
+        if (documents.length === 0) {
+            return (
+                <EmptyState
+                    icon={ScrollText}
+                    title="Локальных актов пока нет"
+                    description="Добавьте первый документ — он появится в разделе «Локальные акты» на сайте."
+                    action={addButton}
+                />
+            );
+        }
+
+        return (
+            <LocalActTable
+                documents={documents}
+                busy={loading}
+                onEdit={allowEdit ? handleEdit : undefined}
+                onDelete={allowDelete ? handleDeleteClick : undefined}
+            />
+        );
+    };
 
     return (
         <div className={styles.manager}>
-            <div className={styles.header}>
-                <h2>Локальные акты</h2>
-                <Button onClick={() => setIsModalOpen(true)}>+ Добавить документ</Button>
-            </div>
-
-            <LocalActTable
-                documents={documents}
-                onEdit={handleEdit}
-                onDelete={handleDeleteClick}
+            <PageHeader
+                icon={ScrollText}
+                title="Локальные акты"
+                description={`Приказы, положения и другие внутренние документы предприятия${totalCount > 0 ? ` · всего ${totalCount}` : ''}`}
+                actions={addButton}
             />
 
-            {totalCount > 0 && (
+            {renderContent()}
+
+            {totalPages > 1 && (
                 <Pagination
                     currentPage={currentPage}
                     totalPages={totalPages}
+                    totalItems={totalCount}
                     onPageChange={handlePageChange}
                 />
             )}
@@ -128,8 +172,8 @@ export const LocalActsManager: React.FC = () => {
 
             <ConfirmModal
                 isOpen={deleteModalOpen}
-                title="Удаление документа"
-                message={`Вы уверены, что хотите удалить "${itemToDelete?.title}"?`}
+                title="Удалить документ?"
+                message={`Документ «${itemToDelete?.title ?? ''}» исчезнет с сайта. Это действие нельзя отменить.`}
                 confirmText="Удалить"
                 cancelText="Отмена"
                 onConfirm={handleConfirmDelete}
