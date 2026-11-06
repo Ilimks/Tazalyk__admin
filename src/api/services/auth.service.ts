@@ -50,43 +50,6 @@ const accessFromMe = (me: MeResponse): Access => {
   return { username: me.username, role, permissions };
 };
 
-// Запасной вариант для сервера без /me/ (или если запрос не дошёл): права по логину, как раньше
-const legacyAccess = (username: string): Access => {
-  let permissions: string[] = [];
-  let role: Role = 'guest';
-
-  if (username === 'admin') {
-    permissions = ['*'];
-    role = 'admin';
-  } else if (username === 'content_manager') {
-    permissions = [
-      'view_videos', 'create_videos', 'edit_videos', 'delete_videos',
-      'view_photos', 'create_photos', 'edit_photos', 'delete_photos',
-      'view_news', 'create_news', 'edit_news', 'delete_news',
-    ];
-    role = 'content_manager';
-  } else if (username === 'procurement_manager') {
-    permissions = [
-      'view_procurements', 'create_procurements', 'edit_procurements', 'delete_procurements',
-    ];
-    role = 'procurement_manager';
-  } else if (username === 'legal_manager') {
-    permissions = [
-      'view_local_acts', 'create_local_acts', 'edit_local_acts', 'delete_local_acts',
-      'view_legislation', 'create_legislation', 'edit_legislation', 'delete_legislation',
-    ];
-    role = 'legal_manager';
-  } else if (username === 'viewer') {
-    permissions = [
-      'view_videos', 'view_photos', 'view_news', 'view_procurements',
-      'view_local_acts', 'view_legislation',
-    ];
-    role = 'viewer';
-  }
-
-  return { username, role, permissions };
-};
-
 const toUser = ({ username, role, permissions }: Access): User => ({
   id: username,
   username,
@@ -96,25 +59,16 @@ const toUser = ({ username, role, permissions }: Access): User => ({
 });
 
 class AuthService {
-  // права по только что выданному токену. null — сервер ответил ошибкой, входить нельзя
-  private async loadAccess(token: string, username: string): Promise<Access | null> {
-    let response: Response;
+  // права по только что полученному входу. null — входить нельзя
+  private async loadAccess(): Promise<Access | null> {
     try {
-      response = await fetch(`${config.api.baseUrl}/me/`, {
-        headers: { Authorization: `Bearer ${token}` },
+      const response = await fetch(`${config.api.baseUrl}/me/`, {
+        credentials: 'include',
         signal: AbortSignal.timeout(config.api.timeout),
       });
+      return response.ok ? accessFromMe(await response.json()) : null;
     } catch (error) {
       console.error('GET /me/ failed:', error);
-      return legacyAccess(username);
-    }
-
-    if (response.status === 404) return legacyAccess(username);
-    if (!response.ok) return null;
-
-    try {
-      return accessFromMe(await response.json());
-    } catch {
       return null;
     }
   }
@@ -123,28 +77,23 @@ class AuthService {
     try {
       const response = await fetch(`${config.api.baseUrl}/token/`, {
         method: 'POST',
+        credentials: 'include',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ username, password }),
       });
 
       if (response.ok) {
-        const data = await response.json();
-
         // роль и права выдаёт сервер по группам сотрудника (GET /me/)
-        const access = await this.loadAccess(data.access, username);
+        const access = await this.loadAccess();
         if (!access) {
           return { success: false, message: 'Не удалось получить права учётной записи. Попробуйте войти позже.' };
         }
-
-        localStorage.setItem('access_token', data.access);
-        localStorage.setItem('refresh_token', data.refresh);
 
         const user = toUser(access);
         localStorage.setItem('current_user', JSON.stringify(user));
 
         return {
           success: true,
-          token: data.access,
           user: user,
         };
       }
@@ -180,10 +129,14 @@ class AuthService {
     }
   }
 
+  // Сервер отзывает токен: скопированная сессия перестаёт работать сразу, а не через сутки
   async logout(): Promise<void> {
     localStorage.removeItem('access_token');
     localStorage.removeItem('refresh_token');
     localStorage.removeItem('current_user');
+    await fetch(`${config.api.baseUrl}/token/logout/`, { method: 'POST', credentials: 'include' }).catch((error) => {
+      console.error('Logout failed:', error);
+    });
   }
 
   getCurrentUser(): User | null {
@@ -196,23 +149,6 @@ class AuthService {
       }
     }
     return null;
-  }
-
-  getToken(): string | null {
-    return localStorage.getItem('access_token');
-  }
-
-  isAuthenticated(): boolean {
-    const token = this.getToken();
-    if (!token) return false;
-
-    try {
-      const payload = JSON.parse(atob(token.split('.')[1]));
-      const exp = payload.exp * 1000;
-      return Date.now() < exp;
-    } catch {
-      return true;
-    }
   }
 }
 

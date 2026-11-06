@@ -1,8 +1,10 @@
 import React, { useEffect, useState } from 'react';
-import { ShoppingCart } from 'lucide-react';
+import { FileSpreadsheet, ShoppingCart } from 'lucide-react';
 import styles from './OrdersManager.module.scss';
 import { useAuthStore, useOrdersStore } from '@/store';
 import { useNotificationStore } from '@/store/notification.store';
+import { ordersService } from '@/api/services';
+import { saveBlob } from '@/utils/download';
 import { Button } from '@/components/common/Button';
 import { Modal } from '@/components/common/Modal';
 import { Pagination } from '@/components/common/Pagination/Pagination';
@@ -44,6 +46,7 @@ export const OrdersManager: React.FC = () => {
   // отдельно от selectedOrder: карточку под окном подтверждения могут закрыть клавишей Esc
   const [orderToDelete, setOrderToDelete] = useState<Order | null>(null);
   const [isDeleting, setIsDeleting] = useState(false);
+  const [isExporting, setIsExporting] = useState(false);
 
   const allowEdit = canEdit('orders');
   const allowDelete = canDelete('orders');
@@ -60,6 +63,20 @@ export const OrdersManager: React.FC = () => {
   const handleSaved = (order: Order) => {
     setSelectedOrder(null);
     showNotification(`Заказ № ${order.id} сохранён`, 'success');
+  };
+
+  const handleExport = async () => {
+    setIsExporting(true);
+    try {
+      const file = await ordersService.exportToExcel();
+      const today = new Date().toISOString().slice(0, 10);
+      saveBlob(file, `Продажи ТАЗАЛЫК ${today}.xlsx`);
+      showNotification('Файл Excel с товарами сохранён', 'success');
+    } catch {
+      showNotification('Не удалось выгрузить заказы. Попробуйте ещё раз.', 'error');
+    } finally {
+      setIsExporting(false);
+    }
   };
 
   const handleConfirmDelete = async () => {
@@ -119,6 +136,11 @@ export const OrdersManager: React.FC = () => {
       <PageHeader
         icon={ShoppingCart}
         title="Заказы"
+        actions={
+          <Button variant="outline" icon={<FileSpreadsheet />} loading={isExporting} onClick={handleExport}>
+            Выгрузить в Excel
+          </Button>
+        }
         description={`Заказы покупателей из магазина на сайте${
           totalCount > 0 ? ` · ${status ? ORDER_FILTER_LABELS[status].toLowerCase() : 'всего'}: ${totalCount}` : ''
         }`}

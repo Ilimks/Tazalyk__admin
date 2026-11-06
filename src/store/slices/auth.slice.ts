@@ -254,6 +254,7 @@ export const useAuthStore = create<AuthState>()(
           products: permissions.canViewProducts,
           orders: permissions.canViewOrders,
           vacancies: permissions.canViewVacancies,
+          applications: permissions.canViewVacancies,
         };
         // в сохранённых старой версией правах новых ключей может не быть
         return Boolean(map[section]);
@@ -271,6 +272,8 @@ export const useAuthStore = create<AuthState>()(
           products: permissions.canCreateProducts,
           orders: permissions.canCreateOrders,
           vacancies: permissions.canCreateVacancies,
+          // отклики приходят только с сайта
+          applications: false,
         };
         return Boolean(map[section]);
       },
@@ -287,6 +290,7 @@ export const useAuthStore = create<AuthState>()(
           products: permissions.canEditProducts,
           orders: permissions.canEditOrders,
           vacancies: permissions.canEditVacancies,
+          applications: permissions.canEditVacancies,
         };
         return Boolean(map[section]);
       },
@@ -303,6 +307,7 @@ export const useAuthStore = create<AuthState>()(
           products: permissions.canDeleteProducts,
           orders: permissions.canDeleteOrders,
           vacancies: permissions.canDeleteVacancies,
+          applications: permissions.canDeleteVacancies,
         };
         return Boolean(map[section]);
       },

@@ -27,6 +27,9 @@ const SECTION_COMPONENTS: Record<Section, React.LazyExoticComponent<React.FC>> =
   products: lazy(() => import('@/features/Products/ProductsManager').then((m) => ({ default: m.ProductsManager }))),
   orders: lazy(() => import('@/features/Orders/OrdersManager').then((m) => ({ default: m.OrdersManager }))),
   vacancies: lazy(() => import('@/features/Vacancies/VacanciesManager').then((m) => ({ default: m.VacanciesManager }))),
+  applications: lazy(() =>
+    import('@/features/Applications/ApplicationsManager').then((module) => ({ default: module.ApplicationsManager }))
+  ),
 };
 
 export const AdminPanel: React.FC = () => {
@@ -52,8 +55,16 @@ export const AdminPanel: React.FC = () => {
       logout();
       useAuthStore.setState({ loginError: 'Сессия истекла — войдите снова.' });
     };
+    // выход в соседней вкладке: здесь не должны оставаться данные заказов и откликов
+    const handleStorage = (event: StorageEvent) => {
+      if (event.key === 'current_user' && !event.newValue) handleExpired();
+    };
     window.addEventListener('auth:expired', handleExpired);
-    return () => window.removeEventListener('auth:expired', handleExpired);
+    window.addEventListener('storage', handleStorage);
+    return () => {
+      window.removeEventListener('auth:expired', handleExpired);
+      window.removeEventListener('storage', handleStorage);
+    };
   }, [logout]);
 
   // меню на телефоне не должно прокручивать страницу под собой

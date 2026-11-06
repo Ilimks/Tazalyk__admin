@@ -174,7 +174,7 @@ export const VideoUpload: React.FC<VideoUploadProps> = ({
                   >
                     <X size={14} />
                   </button>
-                  <span className={styles.sizeBadge}>{formatDataUrlSize(video)}</span>
+                  {video.startsWith('data:') && <span className={styles.sizeBadge}>{formatDataUrlSize(video)}</span>}
                 </div>
               ))}
             </div>
@@ -184,7 +184,8 @@ export const VideoUpload: React.FC<VideoUploadProps> = ({
         <div className={styles.previewContainer}>
           <video src={value} controls preload="metadata" className={styles.videoPreview} />
           <div className={styles.previewBar}>
-            <span className={styles.previewSize}>{formatDataUrlSize(value)}</span>
+            {/* у сохранённого видео в форме только адрес, размер известен лишь у нового файла */}
+            <span className={styles.previewSize}>{value.startsWith('data:') ? formatDataUrlSize(value) : ''}</span>
             <button type="button" className={styles.previewRemove} onClick={handleRemoveSingle}>
               <Trash2 size={16} />
               Удалить

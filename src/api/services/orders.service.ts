@@ -20,6 +20,11 @@ class OrdersService extends BaseService<Order> {
     }
   }
 
+  // проданные и отклонённые товары файлом Excel, независимо от фильтра в списке
+  exportToExcel(): Promise<Blob> {
+    return apiClient.download(`${this.endpoint}export/`);
+  }
+
   // ошибки пробрасываются, чтобы показать текст сервера
   patch(id: number, data: OrderUpdate): Promise<Order> {
     return apiClient.patch<Order>(`${this.endpoint}${id}/`, data);

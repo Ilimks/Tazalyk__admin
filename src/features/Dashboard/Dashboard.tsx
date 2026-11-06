@@ -2,7 +2,7 @@ import React, { useEffect, useState } from 'react';
 import { ExternalLink, Gauge, ImageDown, MonitorPlay } from 'lucide-react';
 import styles from './Dashboard.module.scss';
 import { StatCard } from './components/StatCard';
-import { useAuthStore, useOrdersStore } from '@/store';
+import { useApplicationsStore, useAuthStore, useOrdersStore } from '@/store';
 import { config } from '@/config';
 import { NAV_ITEMS, ROLE_LABELS, SECTIONS, type Section } from '@/layout/navigation';
 import {
@@ -14,6 +14,7 @@ import {
   procurementsService,
   productsService,
   vacanciesService,
+  applicationsService,
   videosService,
 } from '@/api/services';
 import type { ActiveTab } from '@/types';
@@ -33,6 +34,7 @@ const services: Record<Section, { getPage: (page: number, pageSize: number) => P
   products: productsService,
   orders: ordersService,
   vacancies: vacanciesService,
+  applications: applicationsService,
 };
 
 const tones: Record<Section, string> = {
@@ -45,6 +47,7 @@ const tones: Record<Section, string> = {
   products: 'teal',
   orders: 'indigo',
   vacancies: 'orange',
+  applications: 'rose',
 };
 
 // «1 новый», «2 новых», «21 новый»
@@ -76,6 +79,7 @@ export const Dashboard: React.FC<DashboardProps> = ({ availableTabs, onNavigate 
   const { user } = useAuthStore();
   // счётчик новых заказов общий с меню: его загружает и обновляет боковая панель
   const { newCount } = useOrdersStore();
+  const { newCount: newApplications } = useApplicationsStore();
   const sections = SECTIONS.filter((section) => availableTabs.includes(section));
   const [counts, setCounts] = useState<Partial<Record<Section, number>>>(() => countsCache?.counts || {});
 
@@ -128,7 +132,13 @@ export const Dashboard: React.FC<DashboardProps> = ({ availableTabs, onNavigate 
                 icon={item.icon}
                 tone={tones[section]}
                 value={counts[section]}
-                badge={section === 'orders' && newCount ? newOrdersLabel(newCount) : undefined}
+                badge={
+                  section === 'orders' && newCount
+                    ? newOrdersLabel(newCount)
+                    : section === 'applications' && newApplications
+                      ? newOrdersLabel(newApplications)
+                      : undefined
+                }
                 onClick={() => onNavigate(section)}
               />
             );

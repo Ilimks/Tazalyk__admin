@@ -167,7 +167,7 @@ export const ImageUpload: React.FC<ImageUploadProps> = ({
                   >
                     <X size={14} />
                   </button>
-                  <span className={styles.sizeBadge}>{formatDataUrlSize(img)}</span>
+                  {img.startsWith('data:') && <span className={styles.sizeBadge}>{formatDataUrlSize(img)}</span>}
                 </div>
               ))}
             </div>

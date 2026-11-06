@@ -76,6 +76,8 @@ export const LegislationTable: React.FC<LegislationTableProps> = ({ documents, b
                                             {doc.file_url && (
                                                 <a
                                                     href={doc.file_url}
+                                                    target="_blank"
+                                                    rel="noreferrer"
                                                     download={doc.file_name}
                                                     className={styles.iconBtn}
                                                     aria-label={`Скачать файл «${doc.file_name || doc.title}»`}

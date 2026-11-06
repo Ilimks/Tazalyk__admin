@@ -69,7 +69,7 @@ export const compressImage = async (file: File, { maxDimension, quality }: Compr
 };
 
 // Снимает кадр из видео (около 1-й секунды) и возвращает JPEG data URL для превью.
-// source — File или уже загруженный data URL видео.
+// source — File, data URL или адрес видео на сервере.
 export const captureVideoThumbnail = (source: File | string, maxDimension = 960, quality = 0.8): Promise<string | null> =>
   new Promise((resolve) => {
     const url = typeof source === 'string' ? source : URL.createObjectURL(source);
@@ -91,6 +91,8 @@ export const captureVideoThumbnail = (source: File | string, maxDimension = 960,
     video.muted = true;
     video.playsInline = true;
     video.preload = 'auto';
+    // файл с сервера API: без этого браузер не даст прочитать кадр на canvas
+    if (typeof source === 'string' && source.startsWith('http')) video.crossOrigin = 'anonymous';
 
     video.onloadedmetadata = () => {
       const target = Number.isFinite(video.duration) ? Math.min(1, video.duration / 10) : 0;

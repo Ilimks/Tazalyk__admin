@@ -12,6 +12,7 @@ import { EmptyState } from '@/components/common/EmptyState';
 import { MediaCard, mediaCardStyles } from '@/components/common/MediaCard';
 import { VideoForm } from './components/VideoForm';
 import { Loader } from '@/components/common/Loader';
+import { captureVideoThumbnail } from '@/utils/media';
 import type { Video } from '@/types';
 
 const PAGE_SIZE = 8;
@@ -24,6 +25,7 @@ export const VideosManager: React.FC = () => {
     currentPage,
     pageSize,
     fetchPage,
+    updateVideo,
     deleteVideo,
     goToPage,
   } = useVideosStore();
@@ -37,6 +39,7 @@ export const VideosManager: React.FC = () => {
   const [isDeleting, setIsDeleting] = useState(false);
   // просмотр: видео создаётся только здесь, а в сетке — лишь картинка-превью
   const [viewing, setViewing] = useState<{ video: Video; index: number } | null>(null);
+  const [creatingThumbnails, setCreatingThumbnails] = useState(false);
 
   const allowCreate = canCreate('videos');
   const allowEdit = canEdit('videos');
@@ -91,6 +94,19 @@ export const VideosManager: React.FC = () => {
     showNotification(wasEditing ? 'Видео обновлено' : 'Видео добавлено', 'success');
   };
 
+  // кадр снимает браузер: на сервере нет программы для работы с видео
+  const handleCreateThumbnails = async () => {
+    const missing = videos.filter((video) => !video.thumbnail);
+    setCreatingThumbnails(true);
+    let created = 0;
+    for (const video of missing) {
+      const thumbnail = await captureVideoThumbnail(video.main_video_url);
+      if (thumbnail && (await updateVideo(video.id, { ...video, thumbnail }))) created += 1;
+    }
+    setCreatingThumbnails(false);
+    showNotification(`Создано превью: ${created} из ${missing.length}`, created === missing.length ? 'success' : 'error');
+  };
+
   const openCreate = () => {
     setEditingVideo(null);
     setIsModalOpen(true);
@@ -120,8 +136,12 @@ export const VideosManager: React.FC = () => {
 
       {withoutThumbnail > 0 && allowEdit && (
         <div className={styles.notice}>
-          Видео без превью на этой странице: {withoutThumbnail}. На сайте вместо картинки у них показывается заглушка —
-          откройте такое видео на редактирование и нажмите «Сохранить», превью создастся автоматически.
+          <span>
+            Видео без превью на этой странице: {withoutThumbnail}. На сайте вместо картинки у них показывается заглушка.
+          </span>
+          <Button size="sm" loading={creatingThumbnails} onClick={handleCreateThumbnails}>
+            Создать превью
+          </Button>
         </div>
       )}
 

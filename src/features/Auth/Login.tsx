@@ -93,7 +93,7 @@ export const Login: React.FC = () => {
                   type="text"
                   value={username}
                   onChange={handleFieldChange(setUsername)}
-                  placeholder="Например, content_manager"
+                  placeholder="Введите логин"
                   autoComplete="username"
                   autoFocus
                   required

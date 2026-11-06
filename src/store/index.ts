@@ -8,3 +8,4 @@ export { useLegislationStore } from './slices/legislation.slice';
 export { useProductsStore } from './slices/products.slice';
 export { useOrdersStore } from './slices/orders.slice';
 export { useVacanciesStore } from './slices/vacancies.slice';
+export { useApplicationsStore } from './slices/applications.slice';

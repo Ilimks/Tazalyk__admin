@@ -1,8 +1,10 @@
 import React, { useState, useEffect } from 'react';
-import { ClipboardList, Plus } from 'lucide-react';
+import { ClipboardList, FileSpreadsheet, Plus } from 'lucide-react';
 import styles from './ProcurementsManager.module.scss';
 import { useAuthStore, useProcurementsStore } from '@/store';
 import { useNotificationStore } from '@/store/notification.store';
+import { procurementsService } from '@/api/services/procurements.service';
+import { saveBlob } from '@/utils/download';
 import { Button } from '@/components/common/Button';
 import { Modal } from '@/components/common/Modal';
 import { Pagination } from '@/components/common/Pagination/Pagination';
@@ -33,6 +35,7 @@ export const ProcurementsManager: React.FC = () => {
   const [deleteModalOpen, setDeleteModalOpen] = useState(false);
   const [itemToDelete, setItemToDelete] = useState<Procurement | null>(null);
   const [isDeleting, setIsDeleting] = useState(false);
+  const [isExporting, setIsExporting] = useState(false);
 
   const allowCreate = canCreate('procurements');
   const allowEdit = canEdit('procurements');
@@ -57,6 +60,20 @@ export const ProcurementsManager: React.FC = () => {
       showNotification('Закупка успешно удалена!', 'success');
     } else {
       showNotification('Ошибка при удалении закупки', 'error');
+    }
+  };
+
+  const handleExport = async () => {
+    setIsExporting(true);
+    try {
+      const file = await procurementsService.exportToExcel();
+      const today = new Date().toISOString().slice(0, 10);
+      saveBlob(file, `Закупки ТАЗАЛЫК ${today}.xlsx`);
+      showNotification('Файл Excel с закупками сохранён', 'success');
+    } catch {
+      showNotification('Не удалось выгрузить закупки. Попробуйте ещё раз.', 'error');
+    } finally {
+      setIsExporting(false);
     }
   };
 
@@ -105,6 +122,17 @@ export const ProcurementsManager: React.FC = () => {
     </Button>
   );
 
+  const headerActions = (
+    <div className={styles.headerActions}>
+      {totalCount > 0 && (
+        <Button variant="outline" icon={<FileSpreadsheet />} loading={isExporting} onClick={handleExport}>
+          Выгрузить в Excel
+        </Button>
+      )}
+      {addButton}
+    </div>
+  );
+
   const renderContent = () => {
     // первая загрузка: шапка остаётся на месте, спиннер — вместо таблицы
     if (loading && procurements.length === 0) {
@@ -142,7 +170,7 @@ export const ProcurementsManager: React.FC = () => {
         icon={ClipboardList}
         title="Закупки"
         description={`Реестр закупок и заключённых контрактов предприятия${totalCount > 0 ? ` · всего ${totalCount}` : ''}`}
-        actions={addButton}
+        actions={headerActions}
       />
 
       {renderContent()}

@@ -1,7 +1,7 @@
 import { useEffect } from 'react';
 import { ExternalLink, LogOut, X } from 'lucide-react';
 import styles from './Sidebar.module.scss';
-import { useAuthStore, useOrdersStore } from '@/store';
+import { useApplicationsStore, useAuthStore, useOrdersStore } from '@/store';
 import { config } from '@/config';
 import { NAV_GROUPS, NAV_ITEMS, ROLE_LABELS } from '../navigation';
 import type { ActiveTab } from '@/types';
@@ -18,12 +18,18 @@ interface SidebarProps {
 export const Sidebar: React.FC<SidebarProps> = ({ activeTab, onTabChange, availableTabs, isOpen, onClose }) => {
   const { user, logout } = useAuthStore();
   const { newCount, fetchNewCount } = useOrdersStore();
+  const { newCount: newApplications, fetchNewCount: fetchNewApplications } = useApplicationsStore();
   const showOrders = availableTabs.includes('orders');
+  const showApplications = availableTabs.includes('applications');
 
   // счётчик новых заказов: загружается при входе, потом обновляется вместе со списком заказов
   useEffect(() => {
     if (showOrders) fetchNewCount();
   }, [showOrders, fetchNewCount]);
+
+  useEffect(() => {
+    if (showApplications) fetchNewApplications();
+  }, [showApplications, fetchNewApplications]);
 
   const groups = NAV_GROUPS.map((group) => ({
     ...group,
@@ -57,7 +63,7 @@ export const Sidebar: React.FC<SidebarProps> = ({ activeTab, onTabChange, availa
               {group.items.map((id) => {
                 const { label, icon: Icon } = NAV_ITEMS[id];
                 const isActive = activeTab === id;
-                const badge = id === 'orders' && newCount ? newCount : 0;
+                const badge = (id === 'orders' && newCount) || (id === 'applications' && newApplications) || 0;
                 return (
                   <button
                     key={id}

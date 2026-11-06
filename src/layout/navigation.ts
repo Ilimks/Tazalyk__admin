@@ -3,6 +3,7 @@ import {
   Clapperboard,
   ClipboardList,
   Images,
+  Inbox,
   LayoutDashboard,
   Newspaper,
   Package,
@@ -33,6 +34,7 @@ export const NAV_ITEMS: Record<ActiveTab, NavItem> = {
   products: { id: 'products', label: 'Товары', description: 'Каталог мусорных контейнеров', icon: Package },
   orders: { id: 'orders', label: 'Заказы', description: 'Заказы покупателей с сайта', icon: ShoppingCart },
   vacancies: { id: 'vacancies', label: 'Вакансии', description: 'Открытые вакансии на странице «Вакансии»', icon: BriefcaseBusiness },
+  applications: { id: 'applications', label: 'Отклики', description: 'Резюме кандидатов с сайта', icon: Inbox },
 };
 
 // группы бокового меню
@@ -42,7 +44,7 @@ export const NAV_GROUPS: { title?: string; items: ActiveTab[] }[] = [
   { title: 'Закупки', items: ['procurements'] },
   { title: 'Документы', items: ['local_acts', 'legislation'] },
   { title: 'Магазин', items: ['products', 'orders'] },
-  { title: 'Отдел кадров', items: ['vacancies'] },
+  { title: 'Отдел кадров', items: ['vacancies', 'applications'] },
 ];
 
 export const SECTIONS: Section[] = [
@@ -55,6 +57,7 @@ export const SECTIONS: Section[] = [
   'products',
   'orders',
   'vacancies',
+  'applications',
 ];
 
 export const ROLE_LABELS: Record<User['role'], string> = {

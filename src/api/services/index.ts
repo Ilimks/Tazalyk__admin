@@ -8,4 +8,5 @@ export { localActsService } from './localActs.service';
 export { legislationService } from './legislation.service';
 export { productsService } from './products.service';
 export { vacanciesService } from './vacancies.service';
+export { applicationsService } from './applications.service';
 export { ordersService } from './orders.service';

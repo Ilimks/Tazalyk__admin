@@ -3,47 +3,27 @@ import { config } from '@/config';
 class ApiClient {
   private baseUrl: string;
   private timeout: number;
-  private refreshPromise: Promise<string | null> | null = null;
+  private refreshPromise: Promise<boolean> | null = null;
 
   constructor() {
     this.baseUrl = config.api.baseUrl;
     this.timeout = config.api.timeout;
   }
 
-  private getAccessToken(): string | null {
-    return localStorage.getItem('access_token');
-  }
-
-  private getRefreshToken(): string | null {
-    return localStorage.getItem('refresh_token');
-  }
-
-  private setTokens(access: string, refresh: string): void {
-    localStorage.setItem('access_token', access);
-    localStorage.setItem('refresh_token', refresh);
-  }
-
-  private clearTokens(): void {
+  // Токены лежат в cookie, недоступных скриптам. В браузере хранится только имя и права для меню.
+  // access_token и refresh_token остались от прежних версий админки
+  private clearSession(): void {
     localStorage.removeItem('access_token');
     localStorage.removeItem('refresh_token');
     localStorage.removeItem('current_user');
   }
 
-  private getHeaders(): HeadersInit {
-    const headers: HeadersInit = {
-      'Content-Type': 'application/json',
-    };
-    
-    const token = this.getAccessToken();
-    if (token) {
-      headers['Authorization'] = `Bearer ${token}`;
-    }
-    
-    return headers;
+  private hasSession(): boolean {
+    return Boolean(localStorage.getItem('current_user'));
   }
 
   // одно обновление токена на все запросы, получившие 401 одновременно
-  private refreshAccessToken(): Promise<string | null> {
+  private refreshAccessToken(): Promise<boolean> {
     if (!this.refreshPromise) {
       this.refreshPromise = this.refreshToken().finally(() => {
         this.refreshPromise = null;
@@ -52,72 +32,52 @@ class ApiClient {
     return this.refreshPromise;
   }
 
-  private async refreshToken(): Promise<string | null> {
-    const refresh = this.getRefreshToken();
-    if (!refresh) return null;
-
+  private async refreshToken(): Promise<boolean> {
     try {
       const response = await fetch(`${this.baseUrl}/token/refresh/`, {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ refresh }),
+        credentials: 'include',
       });
-
-      if (response.ok) {
-        const data = await response.json();
-        localStorage.setItem('access_token', data.access);
-        // при ROTATE_REFRESH_TOKENS сервер выдаёт и новый refresh
-        if (data.refresh) localStorage.setItem('refresh_token', data.refresh);
-        return data.access;
-      }
-      return null;
+      return response.ok;
     } catch {
-      return null;
+      return false;
     }
   }
 
   private async request<T>(
     endpoint: string,
-    options: RequestInit = {}
+    options: RequestInit = {},
+    parse: (response: Response) => Promise<T> = (response) => response.json()
   ): Promise<T> {
     const controller = new AbortController();
     const timeoutId = setTimeout(() => controller.abort(), this.timeout);
 
     const url = `${this.baseUrl}${endpoint}`;
 
-    const makeRequest = async (token?: string): Promise<Response> => {
-      const headers: HeadersInit = {
-        'Content-Type': 'application/json',
-        ...options.headers,
-      };
-      
-      if (token) {
-        headers['Authorization'] = `Bearer ${token}`;
-      }
-      
-      return fetch(url, {
+    const makeRequest = (): Promise<Response> =>
+      fetch(url, {
         ...options,
-        headers,
+        credentials: 'include',
+        headers: {
+          'Content-Type': 'application/json',
+          ...options.headers,
+        },
         signal: controller.signal,
       });
-    };
 
     try {
-      let token = this.getAccessToken();
-      let response = await makeRequest(token || undefined);
+      let response = await makeRequest();
 
       // Если токен истек (401), пробуем обновить
-      if (response.status === 401 && token) {
-        const newToken = await this.refreshAccessToken();
-
-        if (!newToken) {
+      if (response.status === 401 && this.hasSession()) {
+        if (!(await this.refreshAccessToken())) {
           // AdminPanel ловит событие и возвращает на экран входа
-          this.clearTokens();
+          this.clearSession();
           window.dispatchEvent(new Event('auth:expired'));
           throw new ApiError(401, 'Сессия истекла, войдите снова');
         }
 
-        response = await makeRequest(newToken);
+        response = await makeRequest();
       }
 
       clearTimeout(timeoutId);
@@ -149,7 +109,7 @@ class ApiClient {
         return {} as T;
       }
 
-      return await response.json();
+      return await parse(response);
     } catch (error) {
       clearTimeout(timeoutId);
       console.error('Request failed:', error);
@@ -183,9 +143,7 @@ class ApiClient {
       const response = await fetch(url, {
         method: 'POST',
         body: formData,
-        headers: {
-          'Authorization': `Bearer ${this.getAccessToken()}`,
-        },
+        credentials: 'include',
         signal: controller.signal,
       });
 
@@ -200,6 +158,11 @@ class ApiClient {
       clearTimeout(timeoutId);
       throw error;
     }
+  }
+
+  // файл с сервера: авторизация и обновление токена те же, что у обычных запросов
+  download(endpoint: string): Promise<Blob> {
+    return this.request<Blob>(endpoint, { method: 'GET' }, (response) => response.blob());
   }
 
   get<T>(endpoint: string): Promise<T> {

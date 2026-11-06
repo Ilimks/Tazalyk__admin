@@ -301,6 +301,37 @@ export interface ApiResponse<T = any> {
   error?: string;
 }
 
+// ========== ОТКЛИКИ НА ВАКАНСИИ ==========
+export type ApplicationStatus = 'new' | 'in_review' | 'invited' | 'hired' | 'rejected';
+
+export interface VacancyApplication {
+  id: string;
+  // null, если вакансию уже удалили; название остаётся в vacancy_title
+  vacancy: string | null;
+  vacancy_title: string;
+  full_name: string;
+  phone: string;
+  email: string;
+  comment: string;
+  resume_name: string;
+  resume_size: number;
+  status: ApplicationStatus;
+  status_label: string;
+  hr_note: string;
+  created_at: string;
+  updated_at: string;
+}
+
+export interface ApplicationFilters {
+  status?: ApplicationStatus | '';
+}
+
+// отдел кадров меняет только статус и свою заметку
+export interface ApplicationUpdate {
+  status?: ApplicationStatus;
+  hr_note?: string;
+}
+
 // ========== АКТИВНЫЕ ВКЛАДКИ ==========
 export type ActiveTab =
   | 'dashboard'
@@ -312,7 +343,8 @@ export type ActiveTab =
   | 'legislation'
   | 'products'
   | 'orders'
-  | 'vacancies';
+  | 'vacancies'
+  | 'applications';
 
 // разделы с правами доступа (всё, кроме «Обзора»)
 export type PermissionSection = Exclude<ActiveTab, 'dashboard'>;
