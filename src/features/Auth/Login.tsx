@@ -1,13 +1,26 @@
 import React, { useEffect, useState } from 'react';
-import { CircleAlert, ClipboardList, Eye, EyeOff, Lock, LogIn, Newspaper, ShieldCheck, User } from 'lucide-react';
+import {
+  CircleAlert,
+  ClipboardList,
+  Eye,
+  EyeOff,
+  LoaderCircle,
+  Lock,
+  LockKeyhole,
+  LogIn,
+  Newspaper,
+  ShieldCheck,
+  User,
+} from 'lucide-react';
 import styles from './Login.module.scss';
 import { useAuthStore } from '@/store';
-import { Button } from '@/components/common/Button';
+
+// Экран входа сделан в одном стиле с ассистентом поручений (tazalyk-assistant/web/src/features/auth)
 
 const features = [
-  { icon: Newspaper, text: 'Новости, фото и видео сайта' },
-  { icon: ClipboardList, text: 'Закупки, акты и законодательство' },
-  { icon: ShieldCheck, text: 'Доступ по ролям сотрудников' },
+  { icon: Newspaper, text: 'Новости, фото и видео' },
+  { icon: ClipboardList, text: 'Закупки и документы' },
+  { icon: ShieldCheck, text: 'Доступ по ролям' },
 ];
 
 const statusTexts = {
@@ -21,6 +34,8 @@ export const Login: React.FC = () => {
   const [username, setUsername] = useState('');
   const [password, setPassword] = useState('');
   const [showPassword, setShowPassword] = useState(false);
+  const [emptyError, setEmptyError] = useState('');
+  const error = loginError || emptyError;
 
   useEffect(() => {
     checkServer();
@@ -28,35 +43,53 @@ export const Login: React.FC = () => {
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
+    if (isLoading) return;
+    // кнопка всегда активна: пустые поля подсказываем текстом, а не бледной кнопкой
+    if (!username.trim() || !password) {
+      setEmptyError('Введите логин и пароль');
+      return;
+    }
     await login(username.trim(), password);
   };
 
   const handleFieldChange = (setter: (value: string) => void) => (e: React.ChangeEvent<HTMLInputElement>) => {
     setter(e.target.value);
     if (loginError) clearLoginError();
+    if (emptyError) setEmptyError('');
   };
 
   return (
     <div className={styles.page}>
       <aside className={styles.brand}>
-        <div className={styles.brandTop}>
-          <span className={styles.logo}>
-            <img src="/favicon.svg" alt="" width={44} height={44} />
-          </span>
-          <div>
-            <div className={styles.brandName}>МП «Тазалык»</div>
-            <div className={styles.brandCaption}>Муниципальное предприятие г. Бишкек</div>
-          </div>
-        </div>
+        {/* арка и здания с герба предприятия — водяным знаком */}
+        <img className={styles.arch} src="/arch.svg" alt="" aria-hidden="true" draggable={false} />
 
-        <div className={styles.brandBody}>
-          <h1>Панель управления сайтом</h1>
+        <header className={styles.brandTop}>
+          <span className={styles.logo}>
+            <img src="/favicon.svg" alt="" width={46} height={46} />
+          </span>
+          <div className={styles.brandText}>
+            <div className={styles.brandName}>МП «Тазалык»</div>
+            <div className={styles.brandCaption}>Муниципальное предприятие · Бишкек</div>
+          </div>
+          <span className={styles.appChip}>Админ-панель</span>
+        </header>
+
+        <div className={styles.hero}>
+          <span className={styles.eyebrow}>
+            <span className={styles.eyebrowDot} />
+            Панель управления сайтом
+          </span>
+          <h1>
+            <span>Сайт предприятия</span>
+            <span className={styles.accent}>под контролем</span>
+          </h1>
           <p>Публикуйте новости и медиа, обновляйте документы и закупки — изменения сразу появятся на mptazalyk.kg.</p>
           <ul className={styles.features}>
             {features.map(({ icon: Icon, text }) => (
               <li key={text}>
                 <span className={styles.featureIcon}>
-                  <Icon size={18} />
+                  <Icon size={17} />
                 </span>
                 {text}
               </li>
@@ -64,20 +97,19 @@ export const Login: React.FC = () => {
           </ul>
         </div>
 
-        <div className={styles.brandFooter}>© {new Date().getFullYear()} МП «Тазалык»</div>
+        <footer className={styles.brandFooter}>
+          <span>© {new Date().getFullYear()} МП «Тазалык»</span>
+          <span>mptazalyk.kg · колл-центр 1400</span>
+        </footer>
       </aside>
 
       <main className={styles.formSide}>
         <div className={styles.card}>
-          <div className={styles.mobileLogo}>
-            <img src="/favicon.svg" alt="" width={40} height={40} />
-            <span>МП «Тазалык»</span>
-          </div>
-
-          <div className={styles.heading}>
-            <h2>Вход в админ-панель</h2>
-            <p>Введите логин и пароль, выданные администратором</p>
-          </div>
+          <span className={styles.cardIcon}>
+            <LockKeyhole size={22} />
+          </span>
+          <h2 className={styles.title}>Вход в админ-панель</h2>
+          <p className={styles.subtitle}>Введите логин и пароль, выданные администратором</p>
 
           <div className={`${styles.status} ${styles[serverStatus]}`} role="status">
             <span className={styles.statusDot} />
@@ -97,7 +129,7 @@ export const Login: React.FC = () => {
                   autoComplete="username"
                   autoFocus
                   required
-                  aria-invalid={Boolean(loginError)}
+                  aria-invalid={Boolean(error)}
                 />
               </span>
             </label>
@@ -113,7 +145,7 @@ export const Login: React.FC = () => {
                   placeholder="Введите пароль"
                   autoComplete="current-password"
                   required
-                  aria-invalid={Boolean(loginError)}
+                  aria-invalid={Boolean(error)}
                 />
                 <button
                   type="button"
@@ -127,31 +159,30 @@ export const Login: React.FC = () => {
               </span>
             </label>
 
-            {loginError && (
+            {error && (
               <div className={styles.error} role="alert">
                 <CircleAlert size={18} />
-                {loginError}
+                {error}
               </div>
             )}
 
-            <Button
-              type="submit"
-              size="lg"
-              fullWidth
-              loading={isLoading}
-              disabled={!username.trim() || !password}
-              icon={<LogIn />}
-            >
-              Войти
-            </Button>
+            <button type="submit" className={styles.submit} disabled={isLoading}>
+              {isLoading ? <LoaderCircle size={20} className={styles.spin} /> : <LogIn size={20} />}
+              {isLoading ? 'Входим…' : 'Войти'}
+            </button>
           </form>
 
-          {serverStatus === 'offline' && (
-            <p className={styles.offlineHint}>
-              Сервер не отвечает. Проверьте интернет или попробуйте позже — если проблема не уйдёт, сообщите администратору.
-            </p>
+          {serverStatus === 'offline' ? (
+            <p className={styles.note}>Сервер не отвечает. Проверьте интернет или попробуйте позже.</p>
+          ) : (
+            <p className={styles.note}>Забыли пароль — обратитесь к администратору, он выдаст новый.</p>
           )}
         </div>
+
+        <p className={styles.secure}>
+          <ShieldCheck size={15} />
+          Защищённое подключение · МП «Тазалык», Бишкек
+        </p>
       </main>
     </div>
   );

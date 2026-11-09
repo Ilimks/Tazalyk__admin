@@ -1,7 +1,8 @@
 import React from 'react';
-import { Menu, RefreshCw } from 'lucide-react';
+import { Menu, Moon, RefreshCw, Sun } from 'lucide-react';
 import styles from './Header.module.scss';
 import { useAuthStore } from '@/store';
+import { useTheme } from '@/hooks/useTheme';
 
 interface HeaderProps {
   title: string;
@@ -16,6 +17,8 @@ const statusTexts = {
 
 export const Header: React.FC<HeaderProps> = ({ title, onMenuClick }) => {
   const { serverStatus, checkServer } = useAuthStore();
+  const { theme, toggleTheme } = useTheme();
+  const themeLabel = theme === 'dark' ? 'Светлая тема' : 'Тёмная тема';
   // дата меняется раз в сутки — секундный таймер не нужен
   const today = new Date().toLocaleDateString('ru-RU', { weekday: 'long', day: 'numeric', month: 'long' });
 
@@ -40,6 +43,16 @@ export const Header: React.FC<HeaderProps> = ({ title, onMenuClick }) => {
         <span className={styles.statusDot} />
         <span className={styles.statusText}>{statusTexts[serverStatus]}</span>
         <RefreshCw size={14} className={styles.refreshIcon} />
+      </button>
+
+      <button
+        type="button"
+        className={styles.themeButton}
+        onClick={toggleTheme}
+        title={themeLabel}
+        aria-label={themeLabel}
+      >
+        {theme === 'dark' ? <Sun size={18} /> : <Moon size={18} />}
       </button>
     </header>
   );

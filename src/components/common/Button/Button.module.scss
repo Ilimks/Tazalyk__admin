@@ -45,7 +45,7 @@
     color: var(--color-text-secondary);
 
     &:hover:not(:disabled) {
-      background: #eef1f6;
+      background: var(--color-hover);
       color: var(--color-text);
     }
   }

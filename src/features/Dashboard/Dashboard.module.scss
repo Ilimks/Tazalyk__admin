@@ -66,7 +66,7 @@
 }
 
 .statCard {
-  --tone: var(--color-brand);
+  --tone: var(--color-brand-text);
   --tone-soft: var(--color-brand-soft);
 
   display: flex;
@@ -135,6 +135,11 @@
   }
 }
 
+// тёмная тема: пастельные подложки значков слепят — тот же тон, но приглушённый
+:global([data-theme='dark']) .statCard {
+  --tone-soft: color-mix(in srgb, var(--tone) 18%, transparent);
+}
+
 .statTop {
   display: flex;
   align-items: center;
@@ -200,7 +205,7 @@
   width: 56px;
   height: 33px;
   border-radius: var(--radius-sm);
-  background: linear-gradient(90deg, #eef1f6 0%, #e2e7f0 50%, #eef1f6 100%);
+  background: linear-gradient(90deg, var(--color-skeleton) 0%, var(--color-skeleton-shine) 50%, var(--color-skeleton) 100%);
   background-size: 200% 100%;
   animation: shimmer 1.4s infinite;
 }
@@ -234,7 +239,7 @@
   flex-shrink: 0;
   border-radius: var(--radius-sm);
   background: var(--color-accent-soft);
-  color: #15803d;
+  color: var(--color-success-text);
   display: flex;
   align-items: center;
   justify-content: center;

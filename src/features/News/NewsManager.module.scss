@@ -198,7 +198,7 @@
 
   &:hover {
     background: var(--color-brand-soft);
-    color: var(--color-brand);
+    color: var(--color-brand-text);
   }
 
   &:focus-visible {
@@ -340,7 +340,7 @@
   justify-content: center;
   border-radius: var(--radius-sm);
   background: var(--color-brand-soft);
-  color: var(--color-brand);
+  color: var(--color-brand-text);
 }
 
 .langBadge {

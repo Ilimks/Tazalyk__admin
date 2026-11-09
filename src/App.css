@@ -38,11 +38,89 @@
 
   --focus-ring: 0 0 0 3px rgba(16, 35, 130, 0.18);
 
+  /* текст фирменного цвета: в тёмной теме синий на тёмном не читается, поэтому отдельная роль */
+  --color-brand-text: #102382;
+  --color-hover: #eef1f6;
+  --color-header-bg: rgba(255, 255, 255, 0.86);
+  --color-overlay: rgba(255, 255, 255, 0.85);
+  --color-skeleton: #eef1f6;
+  --color-skeleton-shine: #e2e7f0;
+
+  /* надписи на цветных подложках статусов */
+  --color-success-text: #15803d;
+  --color-danger-text: #b91c1c;
+  --color-danger-border: #fecaca;
+  --color-warning-text: #b45309;
+  --color-warning-strong-text: #92400e;
+  --color-warning-border: #fde4b0;
+  --color-info-text: #1d4ed8;
+
+  /* боковая панель */
+  --sidebar-bg: linear-gradient(180deg, #0a1450 0%, #0d1a5e 100%);
+
+  /* герб предприятия водяным знаком в рабочей области — как в ассистенте */
+  --main-art: url('/main-art.svg');
+
   --sidebar-width: 264px;
   --sidebar-width-collapsed: 76px;
   --header-height: 68px;
 
-  --font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
+  --font-family: 'Onest Variable', 'Onest', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Arial, sans-serif;
+
+  color-scheme: light;
+}
+
+/*
+ * Тёмная тема. Цвета те же, что у ассистента поручений
+ * (tazalyk-assistant/web/src/shared/styles/_tokens.scss): поверхности сине-серые,
+ * фирменный синий остаётся акцентом. Тема ставится на <html data-theme>,
+ * выбор хранится в браузере (src/hooks/useTheme.ts, public/theme-init.js).
+ */
+[data-theme='dark'] {
+  --color-brand: #3044c0;
+  --color-brand-hover: #3a50d6;
+  --color-brand-soft: #1b2540;
+  --color-brand-dark: #0b0f18;
+  --color-brand-text: #9dacff;
+
+  --color-accent-soft: #14301f;
+  --color-danger-soft: #331a18;
+  --color-warning-soft: #33290f;
+  --color-info-soft: #172a45;
+
+  --color-bg: #0f1420;
+  --color-surface: #171e2e;
+  --color-surface-muted: #1c2436;
+  --color-border: #2a3348;
+  --color-border-strong: #3a4560;
+
+  --color-text: #e7eaf0;
+  --color-text-secondary: #b3bbc9;
+  --color-text-muted: #7f8899;
+
+  --shadow-sm: 0 1px 2px rgba(0, 0, 0, 0.3);
+  --shadow-md: 0 4px 16px rgba(0, 0, 0, 0.35);
+  --shadow-lg: 0 20px 48px rgba(0, 0, 0, 0.55);
+  --focus-ring: 0 0 0 3px rgba(125, 143, 245, 0.3);
+
+  --color-hover: #222b3d;
+  --color-header-bg: rgba(15, 20, 32, 0.82);
+  --color-overlay: rgba(15, 20, 32, 0.8);
+  --color-skeleton: #1c2436;
+  --color-skeleton-shine: #26304a;
+
+  --color-success-text: #6ee7a0;
+  --color-danger-text: #f3a093;
+  --color-danger-border: #5c2a25;
+  --color-warning-text: #e9c46a;
+  --color-warning-strong-text: #e9c46a;
+  --color-warning-border: #4a3a14;
+  --color-info-text: #afbcff;
+
+  --sidebar-bg: linear-gradient(180deg, #141b2b 0%, #0b0f18 100%);
+  --main-art: url('/main-art-dark.svg');
+
+  color-scheme: dark;
 }
 
 * {
@@ -104,6 +182,10 @@ video {
 :focus-visible {
   outline: 2px solid var(--color-brand);
   outline-offset: 2px;
+}
+
+[data-theme='dark'] :focus-visible {
+  outline-color: var(--color-brand-text);
 }
 
 @keyframes fadeIn {

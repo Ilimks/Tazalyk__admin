@@ -84,7 +84,7 @@
   height: 48px;
   border-radius: 50%;
   background: rgba(255, 255, 255, 0.92);
-  color: var(--color-brand);
+  color: #102382;
   display: flex;
   align-items: center;
   justify-content: center;
@@ -161,7 +161,7 @@
 
   &:hover {
     background: var(--color-brand-soft);
-    color: var(--color-brand);
+    color: var(--color-brand-text);
   }
 
   &.danger:hover {

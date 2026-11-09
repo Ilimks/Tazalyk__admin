@@ -5,7 +5,7 @@
   width: var(--sidebar-width);
   display: flex;
   flex-direction: column;
-  background: linear-gradient(180deg, var(--color-brand-dark) 0%, #0d1a5e 100%);
+  background: var(--sidebar-bg);
   color: white;
   transition: width 0.2s ease, transform 0.25s ease;
 }

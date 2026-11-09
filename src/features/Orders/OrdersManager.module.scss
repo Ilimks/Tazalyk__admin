@@ -155,7 +155,7 @@
       background: var(--color-surface-muted);
 
       .openIcon {
-        color: var(--color-brand);
+        color: var(--color-brand-text);
         transform: translateX(2px);
       }
     }
@@ -375,14 +375,14 @@
   border: 1px solid color-mix(in srgb, var(--color-warning) 35%, transparent);
   border-radius: var(--radius-md);
   background: var(--color-warning-soft);
-  color: #92400e;
+  color: var(--color-warning-strong-text);
   font-size: 13px;
   line-height: 1.5;
 
   svg {
     flex-shrink: 0;
     margin-top: 1px;
-    color: #b45309;
+    color: var(--color-warning-text);
   }
 
   strong {
@@ -432,7 +432,7 @@
   justify-content: center;
   border-radius: var(--radius-sm);
   background: var(--color-brand-soft);
-  color: var(--color-brand);
+  color: var(--color-brand-text);
 }
 
 // покупатель и получение — рядом, на телефоне друг под другом
@@ -487,7 +487,7 @@
   align-self: flex-start;
   font-size: 14px;
   font-weight: 600;
-  color: var(--color-brand);
+  color: var(--color-brand-text);
   text-decoration: none;
   overflow-wrap: anywhere;
 

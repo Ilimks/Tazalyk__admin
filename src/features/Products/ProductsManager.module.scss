@@ -258,7 +258,7 @@
 
   &:hover {
     background: var(--color-brand-soft);
-    color: var(--color-brand);
+    color: var(--color-brand-text);
   }
 
   &:focus-visible {
@@ -423,7 +423,7 @@
   justify-content: center;
   border-radius: var(--radius-sm);
   background: var(--color-brand-soft);
-  color: var(--color-brand);
+  color: var(--color-brand-text);
 }
 
 // короткие поля — в две/три колонки, длинные — на всю ширину
@@ -460,7 +460,7 @@
   font: inherit;
   font-size: 13px;
   font-weight: 600;
-  color: var(--color-brand);
+  color: var(--color-brand-text);
   cursor: pointer;
 
   &:hover {
