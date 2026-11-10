@@ -2,7 +2,7 @@
   animation: fadeIn 0.2s ease;
 }
 
-// окно просмотра: большое фото и лента миниатюр галереи
+// окно просмотра: фото целиком
 .viewer {
   display: flex;
   flex-direction: column;
@@ -15,42 +15,6 @@
   object-fit: contain;
   border-radius: var(--radius-md);
   background: #0f172a;
-}
-
-.viewerStrip {
-  display: flex;
-  gap: 8px;
-  overflow-x: auto;
-  padding-bottom: 4px;
-}
-
-.viewerThumb {
-  flex: 0 0 auto;
-  width: 88px;
-  height: 64px;
-  padding: 0;
-  border: 2px solid transparent;
-  border-radius: var(--radius-sm);
-  overflow: hidden;
-  background: #0f172a;
-  cursor: pointer;
-  opacity: 0.7;
-  transition: opacity 0.15s ease, border-color 0.15s ease;
-
-  img {
-    width: 100%;
-    height: 100%;
-    object-fit: cover;
-  }
-
-  &:hover {
-    opacity: 1;
-  }
-}
-
-.viewerThumbActive {
-  border-color: var(--color-brand);
-  opacity: 1;
 }
 
 // форма добавления/редактирования

@@ -1,7 +1,7 @@
 import { useEffect } from 'react';
 import { ExternalLink, LogOut, X } from 'lucide-react';
 import styles from './Sidebar.module.scss';
-import { useApplicationsStore, useAuthStore, useOrdersStore } from '@/store';
+import { useApplicationsStore, useAuthStore, useComplaintsStore, useOrdersStore } from '@/store';
 import { config } from '@/config';
 import { NAV_GROUPS, NAV_ITEMS, ROLE_LABELS } from '../navigation';
 import type { ActiveTab } from '@/types';
@@ -19,8 +19,10 @@ export const Sidebar: React.FC<SidebarProps> = ({ activeTab, onTabChange, availa
   const { user, logout } = useAuthStore();
   const { newCount, fetchNewCount } = useOrdersStore();
   const { newCount: newApplications, fetchNewCount: fetchNewApplications } = useApplicationsStore();
+  const { newCount: newComplaints, fetchNewCount: fetchNewComplaints } = useComplaintsStore();
   const showOrders = availableTabs.includes('orders');
   const showApplications = availableTabs.includes('applications');
+  const showComplaints = availableTabs.includes('complaints');
 
   // счётчик новых заказов: загружается при входе, потом обновляется вместе со списком заказов
   useEffect(() => {
@@ -30,6 +32,10 @@ export const Sidebar: React.FC<SidebarProps> = ({ activeTab, onTabChange, availa
   useEffect(() => {
     if (showApplications) fetchNewApplications();
   }, [showApplications, fetchNewApplications]);
+
+  useEffect(() => {
+    if (showComplaints) fetchNewComplaints();
+  }, [showComplaints, fetchNewComplaints]);
 
   const groups = NAV_GROUPS.map((group) => ({
     ...group,
@@ -45,7 +51,8 @@ export const Sidebar: React.FC<SidebarProps> = ({ activeTab, onTabChange, availa
       <aside className={`${styles.sidebar} ${isOpen ? styles.open : ''}`} aria-label="Разделы админ-панели">
         <div className={styles.brand}>
           <span className={styles.logo}>
-            <img src="/favicon.svg" alt="" width={30} height={30} />
+            {/* тот же герб, что на вкладке браузера: без мелкой подписи, которая в 30px не читается */}
+            <img src="/apple-touch-icon.png" alt="" width={32} height={32} />
           </span>
           <div className={styles.brandText}>
             <span className={styles.brandName}>Тазалык</span>
@@ -63,7 +70,11 @@ export const Sidebar: React.FC<SidebarProps> = ({ activeTab, onTabChange, availa
               {group.items.map((id) => {
                 const { label, icon: Icon } = NAV_ITEMS[id];
                 const isActive = activeTab === id;
-                const badge = (id === 'orders' && newCount) || (id === 'applications' && newApplications) || 0;
+                const badge =
+                  (id === 'orders' && newCount) ||
+                  (id === 'complaints' && newComplaints) ||
+                  (id === 'applications' && newApplications) ||
+                  0;
                 return (
                   <button
                     key={id}

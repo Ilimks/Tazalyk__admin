@@ -22,7 +22,6 @@ export const PhotoForm: React.FC<PhotoFormProps> = ({
   const [formData, setFormData] = useState({
     date: initialData?.date || new Date().toISOString().split('T')[0],
     main_image: initialData?.main_image || '',
-    gallery_images: initialData?.gallery_images || [],
   });
 
   const handleSubmit = async (e: React.FormEvent) => {
@@ -44,8 +43,9 @@ export const PhotoForm: React.FC<PhotoFormProps> = ({
 
   return (
     <form onSubmit={handleSubmit} className={styles.form}>
+      {/* одна запись — одно фото: дополнительных фото у записи больше нет */}
       <ImageUpload
-        label="Главное фото"
+        label="Фото"
         value={formData.main_image}
         onChange={(url) => {
           if (typeof url === 'string') {
@@ -53,19 +53,6 @@ export const PhotoForm: React.FC<PhotoFormProps> = ({
           }
         }}
         required
-      />
-
-      <ImageUpload
-        label="Дополнительные фото"
-        value={formData.gallery_images}
-        onChange={(urls) => {
-          if (Array.isArray(urls)) {
-            setFormData({ ...formData, gallery_images: urls });
-          } else if (typeof urls === 'string' && urls) {
-            setFormData({ ...formData, gallery_images: [...formData.gallery_images, urls] });
-          }
-        }}
-        multiple
       />
 
       <Input

@@ -64,6 +64,9 @@ const getPermissionsForUser = (role: string, customPermissions?: string[]): User
     canCreateVacancies: false,
     canEditVacancies: false,
     canDeleteVacancies: false,
+    canViewComplaints: false,
+    canEditComplaints: false,
+    canDeleteComplaints: false,
     canManageUsers: false,
   };
 
@@ -105,6 +108,9 @@ const getPermissionsForUser = (role: string, customPermissions?: string[]): User
       canCreateVacancies: true,
       canEditVacancies: true,
       canDeleteVacancies: true,
+      canViewComplaints: true,
+      canEditComplaints: true,
+      canDeleteComplaints: true,
       canManageUsers: true,
     };
   }
@@ -156,7 +162,11 @@ const getPermissionsForUser = (role: string, customPermissions?: string[]): User
       case 'create_vacancies': perms.canCreateVacancies = true; break;
       case 'edit_vacancies': perms.canEditVacancies = true; break;
       case 'delete_vacancies': perms.canDeleteVacancies = true; break;
-      
+
+      case 'view_complaints': perms.canViewComplaints = true; break;
+      case 'edit_complaints': perms.canEditComplaints = true; break;
+      case 'delete_complaints': perms.canDeleteComplaints = true; break;
+
       case 'manage_users': perms.canManageUsers = true; break;
     }
   });
@@ -253,6 +263,7 @@ export const useAuthStore = create<AuthState>()(
           legislation: permissions.canViewLegislation,
           products: permissions.canViewProducts,
           orders: permissions.canViewOrders,
+          complaints: permissions.canViewComplaints,
           vacancies: permissions.canViewVacancies,
           applications: permissions.canViewVacancies,
         };
@@ -271,6 +282,8 @@ export const useAuthStore = create<AuthState>()(
           legislation: permissions.canCreateLegislation,
           products: permissions.canCreateProducts,
           orders: permissions.canCreateOrders,
+          // жалобы, как и отклики, приходят только с сайта
+          complaints: false,
           vacancies: permissions.canCreateVacancies,
           // отклики приходят только с сайта
           applications: false,
@@ -289,6 +302,7 @@ export const useAuthStore = create<AuthState>()(
           legislation: permissions.canEditLegislation,
           products: permissions.canEditProducts,
           orders: permissions.canEditOrders,
+          complaints: permissions.canEditComplaints,
           vacancies: permissions.canEditVacancies,
           applications: permissions.canEditVacancies,
         };
@@ -306,6 +320,7 @@ export const useAuthStore = create<AuthState>()(
           legislation: permissions.canDeleteLegislation,
           products: permissions.canDeleteProducts,
           orders: permissions.canDeleteOrders,
+          complaints: permissions.canDeleteComplaints,
           vacancies: permissions.canDeleteVacancies,
           applications: permissions.canDeleteVacancies,
         };

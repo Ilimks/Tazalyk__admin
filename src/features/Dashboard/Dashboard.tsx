@@ -2,7 +2,7 @@ import React, { useEffect, useState } from 'react';
 import { ExternalLink, Gauge, ImageDown, MonitorPlay } from 'lucide-react';
 import styles from './Dashboard.module.scss';
 import { StatCard } from './components/StatCard';
-import { useApplicationsStore, useAuthStore, useOrdersStore } from '@/store';
+import { useApplicationsStore, useAuthStore, useComplaintsStore, useOrdersStore } from '@/store';
 import { config } from '@/config';
 import { NAV_ITEMS, ROLE_LABELS, SECTIONS, type Section } from '@/layout/navigation';
 import {
@@ -15,6 +15,7 @@ import {
   productsService,
   vacanciesService,
   applicationsService,
+  complaintsService,
   videosService,
 } from '@/api/services';
 import type { ActiveTab } from '@/types';
@@ -33,6 +34,7 @@ const services: Record<Section, { getPage: (page: number, pageSize: number) => P
   legislation: legislationService,
   products: productsService,
   orders: ordersService,
+  complaints: complaintsService,
   vacancies: vacanciesService,
   applications: applicationsService,
 };
@@ -46,6 +48,7 @@ const tones: Record<Section, string> = {
   legislation: 'cyan',
   products: 'teal',
   orders: 'indigo',
+  complaints: 'amber',
   vacancies: 'orange',
   applications: 'rose',
 };
@@ -53,6 +56,10 @@ const tones: Record<Section, string> = {
 // «1 новый», «2 новых», «21 новый»
 const newOrdersLabel = (count: number) =>
   `${count} ${count % 10 === 1 && count % 100 !== 11 ? 'новый' : 'новых'}`;
+
+// жалоба — женского рода: «1 новая», «2 новых», «21 новая»
+const newComplaintsLabel = (count: number) =>
+  `${count} ${count % 10 === 1 && count % 100 !== 11 ? 'новая' : 'новых'}`;
 
 // API не отдаёт отдельные счётчики, поэтому запрашиваем по одной записи из раздела.
 // Кэш на минуту, чтобы при возврате на «Обзор» не скачивать их заново.
@@ -80,6 +87,7 @@ export const Dashboard: React.FC<DashboardProps> = ({ availableTabs, onNavigate 
   // счётчик новых заказов общий с меню: его загружает и обновляет боковая панель
   const { newCount } = useOrdersStore();
   const { newCount: newApplications } = useApplicationsStore();
+  const { newCount: newComplaints } = useComplaintsStore();
   const sections = SECTIONS.filter((section) => availableTabs.includes(section));
   const [counts, setCounts] = useState<Partial<Record<Section, number>>>(() => countsCache?.counts || {});
 
@@ -137,7 +145,9 @@ export const Dashboard: React.FC<DashboardProps> = ({ availableTabs, onNavigate 
                     ? newOrdersLabel(newCount)
                     : section === 'applications' && newApplications
                       ? newOrdersLabel(newApplications)
-                      : undefined
+                      : section === 'complaints' && newComplaints
+                        ? newComplaintsLabel(newComplaints)
+                        : undefined
                 }
                 onClick={() => onNavigate(section)}
               />

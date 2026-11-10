@@ -8,6 +8,7 @@ export interface User {
     | 'legal_manager'
     | 'shop_manager'
     | 'hr_manager'
+    | 'complaints_manager'
     | 'viewer'
     | 'guest';
   permissions: string[];
@@ -75,6 +76,11 @@ export interface UserPermissions {
   canEditVacancies: boolean;
   canDeleteVacancies: boolean;
 
+  // жалобы присылают граждане с сайта, поэтому права на создание нет
+  canViewComplaints: boolean;
+  canEditComplaints: boolean;
+  canDeleteComplaints: boolean;
+
   canManageUsers: boolean;
 }
 
@@ -93,7 +99,6 @@ export interface Video {
 export interface Photo {
   id: string;
   main_image: string;
-  gallery_images: string[];
   date: string;
   created_at: string;
 }
@@ -332,6 +337,49 @@ export interface ApplicationUpdate {
   hr_note?: string;
 }
 
+// ========== ЖАЛОБЫ (ОБРАЩЕНИЯ ГРАЖДАН) ==========
+export type ComplaintType = 'waste_issue' | 'billing_error' | 'service_quality' | 'employee_complaint' | 'other';
+export type ComplaintStatus = 'new' | 'in_progress' | 'resolved' | 'rejected';
+
+// фото — личные данные: ссылки на файл нет, админка скачивает его по id с входом сотрудника
+export interface ComplaintPhoto {
+  id: number;
+  content_type: string;
+  size: number;
+}
+
+export interface Complaint {
+  id: string;
+  complaint_type: ComplaintType;
+  type_label: string;
+  full_name: string;
+  email: string;
+  phone: string;
+  subject: string;
+  // многострочный текст гражданина
+  description: string;
+  // 'YYYY-MM-DD' или null, если гражданин не указал
+  incident_date: string | null;
+  incident_location: string;
+  photos: ComplaintPhoto[];
+  status: ComplaintStatus;
+  status_label: string;
+  manager_note: string;
+  created_at: string;
+  updated_at: string;
+}
+
+export interface ComplaintFilters {
+  status?: ComplaintStatus | '';
+  complaint_type?: ComplaintType | '';
+}
+
+// сотрудник меняет только статус и свою заметку
+export interface ComplaintUpdate {
+  status?: ComplaintStatus;
+  manager_note?: string;
+}
+
 // ========== АКТИВНЫЕ ВКЛАДКИ ==========
 export type ActiveTab =
   | 'dashboard'
@@ -343,6 +391,7 @@ export type ActiveTab =
   | 'legislation'
   | 'products'
   | 'orders'
+  | 'complaints'
   | 'vacancies'
   | 'applications';
 

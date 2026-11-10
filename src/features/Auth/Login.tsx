@@ -66,7 +66,7 @@ export const Login: React.FC = () => {
 
         <header className={styles.brandTop}>
           <span className={styles.logo}>
-            <img src="/favicon.svg" alt="" width={46} height={46} />
+            <img src="/apple-touch-icon.png" alt="" width={46} height={46} />
           </span>
           <div className={styles.brandText}>
             <div className={styles.brandName}>МП «Тазалык»</div>

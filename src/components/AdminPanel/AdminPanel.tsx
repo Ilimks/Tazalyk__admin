@@ -26,6 +26,9 @@ const SECTION_COMPONENTS: Record<Section, React.LazyExoticComponent<React.FC>> =
   ),
   products: lazy(() => import('@/features/Products/ProductsManager').then((m) => ({ default: m.ProductsManager }))),
   orders: lazy(() => import('@/features/Orders/OrdersManager').then((m) => ({ default: m.OrdersManager }))),
+  complaints: lazy(() =>
+    import('@/features/Complaints/ComplaintsManager').then((m) => ({ default: m.ComplaintsManager })),
+  ),
   vacancies: lazy(() => import('@/features/Vacancies/VacanciesManager').then((m) => ({ default: m.VacanciesManager }))),
   applications: lazy(() =>
     import('@/features/Applications/ApplicationsManager').then((module) => ({ default: module.ApplicationsManager }))

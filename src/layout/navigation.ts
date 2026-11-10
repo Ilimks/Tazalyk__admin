@@ -5,6 +5,7 @@ import {
   Images,
   Inbox,
   LayoutDashboard,
+  MessageSquareWarning,
   Newspaper,
   Package,
   Scale,
@@ -33,6 +34,7 @@ export const NAV_ITEMS: Record<ActiveTab, NavItem> = {
   legislation: { id: 'legislation', label: 'Законодательство КР', description: 'Нормативные акты Кыргызстана', icon: Scale },
   products: { id: 'products', label: 'Товары', description: 'Каталог мусорных контейнеров', icon: Package },
   orders: { id: 'orders', label: 'Заказы', description: 'Заказы покупателей с сайта', icon: ShoppingCart },
+  complaints: { id: 'complaints', label: 'Жалобы', description: 'Обращения граждан с сайта', icon: MessageSquareWarning },
   vacancies: { id: 'vacancies', label: 'Вакансии', description: 'Открытые вакансии на странице «Вакансии»', icon: BriefcaseBusiness },
   applications: { id: 'applications', label: 'Отклики', description: 'Резюме кандидатов с сайта', icon: Inbox },
 };
@@ -44,6 +46,8 @@ export const NAV_GROUPS: { title?: string; items: ActiveTab[] }[] = [
   { title: 'Закупки', items: ['procurements'] },
   { title: 'Документы', items: ['local_acts', 'legislation'] },
   { title: 'Магазин', items: ['products', 'orders'] },
+  // между заказами и откликами: всё, что присылают с сайта, рядом
+  { title: 'Обращения', items: ['complaints'] },
   { title: 'Отдел кадров', items: ['vacancies', 'applications'] },
 ];
 
@@ -56,6 +60,7 @@ export const SECTIONS: Section[] = [
   'legislation',
   'products',
   'orders',
+  'complaints',
   'vacancies',
   'applications',
 ];
@@ -67,6 +72,7 @@ export const ROLE_LABELS: Record<User['role'], string> = {
   legal_manager: 'Юрист',
   shop_manager: 'Менеджер магазина',
   hr_manager: 'Отдел кадров',
+  complaints_manager: 'Обращения граждан',
   viewer: 'Только просмотр',
   guest: 'Гость',
 };

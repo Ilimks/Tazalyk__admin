@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState } from 'react';
 import { Clapperboard, Plus } from 'lucide-react';
 import styles from './VideosManager.module.scss';
 import { useAuthStore, useVideosStore } from '@/store';
@@ -9,13 +9,11 @@ import { Pagination } from '@/components/common/Pagination';
 import { ConfirmModal } from '@/components/common/ConfirmModal';
 import { PageHeader } from '@/components/common/PageHeader';
 import { EmptyState } from '@/components/common/EmptyState';
-import { MediaCard, mediaCardStyles } from '@/components/common/MediaCard';
+import { MediaCard, mediaCardStyles, useMediaGrid } from '@/components/common/MediaCard';
 import { VideoForm } from './components/VideoForm';
 import { Loader } from '@/components/common/Loader';
 import { captureVideoThumbnail } from '@/utils/media';
 import type { Video } from '@/types';
-
-const PAGE_SIZE = 8;
 
 export const VideosManager: React.FC = () => {
   const {
@@ -45,9 +43,8 @@ export const VideosManager: React.FC = () => {
   const allowEdit = canEdit('videos');
   const allowDelete = canDelete('videos');
 
-  useEffect(() => {
-    fetchPage(1, PAGE_SIZE);
-  }, []);
+  // сколько видео на странице, решает ширина сетки: последний ряд всегда полный
+  const grid = useMediaGrid<HTMLDivElement>(fetchPage, { currentPage, pageSize });
 
   const totalPages = Math.ceil(totalCount / pageSize);
 
@@ -120,7 +117,7 @@ export const VideosManager: React.FC = () => {
   const withoutThumbnail = videos.filter((video) => !video.thumbnail).length;
 
   return (
-    <div className={styles.manager}>
+    <div ref={grid.ref} className={styles.manager}>
       <PageHeader
         icon={Clapperboard}
         title="Видео"
@@ -159,7 +156,7 @@ export const VideosManager: React.FC = () => {
           }
         />
       ) : (
-        <div className={mediaCardStyles.grid}>
+        <div className={mediaCardStyles.grid} style={grid.gridStyle}>
           {videos.map((video) => (
             <MediaCard
               key={video.id}

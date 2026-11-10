@@ -23,7 +23,9 @@ const GROUP_PERMISSIONS: Record<string, string[]> = {
   shop_managers: [...crud('products'), 'view_orders', 'edit_orders'],
   // отдел кадров видит только вакансии
   hr_managers: crud('vacancies'),
-  // заказы не показываем: в них личные данные покупателей
+  // удалять жалобы может только суперпользователь: это история обращений граждан
+  complaints_managers: ['view_complaints', 'edit_complaints'],
+  // заказы и жалобы не показываем: в них личные данные покупателей и заявителей
   viewers: [
     'view_videos', 'view_photos', 'view_news', 'view_procurements',
     'view_local_acts', 'view_legislation', 'view_products',
@@ -37,6 +39,7 @@ const GROUP_ROLES: [string, Role][] = [
   ['legal_managers', 'legal_manager'],
   ['shop_managers', 'shop_manager'],
   ['hr_managers', 'hr_manager'],
+  ['complaints_managers', 'complaints_manager'],
   ['viewers', 'viewer'],
 ];
 

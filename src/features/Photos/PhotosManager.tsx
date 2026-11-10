@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState } from 'react';
 import { Images, Plus } from 'lucide-react';
 import styles from './PhotosManager.module.scss';
 import { useAuthStore, usePhotosStore } from '@/store';
@@ -8,13 +8,11 @@ import { Modal } from '@/components/common/Modal';
 import { Pagination } from '@/components/common/Pagination/Pagination';
 import { PageHeader } from '@/components/common/PageHeader';
 import { EmptyState } from '@/components/common/EmptyState';
-import { MediaCard, mediaCardStyles } from '@/components/common/MediaCard';
+import { MediaCard, mediaCardStyles, useMediaGrid } from '@/components/common/MediaCard';
 import { PhotoForm } from './components/PhotoForm';
 import { Loader } from '@/components/common/Loader/Loader';
 import type { Photo } from '@/types';
 import { ConfirmModal } from '@/components/common/ConfirmModal';
-
-const PAGE_SIZE = 8;
 
 export const PhotosManager: React.FC = () => {
   const {
@@ -35,15 +33,14 @@ export const PhotosManager: React.FC = () => {
   const [deleteModalOpen, setDeleteModalOpen] = useState(false);
   const [itemToDelete, setItemToDelete] = useState<Photo | null>(null);
   const [isDeleting, setIsDeleting] = useState(false);
-  const [viewing, setViewing] = useState<{ photo: Photo; index: number } | null>(null);
+  const [viewing, setViewing] = useState<Photo | null>(null);
 
   const allowCreate = canCreate('photos');
   const allowEdit = canEdit('photos');
   const allowDelete = canDelete('photos');
 
-  useEffect(() => {
-    fetchPage(1, PAGE_SIZE);
-  }, []);
+  // сколько фото на странице, решает ширина сетки: последний ряд всегда полный
+  const grid = useMediaGrid<HTMLDivElement>(fetchPage, { currentPage, pageSize });
 
   const totalPages = Math.ceil(totalCount / pageSize);
 
@@ -97,10 +94,8 @@ export const PhotosManager: React.FC = () => {
     return <Loader />;
   }
 
-  const viewingImages = viewing ? [viewing.photo.main_image, ...(viewing.photo.gallery_images || [])] : [];
-
   return (
-    <div className={styles.manager}>
+    <div ref={grid.ref} className={styles.manager}>
       <PageHeader
         icon={Images}
         title="Фото"
@@ -128,15 +123,14 @@ export const PhotosManager: React.FC = () => {
           }
         />
       ) : (
-        <div className={mediaCardStyles.grid}>
+        <div className={mediaCardStyles.grid} style={grid.gridStyle}>
           {photos.map((photo) => (
             <MediaCard
               key={photo.id}
               kind="photo"
               previewSrc={photo.main_image}
-              extraCount={photo.gallery_images?.length || 0}
               date={photo.date}
-              onOpen={() => setViewing({ photo, index: 0 })}
+              onOpen={() => setViewing(photo)}
               onEdit={allowEdit ? () => handleEdit(photo) : undefined}
               onDelete={allowDelete ? () => handleDeleteClick(photo) : undefined}
             />
@@ -169,27 +163,12 @@ export const PhotosManager: React.FC = () => {
       <Modal
         isOpen={Boolean(viewing)}
         onClose={() => setViewing(null)}
-        title={viewing ? new Date(viewing.photo.date).toLocaleDateString('ru-RU') : ''}
+        title={viewing ? new Date(viewing.date).toLocaleDateString('ru-RU') : ''}
         size="xl"
       >
         {viewing && (
           <div className={styles.viewer}>
-            <img src={viewingImages[viewing.index]} alt="" className={styles.viewerImage} decoding="async" />
-            {viewingImages.length > 1 && (
-              <div className={styles.viewerStrip}>
-                {viewingImages.map((src, index) => (
-                  <button
-                    key={index}
-                    type="button"
-                    className={`${styles.viewerThumb} ${index === viewing.index ? styles.viewerThumbActive : ''}`}
-                    onClick={() => setViewing({ ...viewing, index })}
-                    aria-label={`Фото ${index + 1}`}
-                  >
-                    <img src={src} alt="" loading="lazy" decoding="async" />
-                  </button>
-                ))}
-              </div>
-            )}
+            <img src={viewing.main_image} alt="" className={styles.viewerImage} decoding="async" />
           </div>
         )}
       </Modal>

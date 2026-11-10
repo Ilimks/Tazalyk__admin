@@ -9,3 +9,4 @@ export { useProductsStore } from './slices/products.slice';
 export { useOrdersStore } from './slices/orders.slice';
 export { useVacanciesStore } from './slices/vacancies.slice';
 export { useApplicationsStore } from './slices/applications.slice';
+export { useComplaintsStore } from './slices/complaints.slice';
