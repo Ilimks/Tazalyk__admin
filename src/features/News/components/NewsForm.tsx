@@ -7,6 +7,7 @@ import { Button } from '@/components/common/Button';
 import { Input } from '@/components/common/Form/Input';
 import { Textarea } from '@/components/common/Form/Textarea';
 import { ImageUpload } from '@/components/common/FileUpload/ImageUpload';
+import { FormError } from '@/components/common/FormError';
 import type { News } from '@/types';
 
 interface NewsFormProps {
@@ -22,6 +23,7 @@ export const NewsForm: React.FC<NewsFormProps> = ({
 }) => {
     const { addNews, updateNews } = useNewsStore();
     const [loading, setLoading] = useState(false);
+    const [errors, setErrors] = useState<{ title_ru?: string; description_ru?: string; form?: string }>({});
     const [uploadProgress, setUploadProgress] = useState(0);
     const [showKyLanguage, setShowKyLanguage] = useState(!!initialData?.title_ky);
     const [formData, setFormData] = useState({
@@ -37,10 +39,11 @@ export const NewsForm: React.FC<NewsFormProps> = ({
     const handleSubmit = async (e: React.FormEvent) => {
         e.preventDefault();
 
-        if (!formData.title_ru || !formData.description_ru) {
-            alert('Заполните обязательные поля (Русский язык)');
-            return;
-        }
+        const problems: typeof errors = {};
+        if (!formData.title_ru.trim()) problems.title_ru = 'Введите заголовок на русском';
+        if (!formData.description_ru.trim()) problems.description_ru = 'Введите описание на русском';
+        setErrors(problems);
+        if (Object.keys(problems).length > 0) return;
 
         setLoading(true);
         setUploadProgress(0);
@@ -54,19 +57,21 @@ export const NewsForm: React.FC<NewsFormProps> = ({
 
         if (success) {
             onSuccess();
+        } else {
+            setErrors({ form: 'Не удалось сохранить. Проверьте поля и связь с сервером и попробуйте ещё раз.' });
         }
         setLoading(false);
     };
 
     return (
-        <form onSubmit={handleSubmit} className={styles.form}>
+        <form onSubmit={handleSubmit} className={styles.form} noValidate>
             {/* Русский язык (обязательный) */}
             <section className={styles.formSection}>
                 <div className={styles.formSectionHead}>
                     <span className={styles.langBadge}>RU</span>
                     <div className={styles.formSectionText}>
                         <h4 className={styles.formSectionTitle}>
-                            Русский язык <span className={styles.required}>*</span>
+                            Русский язык
                         </h4>
                         <p className={styles.formSectionHint}>Основная версия новости, обязательна для публикации</p>
                     </div>
@@ -75,6 +80,7 @@ export const NewsForm: React.FC<NewsFormProps> = ({
                     label="Заголовок"
                     value={formData.title_ru}
                     onChange={(e) => setFormData({ ...formData, title_ru: e.target.value })}
+                    error={errors.title_ru}
                     required
                     placeholder="Введите заголовок на русском"
                 />
@@ -82,6 +88,7 @@ export const NewsForm: React.FC<NewsFormProps> = ({
                     label="Описание"
                     value={formData.description_ru}
                     onChange={(e) => setFormData({ ...formData, description_ru: e.target.value })}
+                    error={errors.description_ru}
                     required
                     placeholder="Введите описание на русском"
                     rows={5}
@@ -168,6 +175,8 @@ export const NewsForm: React.FC<NewsFormProps> = ({
                     </div>
                 )}
             </section>
+
+            <FormError message={errors.form} />
 
             <div className={styles.formActions}>
                 <Button type="button" variant="outline" onClick={onCancel}>

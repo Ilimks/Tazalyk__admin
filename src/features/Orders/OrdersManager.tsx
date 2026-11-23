@@ -11,7 +11,7 @@ import { Pagination } from '@/components/common/Pagination/Pagination';
 import { PageHeader } from '@/components/common/PageHeader';
 import { EmptyState } from '@/components/common/EmptyState';
 import { ConfirmModal } from '@/components/common/ConfirmModal';
-import { Loader } from '@/components/common/Loader';
+import { TableSkeleton } from '@/components/common/Skeleton';
 import { OrderTable } from './components/OrderTable';
 import { OrderDetails } from './components/OrderDetails';
 import { ORDER_FILTER_LABELS, ORDER_STATUSES } from './statuses';
@@ -94,12 +94,10 @@ export const OrdersManager: React.FC = () => {
   };
 
   const renderContent = () => {
-    // первая загрузка: шапка остаётся на месте, спиннер — вместо таблицы
+    // первая загрузка: шапка остаётся на месте, заглушка — вместо таблицы
     if (loading && orders.length === 0) {
       return (
-        <div className={styles.loaderCard}>
-          <Loader />
-        </div>
+        <TableSkeleton />
       );
     }
 

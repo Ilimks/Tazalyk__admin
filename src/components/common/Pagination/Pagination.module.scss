@@ -4,8 +4,8 @@
   justify-content: space-between;
   flex-wrap: wrap;
   gap: 16px;
-  margin-top: 24px;
-  padding: 12px 16px;
+  margin-top: 16px;
+  padding: 10px 12px 10px 16px;
   background: var(--color-surface);
   border: 1px solid var(--color-border);
   border-radius: var(--radius-lg);
@@ -30,7 +30,7 @@
   gap: 8px;
 
   select {
-    height: 32px;
+    height: 36px;
     padding: 0 10px;
     border: 1px solid var(--color-border);
     border-radius: var(--radius-sm);
@@ -40,8 +40,8 @@
 
     &:focus {
       outline: none;
-      border-color: var(--color-brand);
-      box-shadow: var(--focus-ring);
+      border-color: var(--color-focus);
+      box-shadow: var(--focus-ring-input);
     }
   }
 }
@@ -60,8 +60,8 @@
 }
 
 .pageBtn {
-  min-width: 32px;
-  height: 32px;
+  min-width: 36px;
+  height: 36px;
   padding: 0 8px;
   border: 1px solid transparent;
   border-radius: var(--radius-sm);
@@ -81,6 +81,11 @@
     background: var(--color-brand);
     color: white;
   }
+
+  &:focus-visible {
+    outline: none;
+    box-shadow: var(--focus-ring);
+  }
 }
 
 .dots {
@@ -89,12 +94,17 @@
   color: var(--color-text-muted);
 }
 
+// на телефоне: счётчик строкой сверху, кнопки «назад/вперёд» по краям
 @media (max-width: 640px) {
   .pagination {
     justify-content: center;
+    gap: 10px;
+    padding: 12px;
   }
 
   .paginationControls {
+    width: 100%;
     margin-left: 0;
+    justify-content: space-between;
   }
 }

@@ -1,9 +1,11 @@
 import React, { useState } from 'react';
+import { CalendarDays, Camera } from 'lucide-react';
 import styles from '../PhotosManager.module.scss';
 import { usePhotosStore } from '@/store';
 import { Button } from '@/components/common/Button/Button';
 import { Input } from '@/components/common/Form/Input';
 import { ImageUpload } from '@/components/common/FileUpload/ImageUpload';
+import { FormError } from '@/components/common/FormError';
 import type { Photo } from '@/types';
 
 interface PhotoFormProps {
@@ -19,6 +21,7 @@ export const PhotoForm: React.FC<PhotoFormProps> = ({
 }) => {
   const { addPhoto, updatePhoto } = usePhotosStore();
   const [loading, setLoading] = useState(false);
+  const [errors, setErrors] = useState<{ image?: string; date?: string; form?: string }>({});
   const [formData, setFormData] = useState({
     date: initialData?.date || new Date().toISOString().split('T')[0],
     main_image: initialData?.main_image || '',
@@ -26,6 +29,13 @@ export const PhotoForm: React.FC<PhotoFormProps> = ({
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
+
+    const problems: typeof errors = {};
+    if (!formData.main_image) problems.image = 'Выберите фото';
+    if (!formData.date) problems.date = 'Укажите дату публикации';
+    setErrors(problems);
+    if (Object.keys(problems).length > 0) return;
+
     setLoading(true);
 
     let success = false;
@@ -37,32 +47,61 @@ export const PhotoForm: React.FC<PhotoFormProps> = ({
 
     if (success) {
       onSuccess();
+    } else {
+      setErrors({ form: 'Не удалось сохранить. Проверьте поля и связь с сервером и попробуйте ещё раз.' });
     }
     setLoading(false);
   };
 
   return (
-    <form onSubmit={handleSubmit} className={styles.form}>
+    <form onSubmit={handleSubmit} className={styles.form} noValidate>
       {/* одна запись — одно фото: дополнительных фото у записи больше нет */}
-      <ImageUpload
-        label="Фото"
-        value={formData.main_image}
-        onChange={(url) => {
-          if (typeof url === 'string') {
-            setFormData({ ...formData, main_image: url });
-          }
-        }}
-        required
-      />
+      <section className={styles.formSection}>
+        <div className={styles.formSectionHead}>
+          <span className={styles.sectionIcon}>
+            <Camera size={16} />
+          </span>
+          <div className={styles.formSectionText}>
+            <h4 className={styles.formSectionTitle}>Фото</h4>
+            <p className={styles.formSectionHint}>Показывается в разделе «Медиа» на сайте</p>
+          </div>
+        </div>
+        <ImageUpload
+          label="Фото"
+          value={formData.main_image}
+          onChange={(url) => {
+            if (typeof url === 'string') {
+              setFormData({ ...formData, main_image: url });
+              if (url) setErrors((prev) => ({ ...prev, image: undefined }));
+            }
+          }}
+          required
+        />
+        {errors.image && <span className={styles.fieldError} role="alert">{errors.image}</span>}
+      </section>
 
-      <Input
-        className={styles.formRow}
-        label="Дата публикации"
-        type="date"
-        value={formData.date}
-        onChange={(e) => setFormData({ ...formData, date: e.target.value })}
-        required
-      />
+      <section className={styles.formSection}>
+        <div className={styles.formSectionHead}>
+          <span className={styles.sectionIcon}>
+            <CalendarDays size={16} />
+          </span>
+          <div className={styles.formSectionText}>
+            <h4 className={styles.formSectionTitle}>Публикация</h4>
+            <p className={styles.formSectionHint}>Дата публикации на сайте</p>
+          </div>
+        </div>
+        <Input
+          className={styles.formRow}
+          label="Дата публикации"
+          type="date"
+          value={formData.date}
+          onChange={(e) => setFormData({ ...formData, date: e.target.value })}
+          error={errors.date}
+          required
+        />
+      </section>
+
+      <FormError message={errors.form} />
 
       <div className={styles.formActions}>
         <Button type="button" variant="outline" onClick={onCancel}>

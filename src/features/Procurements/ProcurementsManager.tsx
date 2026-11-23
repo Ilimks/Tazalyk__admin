@@ -11,7 +11,7 @@ import { Pagination } from '@/components/common/Pagination/Pagination';
 import { PageHeader } from '@/components/common/PageHeader';
 import { EmptyState } from '@/components/common/EmptyState';
 import { ConfirmModal } from '@/components/common/ConfirmModal';
-import { Loader } from '@/components/common/Loader';
+import { TableSkeleton } from '@/components/common/Skeleton';
 import { ProcurementForm } from './components/ProcurementForm';
 import { ProcurementTable } from './components/ProcurementTable';
 import type { Procurement } from '@/types';
@@ -134,12 +134,10 @@ export const ProcurementsManager: React.FC = () => {
   );
 
   const renderContent = () => {
-    // первая загрузка: шапка остаётся на месте, спиннер — вместо таблицы
+    // первая загрузка: шапка остаётся на месте, заглушка — вместо таблицы
     if (loading && procurements.length === 0) {
       return (
-        <div className={styles.loaderCard}>
-          <Loader />
-        </div>
+        <TableSkeleton />
       );
     }
 

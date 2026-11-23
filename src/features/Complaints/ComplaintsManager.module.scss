@@ -9,6 +9,10 @@
   align-items: flex-start;
   justify-content: space-between;
   column-gap: 12px;
+
+  > :first-child {
+    min-width: 0;
+  }
 }
 
 // выпадающий список в виде такой же «таблетки», как кнопки статусов
@@ -20,7 +24,7 @@
   border: 1px solid var(--color-border);
   border-radius: 999px;
   background-color: var(--color-surface);
-  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='16' height='16' viewBox='0 0 24 24' fill='none' stroke='%2364748b' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpolyline points='6 9 12 15 18 9'%3E%3C/polyline%3E%3C/svg%3E");
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='16' height='16' viewBox='0 0 24 24' fill='none' stroke='%2376839a' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpolyline points='6 9 12 15 18 9'%3E%3C/polyline%3E%3C/svg%3E");
   background-repeat: no-repeat;
   background-position: right 12px center;
   color: var(--color-text-secondary);
@@ -50,9 +54,17 @@
   }
 }
 
-@media (max-width: 640px) {
+@media (max-width: 767px) {
+  .filters {
+    display: block;
+  }
+
   .typeSelect {
     width: 100%;
+    height: 44px;
+    border-radius: var(--radius-md);
+    color: var(--color-text);
+    font-size: 14px;
   }
 }
 
@@ -78,10 +90,19 @@
     width: 1%;
   }
 
-  // тема занимает остаток строки, длинная обрезается
+  // тема занимает остаток строки
   .subjectCell {
     width: 100%;
     max-width: 0;
+
+    // длинная тема — в две строки
+    > span {
+      display: -webkit-box;
+      -webkit-line-clamp: 2;
+      -webkit-box-orient: vertical;
+      white-space: normal;
+      line-height: 1.4;
+    }
   }
 }
 
@@ -99,7 +120,6 @@
   align-items: center;
   gap: 5px;
   color: var(--color-text);
-  font-variant-numeric: tabular-nums;
 
   svg {
     color: var(--color-text-muted);
@@ -160,6 +180,10 @@
 
   .typeText {
     width: auto;
+  }
+
+  .noPhotos {
+    display: none;
   }
 }
 

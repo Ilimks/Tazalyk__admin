@@ -1,6 +1,7 @@
 import { Pencil, Trash2 } from 'lucide-react';
 import styles from '../ProcurementsManager.module.scss';
 import { StatusBadge } from '@/components/common/StatusBadge';
+import { formatters } from '@/utils/formatters';
 import type { Procurement } from '@/types';
 
 interface ProcurementTableProps {
@@ -38,8 +39,6 @@ const getMethodLabel = (method: string) => {
 };
 
 const formatDate = (date: string) => (date ? new Date(date).toLocaleDateString('ru-RU') : '—');
-
-const formatAmount = (amount: number) => (amount ? amount.toLocaleString('ru-RU') : '0');
 
 export const ProcurementTable: React.FC<ProcurementTableProps> = ({
   procurements,
@@ -93,7 +92,7 @@ export const ProcurementTable: React.FC<ProcurementTableProps> = ({
                   {proc.date ? <time dateTime={proc.date}>{formatDate(proc.date)}</time> : '—'}
                 </td>
                 <td className={styles.amountCell}>
-                  <span className={styles.amount}>{formatAmount(proc.amount)}</span>
+                  <span className={styles.amount}>{formatters.amount(proc.amount)}</span>
                   <span className={styles.currency}>сом</span>
                 </td>
                 {hasActions && (

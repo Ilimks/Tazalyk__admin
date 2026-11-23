@@ -1,7 +1,7 @@
 .overlay {
   position: fixed;
   inset: 0;
-  background: rgba(10, 20, 80, 0.45);
+  background: var(--color-backdrop);
   backdrop-filter: blur(3px);
   display: flex;
   align-items: center;
@@ -40,6 +40,11 @@
     background: var(--color-surface-muted);
     color: var(--color-text);
   }
+
+  &:focus-visible {
+    outline: none;
+    box-shadow: var(--focus-ring);
+  }
 }
 
 .body {
@@ -70,17 +75,17 @@
 
   &.danger {
     background: var(--color-danger-soft);
-    color: var(--color-danger);
+    color: var(--color-danger-text);
   }
 
   &.warning {
     background: var(--color-warning-soft);
-    color: var(--color-warning);
+    color: var(--color-warning-text);
   }
 
   &.info {
     background: var(--color-info-soft);
-    color: var(--color-info);
+    color: var(--color-info-text);
   }
 }
 
@@ -89,6 +94,10 @@
   display: grid;
   grid-template-columns: 1fr 1fr;
   gap: 12px;
+
+  > * {
+    height: 44px;
+  }
 }
 
 @keyframes fadeIn {

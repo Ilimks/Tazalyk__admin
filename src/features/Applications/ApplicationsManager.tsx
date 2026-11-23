@@ -7,7 +7,7 @@ import { useNotificationStore } from '@/store/notification.store';
 import { Button } from '@/components/common/Button';
 import { ConfirmModal } from '@/components/common/ConfirmModal';
 import { EmptyState } from '@/components/common/EmptyState';
-import { Loader } from '@/components/common/Loader';
+import { TableSkeleton } from '@/components/common/Skeleton';
 import { Modal } from '@/components/common/Modal';
 import { PageHeader } from '@/components/common/PageHeader';
 import { Pagination } from '@/components/common/Pagination/Pagination';
@@ -91,9 +91,7 @@ export const ApplicationsManager: React.FC = () => {
   const renderContent = () => {
     if (loading && applications.length === 0) {
       return (
-        <div className={styles.loaderCard}>
-          <Loader />
-        </div>
+        <TableSkeleton />
       );
     }
 

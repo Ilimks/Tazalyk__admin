@@ -1,94 +1,109 @@
+// «Обзор»: приветствие строкой, новое с сайта, разделы группами меню, советы
+
 .dashboard {
-  display: flex;
-  flex-direction: column;
+  display: grid;
+  grid-template-columns: minmax(0, 1fr);
   gap: 28px;
   animation: fadeIn 0.2s ease;
 }
+
+// ---------- приветствие ----------
 
 .welcome {
   display: flex;
   align-items: center;
   justify-content: space-between;
   flex-wrap: wrap;
-  gap: 20px;
-  padding: 28px 32px;
-  border-radius: var(--radius-xl);
-  color: white;
-  background:
-    radial-gradient(circle at 90% 10%, rgba(34, 197, 94, 0.3), transparent 45%),
-    linear-gradient(135deg, var(--color-brand) 0%, var(--color-brand-dark) 100%);
-  box-shadow: var(--shadow-md);
+  gap: 12px 24px;
+}
+
+.welcomeText {
+  min-width: 0;
 
   h1 {
-    font-size: 26px;
-    font-weight: 800;
+    font-size: 22px;
+    font-weight: 700;
+    line-height: 1.25;
     letter-spacing: -0.01em;
+    color: var(--color-text);
+    overflow-wrap: anywhere;
   }
 
   p {
-    margin-top: 6px;
+    margin-top: 2px;
     font-size: 14px;
-    color: rgba(255, 255, 255, 0.75);
+    color: var(--color-text-secondary);
   }
 }
 
 .siteButton {
   display: inline-flex;
   align-items: center;
+  justify-content: center;
   gap: 8px;
-  height: 42px;
-  padding: 0 18px;
+  height: 40px;
+  padding: 0 16px;
+  flex-shrink: 0;
+  border: 1px solid var(--color-border-strong);
   border-radius: var(--radius-md);
-  border: 1px solid rgba(255, 255, 255, 0.25);
-  background: rgba(255, 255, 255, 0.1);
-  color: white;
+  background: var(--color-surface);
+  color: var(--color-text);
   font-size: 14px;
   font-weight: 600;
   text-decoration: none;
-  transition: background 0.15s ease;
+  transition: background-color 0.15s ease, border-color 0.15s ease;
 
   &:hover {
-    background: rgba(255, 255, 255, 0.18);
+    border-color: var(--color-text-muted);
+    background: var(--color-surface-muted);
+  }
+
+  &:focus-visible {
+    outline: none;
+    box-shadow: var(--focus-ring);
   }
 }
 
 .sectionTitle {
-  margin-bottom: 14px;
+  margin-bottom: 12px;
   font-size: 16px;
   font-weight: 700;
+  line-height: 1.3;
   color: var(--color-text);
 }
 
-.statsGrid {
+// ---------- требует внимания ----------
+
+.attentionGrid {
   display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+  grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
   gap: 16px;
 }
 
-.statCard {
-  --tone: var(--color-brand-text);
-  --tone-soft: var(--color-brand-soft);
-
+.attentionCard {
+  position: relative;
   display: flex;
-  flex-direction: column;
-  align-items: flex-start;
-  gap: 4px;
-  padding: 20px;
+  align-items: center;
+  gap: 16px;
+  min-height: 88px;
+  padding: 16px 18px;
   border: 1px solid var(--color-border);
   border-radius: var(--radius-lg);
   background: var(--color-surface);
+  box-shadow: var(--shadow-sm);
+  font: inherit;
   text-align: left;
+  color: var(--color-text);
   cursor: pointer;
-  transition: transform 0.15s ease, box-shadow 0.15s ease, border-color 0.15s ease;
+  transition: border-color 0.15s ease, box-shadow 0.15s ease;
 
   &:hover {
-    transform: translateY(-2px);
     border-color: var(--color-border-strong);
     box-shadow: var(--shadow-md);
 
-    .statArrow {
-      color: var(--tone);
-      transform: translateX(3px);
+    .arrow {
+      color: var(--color-brand-text);
+      transform: translateX(2px);
     }
   }
 
@@ -96,161 +111,328 @@
     outline: none;
     box-shadow: var(--focus-ring);
   }
-
-  &.green {
-    --tone: #16a34a;
-    --tone-soft: #dcfce7;
-  }
-  &.blue {
-    --tone: #2563eb;
-    --tone-soft: #dbeafe;
-  }
-  &.rose {
-    --tone: #e11d48;
-    --tone-soft: #ffe4e6;
-  }
-  &.amber {
-    --tone: #d97706;
-    --tone-soft: #fef3c7;
-  }
-  &.violet {
-    --tone: #7c3aed;
-    --tone-soft: #ede9fe;
-  }
-  &.cyan {
-    --tone: #0891b2;
-    --tone-soft: #cffafe;
-  }
-  &.teal {
-    --tone: #0d9488;
-    --tone-soft: #ccfbf1;
-  }
-  &.indigo {
-    --tone: #4f46e5;
-    --tone-soft: #e0e7ff;
-  }
-  &.orange {
-    --tone: #ea580c;
-    --tone-soft: #ffedd5;
-  }
 }
 
-// тёмная тема: пастельные подложки значков слепят — тот же тон, но приглушённый
-:global([data-theme='dark']) .statCard {
-  --tone-soft: color-mix(in srgb, var(--tone) 18%, transparent);
-}
-
-.statTop {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  width: 100%;
-  margin-bottom: 12px;
-}
-
-.statIcon {
-  width: 44px;
-  height: 44px;
-  border-radius: var(--radius-md);
-  background: var(--tone-soft);
-  color: var(--tone);
-  display: flex;
+.attentionIcon {
+  width: 48px;
+  height: 48px;
+  flex-shrink: 0;
+  display: inline-flex;
   align-items: center;
   justify-content: center;
+  border-radius: var(--radius-md);
+  background: var(--color-brand-soft);
+  color: var(--color-brand-text);
 }
 
-.statArrow {
+.attentionText {
+  flex: 1;
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+}
+
+.attentionLabel {
+  font-size: 13px;
+  font-weight: 500;
+  color: var(--color-text-secondary);
+}
+
+.attentionValue {
+  display: flex;
+  align-items: baseline;
+  flex-wrap: wrap;
+  gap: 0 8px;
+  font-size: 15px;
+  font-weight: 600;
+
+  strong {
+    font-size: 28px;
+    font-weight: 700;
+    line-height: 1.2;
+    letter-spacing: -0.02em;
+  }
+}
+
+.attentionDone {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  margin-top: 4px;
+  font-size: 14px;
+  color: var(--color-text-secondary);
+
+  svg {
+    flex-shrink: 0;
+    color: var(--color-success-text);
+  }
+}
+
+// есть новое: фирменная заливка значка и полоса слева
+.attentionHot {
+  border-color: color-mix(in srgb, var(--color-brand) 32%, var(--color-border));
+
+  &::before {
+    content: '';
+    position: absolute;
+    left: -1px;
+    top: 14px;
+    bottom: 14px;
+    width: 4px;
+    border-radius: 0 4px 4px 0;
+    background: var(--color-accent);
+  }
+
+  .attentionIcon {
+    background: var(--color-brand);
+    color: white;
+  }
+}
+
+.arrow {
+  flex-shrink: 0;
   color: var(--color-text-muted);
   transition: transform 0.15s ease, color 0.15s ease;
 }
 
-.statValueRow {
+.calm {
   display: flex;
   align-items: center;
-  flex-wrap: wrap;
-  gap: 4px 10px;
-}
-
-.statValue {
-  font-size: 30px;
-  font-weight: 800;
-  line-height: 1.1;
-  color: var(--color-text);
-}
-
-// например, «3 новых» у заказов
-.statBadge {
-  padding: 3px 10px;
-  border-radius: 999px;
-  background: var(--tone);
-  color: white;
-  font-size: 12px;
-  font-weight: 700;
-  line-height: 1.4;
-  white-space: nowrap;
-}
-
-.statLabel {
-  font-size: 15px;
-  font-weight: 600;
-  color: var(--color-text);
-}
-
-.statDescription {
-  font-size: 13px;
-  color: var(--color-text-secondary);
-}
-
-.skeleton {
-  width: 56px;
-  height: 33px;
-  border-radius: var(--radius-sm);
-  background: linear-gradient(90deg, var(--color-skeleton) 0%, var(--color-skeleton-shine) 50%, var(--color-skeleton) 100%);
-  background-size: 200% 100%;
-  animation: shimmer 1.4s infinite;
-}
-
-.tips {
-  padding: 22px 24px;
+  gap: 14px;
+  padding: 16px 18px;
   border: 1px solid var(--color-border);
   border-radius: var(--radius-lg);
   background: var(--color-surface);
+  box-shadow: var(--shadow-sm);
 
-  ul {
-    list-style: none;
-    display: grid;
-    grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
-    gap: 16px;
+  strong {
+    display: block;
+    font-size: 15px;
+    font-weight: 600;
+    color: var(--color-text);
   }
 
-  li {
-    display: flex;
-    align-items: flex-start;
-    gap: 12px;
+  p {
     font-size: 13px;
-    line-height: 1.55;
     color: var(--color-text-secondary);
   }
 }
 
-.tipIcon {
-  width: 34px;
-  height: 34px;
+.calmIcon {
+  width: 44px;
+  height: 44px;
   flex-shrink: 0;
-  border-radius: var(--radius-sm);
-  background: var(--color-accent-soft);
-  color: var(--color-success-text);
-  display: flex;
+  display: inline-flex;
   align-items: center;
   justify-content: center;
+  border-radius: 50%;
+  background: var(--color-accent-soft);
+  color: var(--color-success-text);
 }
 
-@keyframes shimmer {
-  0% {
-    background-position: 200% 0;
+// ---------- разделы: группы меню колонками ----------
+
+.groups {
+  columns: 3;
+  column-gap: 16px;
+}
+
+.group {
+  display: inline-block;
+  width: 100%;
+  margin-bottom: 16px;
+  padding: 12px 8px 8px;
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-lg);
+  background: var(--color-surface);
+  box-shadow: var(--shadow-sm);
+  break-inside: avoid;
+  vertical-align: top;
+}
+
+.groupTitle {
+  padding: 0 10px 6px;
+  font-size: 12px;
+  font-weight: 600;
+  color: var(--color-text-secondary);
+}
+
+.row {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  width: 100%;
+  min-height: 56px;
+  padding: 8px 8px 8px 10px;
+  border: none;
+  border-radius: 10px;
+  background: none;
+  font: inherit;
+  text-align: left;
+  color: inherit;
+  cursor: pointer;
+  transition: background-color 0.12s ease;
+
+  &:hover {
+    background: var(--color-row-hover);
+
+    .rowArrow {
+      color: var(--color-brand-text);
+    }
   }
-  100% {
-    background-position: -200% 0;
+
+  &:focus-visible {
+    outline: none;
+    box-shadow: inset 0 0 0 2px var(--color-focus);
+  }
+}
+
+.rowIcon {
+  width: 36px;
+  height: 36px;
+  flex-shrink: 0;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 10px;
+  background: var(--color-brand-soft);
+  color: var(--color-brand-text);
+}
+
+.rowText {
+  flex: 1;
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+}
+
+.rowLabel {
+  font-size: 14px;
+  font-weight: 600;
+  line-height: 1.35;
+  color: var(--color-text);
+}
+
+.rowDescription {
+  font-size: 13px;
+  line-height: 1.35;
+  color: var(--color-text-secondary);
+}
+
+.rowValue {
+  flex-shrink: 0;
+  font-size: 16px;
+  font-weight: 700;
+  color: var(--color-text);
+}
+
+.rowArrow {
+  flex-shrink: 0;
+  color: var(--color-text-muted);
+  transition: color 0.12s ease;
+}
+
+.skeleton {
+  display: block;
+  width: 120px;
+  height: 22px;
+  margin-top: 6px;
+  border-radius: 6px;
+  background: linear-gradient(
+    90deg,
+    var(--color-skeleton) 25%,
+    var(--color-skeleton-shine) 50%,
+    var(--color-skeleton) 75%
+  );
+  background-size: 200% 100%;
+  animation: shimmer 1.4s ease-in-out infinite;
+}
+
+.skeletonSmall {
+  width: 26px;
+  height: 18px;
+  margin-top: 0;
+  flex-shrink: 0;
+}
+
+// ---------- советы: тихая полоса ----------
+
+.tips {
+  margin-top: -12px;
+  padding: 16px 18px;
+  border: 1px dashed var(--color-border-strong);
+  border-radius: var(--radius-lg);
+
+  ul {
+    display: grid;
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+    gap: 12px 28px;
+    list-style: none;
+  }
+
+  li {
+    display: flex;
+    gap: 10px;
+    font-size: 13px;
+    line-height: 1.45;
+    color: var(--color-text-secondary);
+
+    svg {
+      flex-shrink: 0;
+      margin-top: 1px;
+      color: var(--color-brand-text);
+    }
+  }
+}
+
+.tipsTitle {
+  margin-bottom: 8px;
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--color-text);
+}
+
+@media (max-width: 1180px) {
+  .groups {
+    columns: 2;
+  }
+}
+
+@media (max-width: 767px) {
+  .dashboard {
+    gap: 24px;
+  }
+
+  .siteButton {
+    width: 100%;
+    height: 44px;
+  }
+
+  .attentionGrid {
+    grid-template-columns: minmax(0, 1fr);
+    gap: 10px;
+  }
+
+  .attentionCard {
+    min-height: 76px;
+    padding: 12px 14px;
+    gap: 14px;
+  }
+
+  .groups {
+    columns: 1;
+  }
+
+  .group {
+    margin-bottom: 12px;
+  }
+
+  .tips {
+    margin-top: -8px;
+
+    ul {
+      grid-template-columns: minmax(0, 1fr);
+    }
   }
 }
 
@@ -263,44 +445,11 @@
   }
 }
 
-@media (max-width: 768px) {
-  .dashboard {
-    gap: 22px;
+@keyframes shimmer {
+  from {
+    background-position: 200% 0;
   }
-
-  .welcome {
-    padding: 22px 20px;
-
-    h1 {
-      font-size: 21px;
-    }
-  }
-
-  .siteButton {
-    width: 100%;
-    justify-content: center;
-  }
-
-  .statsGrid {
-    grid-template-columns: repeat(2, minmax(0, 1fr));
-    gap: 12px;
-  }
-
-  .statCard {
-    padding: 16px;
-  }
-
-  .statDescription {
-    display: none;
-  }
-
-  .statValue {
-    font-size: 26px;
-  }
-}
-
-@media (max-width: 380px) {
-  .statsGrid {
-    grid-template-columns: 1fr;
+  to {
+    background-position: -200% 0;
   }
 }

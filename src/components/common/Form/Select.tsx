@@ -1,4 +1,4 @@
-import React, { forwardRef } from 'react';
+import React, { forwardRef, useId } from 'react';
 import styles from './Form.module.scss';
 
 interface SelectOption {
@@ -14,11 +14,26 @@ interface SelectProps extends React.SelectHTMLAttributes<HTMLSelectElement> {
 }
 
 export const Select = forwardRef<HTMLSelectElement, SelectProps>(
-  ({ label, error, options, placeholder, className = '', ...props }, ref) => {
+  ({ label, error, options, placeholder, className = '', id, ...props }, ref) => {
+    const autoId = useId();
+    const selectId = id || autoId;
+    const noteId = `${selectId}-note`;
     return (
       <div className={`${styles.formGroup} ${className}`}>
-        {label && <label className={styles.label}>{label}</label>}
-        <select ref={ref} className={`${styles.input} ${error ? styles.error : ''}`} {...props}>
+        {label && (
+          <label className={styles.label} htmlFor={selectId}>
+            {label}
+            {props.required && <span className={styles.required} aria-hidden>*</span>}
+          </label>
+        )}
+        <select
+          ref={ref}
+          id={selectId}
+          aria-invalid={error ? true : undefined}
+          aria-describedby={error ? noteId : undefined}
+          className={`${styles.input} ${error ? styles.error : ''}`}
+          {...props}
+        >
           {placeholder && (
             <option value="" disabled>
               {placeholder}
@@ -30,7 +45,7 @@ export const Select = forwardRef<HTMLSelectElement, SelectProps>(
             </option>
           ))}
         </select>
-        {error && <span className={styles.errorMessage}>{error}</span>}
+        {error && <span id={noteId} className={styles.errorMessage} role="alert">{error}</span>}
       </div>
     );
   }

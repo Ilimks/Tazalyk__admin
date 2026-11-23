@@ -11,7 +11,7 @@ import { PageHeader } from '@/components/common/PageHeader';
 import { EmptyState } from '@/components/common/EmptyState';
 import { MediaCard, mediaCardStyles, useMediaGrid } from '@/components/common/MediaCard';
 import { VideoForm } from './components/VideoForm';
-import { Loader } from '@/components/common/Loader';
+import { GridSkeleton } from '@/components/common/Skeleton';
 import { captureVideoThumbnail } from '@/utils/media';
 import type { Video } from '@/types';
 
@@ -109,10 +109,6 @@ export const VideosManager: React.FC = () => {
     setIsModalOpen(true);
   };
 
-  if (loading && videos.length === 0) {
-    return <Loader />;
-  }
-
   const viewingSources = viewing ? [viewing.video.main_video_url, ...(viewing.video.gallery_videos || [])] : [];
   const withoutThumbnail = videos.filter((video) => !video.thumbnail).length;
 
@@ -121,7 +117,7 @@ export const VideosManager: React.FC = () => {
       <PageHeader
         icon={Clapperboard}
         title="Видео"
-        description={`Видеогалерея сайта · всего ${totalCount}`}
+        description={`Видеогалерея сайта${totalCount > 0 ? ` · всего ${totalCount}` : ''}`}
         actions={
           allowCreate && (
             <Button icon={<Plus />} onClick={openCreate}>
@@ -142,7 +138,10 @@ export const VideosManager: React.FC = () => {
         </div>
       )}
 
-      {videos.length === 0 && !loading ? (
+      {/* первая загрузка: шапка на месте, вместо карточек — заглушки */}
+      {loading && videos.length === 0 ? (
+        <GridSkeleton />
+      ) : videos.length === 0 ? (
         <EmptyState
           icon={Clapperboard}
           title="Видео пока нет"

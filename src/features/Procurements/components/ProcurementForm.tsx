@@ -5,6 +5,8 @@ import { useProcurementsStore } from '@/store';
 import { Button } from '@/components/common/Button';
 import { Input } from '@/components/common/Form';
 import { Select } from '@/components/common/Form';
+import { FormError } from '@/components/common/FormError';
+import { formatters } from '@/utils/formatters';
 import type { Procurement } from '@/types';
 
 interface ProcurementFormProps {
@@ -39,6 +41,7 @@ export const ProcurementForm: React.FC<ProcurementFormProps> = ({
 }) => {
   const { addProcurement, updateProcurement } = useProcurementsStore();
   const [loading, setLoading] = useState(false);
+  const [errors, setErrors] = useState<{ contractNumber?: string; supplier?: string; amount?: string; date?: string; form?: string }>({});
   const [formData, setFormData] = useState({
     contractNumber: initialData?.contractNumber || '',
     supplier: initialData?.supplier || '',
@@ -46,19 +49,23 @@ export const ProcurementForm: React.FC<ProcurementFormProps> = ({
     method: initialData?.method || 'direct',
     status: initialData?.status || 'active',
     date: initialData?.date || new Date().toISOString().split('T')[0],
-    amount: initialData?.amount?.toString() || '',
+    // сервер отдаёт «12450000.00» — в поле показываем как в таблице: «12 450 000»
+    amount: initialData?.amount ? formatters.amount(initialData.amount).replace(/\u00a0/g, ' ') : '',
   });
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    setLoading(true);
 
-    const amountNumber = parseFloat(formData.amount.replace(/\s/g, ''));
-    if (isNaN(amountNumber) || amountNumber <= 0) {
-      alert('Введите корректную сумму');
-      setLoading(false);
-      return;
-    }
+    const amountNumber = parseFloat(formData.amount.replace(/\s/g, '').replace(',', '.'));
+    const problems: typeof errors = {};
+    if (!formData.contractNumber.trim()) problems.contractNumber = 'Введите номер контракта';
+    if (!formData.supplier.trim()) problems.supplier = 'Введите название поставщика';
+    if (isNaN(amountNumber) || amountNumber <= 0) problems.amount = 'Сумма — число больше нуля, например 860 000';
+    if (!formData.date) problems.date = 'Укажите дату';
+    setErrors(problems);
+    if (Object.keys(problems).length > 0) return;
+
+    setLoading(true);
 
     const procurementData = {
       ...formData,
@@ -74,12 +81,14 @@ export const ProcurementForm: React.FC<ProcurementFormProps> = ({
 
     if (success) {
       onSuccess();
+    } else {
+      setErrors({ form: 'Не удалось сохранить. Проверьте поля и связь с сервером и попробуйте ещё раз.' });
     }
     setLoading(false);
   };
 
   return (
-    <form onSubmit={handleSubmit} className={styles.form}>
+    <form onSubmit={handleSubmit} className={styles.form} noValidate>
       {/* Контракт: номер, поставщик, сумма */}
       <section className={styles.formSection}>
         <div className={styles.formSectionHead}>
@@ -97,19 +106,21 @@ export const ProcurementForm: React.FC<ProcurementFormProps> = ({
             label="Номер контракта"
             value={formData.contractNumber}
             onChange={(e) => setFormData({ ...formData, contractNumber: e.target.value })}
+            error={errors.contractNumber}
             required
             placeholder="Введите номер контракта"
             icon={<Hash />}
           />
 
           <Input
-            label="Сумма договора"
+            label="Сумма договора, сом"
             type="text"
             inputMode="decimal"
             value={formData.amount}
             onChange={(e) => setFormData({ ...formData, amount: e.target.value })}
+            error={errors.amount}
             required
-            placeholder="Введите сумму в сомах"
+            placeholder="Например, 860 000"
             icon={<Banknote />}
           />
 
@@ -118,6 +129,7 @@ export const ProcurementForm: React.FC<ProcurementFormProps> = ({
             label="Поставщик"
             value={formData.supplier}
             onChange={(e) => setFormData({ ...formData, supplier: e.target.value })}
+            error={errors.supplier}
             required
             placeholder="Введите название поставщика"
             icon={<Building />}
@@ -167,10 +179,13 @@ export const ProcurementForm: React.FC<ProcurementFormProps> = ({
             type="date"
             value={formData.date}
             onChange={(e) => setFormData({ ...formData, date: e.target.value })}
+            error={errors.date}
             required
           />
         </div>
       </section>
+
+      <FormError message={errors.form} />
 
       <div className={styles.formActions}>
         <Button type="button" variant="outline" onClick={onCancel}>

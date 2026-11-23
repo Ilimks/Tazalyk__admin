@@ -50,7 +50,7 @@ $field-line: #d8dfeb;
   --g-field-line: #33405a;
   --g-field-hover: #46557a;
   --g-ink: var(--color-text);
-  --g-muted: var(--color-text-muted);
+  --g-muted: #7f8899; // экран входа не меняем: прежний оттенок
   --g-placeholder: #6b7486;
   --g-focus: #7d8ff5;
   --g-ring: rgba(125, 143, 245, 0.2);

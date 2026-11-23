@@ -3,6 +3,7 @@ import { CloudUpload, FileText, Paperclip, X } from 'lucide-react';
 import styles from '../LocalActsManager.module.scss';
 import { Button } from '@/components/common/Button';
 import { Input } from '@/components/common/Form/Input';
+import { FormError } from '@/components/common/FormError';
 import { useLocalActsStore } from '@/store';
 import type { LocalAct } from '@/types';
 
@@ -27,6 +28,7 @@ export const LocalActForm: React.FC<LocalActFormProps> = ({
 }) => {
     const { addItem, updateItem } = useLocalActsStore();
     const [loading, setLoading] = useState(false);
+    const [errors, setErrors] = useState<{ title?: string; file?: string; date?: string; form?: string }>({});
     const [isDragging, setIsDragging] = useState(false);
     const fileInputRef = useRef<HTMLInputElement>(null);
     const [formData, setFormData] = useState({
@@ -75,10 +77,13 @@ export const LocalActForm: React.FC<LocalActFormProps> = ({
 
     const handleSubmit = async (e: React.FormEvent) => {
         e.preventDefault();
-        if (!formData.title || !formData.file_url) {
-            alert('Заполните все поля');
-            return;
-        }
+        const problems: typeof errors = {};
+        if (!formData.title.trim()) problems.title = 'Введите название документа';
+        if (!formData.date) problems.date = 'Укажите дату публикации';
+        if (!formData.file_url) problems.file = 'Выберите файл документа';
+        setErrors(problems);
+        if (Object.keys(problems).length > 0) return;
+
         setLoading(true);
         let success = false;
         if (initialData) {
@@ -87,11 +92,12 @@ export const LocalActForm: React.FC<LocalActFormProps> = ({
             success = await addItem(formData);
         }
         if (success) onSuccess();
+        else setErrors({ form: 'Не удалось сохранить. Проверьте поля и связь с сервером и попробуйте ещё раз.' });
         setLoading(false);
     };
 
     return (
-        <form onSubmit={handleSubmit} className={styles.form}>
+        <form onSubmit={handleSubmit} className={styles.form} noValidate>
             {/* Сведения о документе */}
             <section className={styles.formSection}>
                 <div className={styles.formSectionHead}>
@@ -110,6 +116,7 @@ export const LocalActForm: React.FC<LocalActFormProps> = ({
                         label="Название документа"
                         value={formData.title}
                         onChange={(e) => setFormData({ ...formData, title: e.target.value })}
+                        error={errors.title}
                         required
                         placeholder="Введите название документа"
                     />
@@ -118,6 +125,7 @@ export const LocalActForm: React.FC<LocalActFormProps> = ({
                         type="date"
                         value={formData.date}
                         onChange={(e) => setFormData({ ...formData, date: e.target.value })}
+                        error={errors.date}
                         required
                     />
                 </div>
@@ -158,7 +166,7 @@ export const LocalActForm: React.FC<LocalActFormProps> = ({
                     </div>
                 ) : (
                     <div
-                        className={`${styles.dropzone} ${isDragging ? styles.dragging : ''}`}
+                        className={`${styles.dropzone} ${isDragging ? styles.dragging : ''} ${errors.file ? styles.dropzoneError : ''}`}
                         role="button"
                         tabIndex={0}
                         aria-label="Выбрать файл документа"
@@ -182,7 +190,12 @@ export const LocalActForm: React.FC<LocalActFormProps> = ({
                         <span className={styles.dropzoneHint}>PDF, DOC, DOCX, XLS, XLSX, TXT до 10 МБ</span>
                     </div>
                 )}
+                {errors.file && !formData.file_url && (
+                    <span className={styles.fieldError} role="alert">{errors.file}</span>
+                )}
             </section>
+
+            <FormError message={errors.form} />
 
             <div className={styles.formActions}>
                 <Button type="button" variant="outline" onClick={onCancel}>Отмена</Button>

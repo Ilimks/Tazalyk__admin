@@ -6,8 +6,9 @@
   text-align: center;
   padding: 56px 24px;
   background: var(--color-surface);
-  border: 1px dashed var(--color-border-strong);
+  border: 1px solid var(--color-border);
   border-radius: var(--radius-lg);
+  box-shadow: var(--shadow-sm);
 
   h3 {
     font-size: 16px;
@@ -17,8 +18,8 @@
 
   p {
     margin-top: 4px;
-    max-width: 360px;
-    font-size: 13px;
+    max-width: 400px;
+    font-size: 14px;
     color: var(--color-text-secondary);
   }
 }

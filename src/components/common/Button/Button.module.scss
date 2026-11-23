@@ -17,7 +17,7 @@
   }
 
   &:disabled {
-    opacity: 0.55;
+    opacity: 0.5;
     cursor: not-allowed;
   }
 
@@ -31,11 +31,11 @@
   }
 
   &.success {
-    background: var(--color-accent);
+    background: var(--color-success-fill);
     color: white;
 
     &:hover:not(:disabled) {
-      background: var(--color-accent-hover);
+      background: var(--color-success-fill-hover);
     }
   }
 
@@ -61,18 +61,18 @@
 
   &.outline {
     background: var(--color-surface);
-    border-color: var(--color-border);
-    color: var(--color-text-secondary);
+    border-color: var(--color-border-strong);
+    color: var(--color-text);
 
     &:hover:not(:disabled) {
-      border-color: var(--color-border-strong);
+      border-color: var(--color-text-muted);
       color: var(--color-text);
       background: var(--color-surface-muted);
     }
   }
 
   &.sm {
-    height: 32px;
+    height: 36px;
     padding: 0 12px;
     font-size: 13px;
     border-radius: var(--radius-sm);

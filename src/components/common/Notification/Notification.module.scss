@@ -13,19 +13,19 @@
   animation: slideIn 0.22s ease;
 
   &.success .icon {
-    color: var(--color-accent);
+    color: var(--color-success-text);
   }
 
   &.error .icon {
-    color: var(--color-danger);
+    color: var(--color-danger-text);
   }
 
   &.warning .icon {
-    color: var(--color-warning);
+    color: var(--color-warning-text);
   }
 
   &.info .icon {
-    color: var(--color-info);
+    color: var(--color-info-text);
   }
 }
 
@@ -47,8 +47,9 @@
   display: inline-flex;
   align-items: center;
   justify-content: center;
-  width: 24px;
-  height: 24px;
+  width: 28px;
+  height: 28px;
+  margin: -3px -4px -3px 0;
   flex-shrink: 0;
   border: none;
   border-radius: 6px;

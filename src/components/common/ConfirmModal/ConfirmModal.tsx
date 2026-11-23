@@ -39,7 +39,7 @@ export const ConfirmModal: React.FC<ConfirmModalProps> = ({
     return createPortal(
         <div className={styles.overlay} onClick={onCancel}>
             <div className={styles.modal} onClick={(e) => e.stopPropagation()} role="alertdialog" aria-modal="true">
-                <button className={styles.closeBtn} onClick={onCancel} aria-label="Закрыть">
+                <button type="button" className={styles.closeBtn} onClick={onCancel} aria-label="Закрыть" title="Закрыть">
                     <X size={20} />
                 </button>
 

@@ -50,11 +50,14 @@ export const Modal: React.FC<ModalProps> = ({
       <div
         className={`${styles.modal} ${styles[size]}`}
         onClick={(e) => e.stopPropagation()}
+        role="dialog"
+        aria-modal="true"
+        aria-label={title}
       >
         <div className={styles.header}>
           <h3>{title}</h3>
           {showCloseButton && (
-            <button className={styles.closeBtn} onClick={onClose} aria-label="Закрыть">
+            <button type="button" className={styles.closeBtn} onClick={onClose} aria-label="Закрыть" title="Закрыть">
               <X size={20} />
             </button>
           )}

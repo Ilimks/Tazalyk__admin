@@ -8,9 +8,14 @@
   --color-accent: #22c55e;
   --color-accent-hover: #16a34a;
   --color-accent-soft: #e9f9ef;
+  /* надпись на зелёной заливке: белый на #22c55e не читается (2,3:1) */
+  --color-on-accent: #052e16;
+  /* зелёная заливка под белую надпись и белый ползунок */
+  --color-success-fill: #15803d;
+  --color-success-fill-hover: #166534;
 
-  --color-danger: #ef4444;
-  --color-danger-hover: #dc2626;
+  --color-danger: #dc2626;
+  --color-danger-hover: #b91c1c;
   --color-danger-soft: #fdecec;
   --color-warning: #f59e0b;
   --color-warning-soft: #fef4e2;
@@ -25,7 +30,8 @@
 
   --color-text: #0f172a;
   --color-text-secondary: #475569;
-  --color-text-muted: #94a3b8;
+  /* второстепенный текст: 5,7:1 на белом и 5,3:1 на фоне страницы */
+  --color-text-muted: #5b677a;
 
   --radius-sm: 8px;
   --radius-md: 12px;
@@ -36,13 +42,19 @@
   --shadow-md: 0 4px 16px rgba(15, 23, 42, 0.08);
   --shadow-lg: 0 20px 48px rgba(15, 23, 42, 0.16);
 
-  --focus-ring: 0 0 0 3px rgba(16, 35, 130, 0.18);
+  /* рамка клавиатурного фокуса: цвет — для контуров, двойное кольцо — для кнопок, мягкое — для полей */
+  --color-focus: #3b57e0;
+  --focus-ring: 0 0 0 2px var(--color-surface), 0 0 0 4px var(--color-focus);
+  --focus-ring-input: 0 0 0 3px rgba(59, 87, 224, 0.18);
 
   /* текст фирменного цвета: в тёмной теме синий на тёмном не читается, поэтому отдельная роль */
   --color-brand-text: #102382;
   --color-hover: #eef1f6;
+  --color-row-hover: #f5f7fc;
+  --color-switch-off: #7f8ba0;
   --color-header-bg: rgba(255, 255, 255, 0.86);
   --color-overlay: rgba(255, 255, 255, 0.85);
+  --color-backdrop: rgba(10, 20, 80, 0.45);
   --color-skeleton: #eef1f6;
   --color-skeleton-shine: #e2e7f0;
 
@@ -84,6 +96,8 @@
   --color-brand-text: #9dacff;
 
   --color-accent-soft: #14301f;
+  --color-success-fill: #178248;
+  --color-success-fill-hover: #126a3a;
   --color-danger-soft: #331a18;
   --color-warning-soft: #33290f;
   --color-info-soft: #172a45;
@@ -96,16 +110,20 @@
 
   --color-text: #e7eaf0;
   --color-text-secondary: #b3bbc9;
-  --color-text-muted: #7f8899;
+  --color-text-muted: #98a3b6;
 
   --shadow-sm: 0 1px 2px rgba(0, 0, 0, 0.3);
   --shadow-md: 0 4px 16px rgba(0, 0, 0, 0.35);
   --shadow-lg: 0 20px 48px rgba(0, 0, 0, 0.55);
-  --focus-ring: 0 0 0 3px rgba(125, 143, 245, 0.3);
+  --color-focus: #8fa2ff;
+  --focus-ring-input: 0 0 0 3px rgba(143, 162, 255, 0.28);
 
   --color-hover: #222b3d;
+  --color-row-hover: #1d2638;
+  --color-switch-off: #55617a;
   --color-header-bg: rgba(15, 20, 32, 0.82);
   --color-overlay: rgba(15, 20, 32, 0.8);
+  --color-backdrop: rgba(4, 7, 14, 0.66);
   --color-skeleton: #1c2436;
   --color-skeleton-shine: #26304a;
 
@@ -127,6 +145,11 @@
   margin: 0;
   padding: 0;
   box-sizing: border-box;
+}
+
+/* значки не сжимаются, когда рядом длинный текст */
+.lucide {
+  flex-shrink: 0;
 }
 
 body {
@@ -180,12 +203,8 @@ video {
 }
 
 :focus-visible {
-  outline: 2px solid var(--color-brand);
+  outline: 2px solid var(--color-focus);
   outline-offset: 2px;
-}
-
-[data-theme='dark'] :focus-visible {
-  outline-color: var(--color-brand-text);
 }
 
 @keyframes fadeIn {

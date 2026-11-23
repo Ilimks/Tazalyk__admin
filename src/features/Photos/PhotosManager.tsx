@@ -10,7 +10,7 @@ import { PageHeader } from '@/components/common/PageHeader';
 import { EmptyState } from '@/components/common/EmptyState';
 import { MediaCard, mediaCardStyles, useMediaGrid } from '@/components/common/MediaCard';
 import { PhotoForm } from './components/PhotoForm';
-import { Loader } from '@/components/common/Loader/Loader';
+import { GridSkeleton } from '@/components/common/Skeleton';
 import type { Photo } from '@/types';
 import { ConfirmModal } from '@/components/common/ConfirmModal';
 
@@ -90,16 +90,12 @@ export const PhotosManager: React.FC = () => {
     setIsModalOpen(true);
   };
 
-  if (loading && photos.length === 0) {
-    return <Loader />;
-  }
-
   return (
     <div ref={grid.ref} className={styles.manager}>
       <PageHeader
         icon={Images}
         title="Фото"
-        description={`Фотогалерея сайта · всего ${totalCount}`}
+        description={`Фотогалерея сайта${totalCount > 0 ? ` · всего ${totalCount}` : ''}`}
         actions={
           allowCreate && (
             <Button icon={<Plus />} onClick={openCreate}>
@@ -109,7 +105,10 @@ export const PhotosManager: React.FC = () => {
         }
       />
 
-      {photos.length === 0 && !loading ? (
+      {/* первая загрузка: шапка на месте, вместо карточек — заглушки */}
+      {loading && photos.length === 0 ? (
+        <GridSkeleton />
+      ) : photos.length === 0 ? (
         <EmptyState
           icon={Images}
           title="Фото пока нет"

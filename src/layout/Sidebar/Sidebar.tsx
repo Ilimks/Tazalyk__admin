@@ -1,4 +1,4 @@
-import { useEffect } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import { ExternalLink, LogOut, X } from 'lucide-react';
 import styles from './Sidebar.module.scss';
 import { useApplicationsStore, useAuthStore, useComplaintsStore, useOrdersStore } from '@/store';
@@ -42,6 +42,39 @@ export const Sidebar: React.FC<SidebarProps> = ({ activeTab, onTabChange, availa
     items: group.items.filter((id) => availableTabs.includes(id)),
   })).filter((group) => group.items.length > 0);
 
+  // меню не помещается по высоте — край, за которым есть пункты, тает
+  const navRef = useRef<HTMLElement>(null);
+  const [fade, setFade] = useState({ top: false, bottom: false });
+  useEffect(() => {
+    const nav = navRef.current;
+    if (!nav) return;
+    const update = () => {
+      const top = nav.scrollTop > 4;
+      const bottom = nav.scrollTop + nav.clientHeight < nav.scrollHeight - 4;
+      setFade((prev) => (prev.top === top && prev.bottom === bottom ? prev : { top, bottom }));
+    };
+    update();
+    nav.addEventListener('scroll', update, { passive: true });
+    const observer = new ResizeObserver(update);
+    observer.observe(nav);
+    return () => {
+      nav.removeEventListener('scroll', update);
+      observer.disconnect();
+    };
+  }, [groups.length]);
+
+  // открытый раздел всегда виден, даже если меню прокручивается
+  useEffect(() => {
+    const nav = navRef.current;
+    const item = nav?.querySelector<HTMLElement>('[aria-current="page"]');
+    if (!nav || !item) return;
+    const top = item.offsetTop - nav.offsetTop;
+    if (top < nav.scrollTop) nav.scrollTop = Math.max(0, top - 44);
+    else if (top + item.offsetHeight > nav.scrollTop + nav.clientHeight) {
+      nav.scrollTop = top + item.offsetHeight - nav.clientHeight + 44;
+    }
+  }, [activeTab]);
+
   const initials = (user?.username || '?').slice(0, 2).toUpperCase();
 
   return (
@@ -63,7 +96,10 @@ export const Sidebar: React.FC<SidebarProps> = ({ activeTab, onTabChange, availa
           </button>
         </div>
 
-        <nav className={styles.nav}>
+        <nav
+          ref={navRef}
+          className={`${styles.nav} ${fade.top ? styles.navFadeTop : ''} ${fade.bottom ? styles.navFadeBottom : ''}`}
+        >
           {groups.map((group, index) => (
             <div key={group.title || index} className={styles.group}>
               {group.title && <span className={styles.groupTitle}>{group.title}</span>}
@@ -84,7 +120,7 @@ export const Sidebar: React.FC<SidebarProps> = ({ activeTab, onTabChange, availa
                     aria-current={isActive ? 'page' : undefined}
                     title={badge ? `${label} · новых: ${badge}` : label}
                   >
-                    <Icon size={20} className={styles.navIcon} />
+                    <Icon size={18} className={styles.navIcon} />
                     <span className={styles.navLabel}>{label}</span>
                     {badge > 0 && (
                       <span className={styles.navBadge}>

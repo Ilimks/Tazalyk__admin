@@ -11,8 +11,8 @@
 }
 
 .required {
-  color: var(--color-danger);
-  margin-left: 4px;
+  color: var(--color-danger-text);
+  margin-left: 3px;
 }
 
 .hiddenInput {
@@ -21,18 +21,22 @@
 
 .uploadArea {
   border: 1.5px dashed var(--color-border-strong);
-  border-radius: var(--radius-lg);
+  border-radius: var(--radius-md);
   padding: 28px 20px;
   text-align: center;
   cursor: pointer;
   background: var(--color-surface-muted);
   transition: border-color 0.15s ease, background-color 0.15s ease;
 
-  &:hover,
+  &:hover {
+    border-color: var(--color-focus);
+    background: var(--color-brand-soft);
+  }
+
   &:focus-visible {
     outline: none;
-    border-color: var(--color-brand);
-    background: var(--color-brand-soft);
+    border-color: var(--color-focus);
+    box-shadow: var(--focus-ring);
   }
 
   &.dragging {
@@ -57,8 +61,8 @@
   height: 48px;
   border-radius: 50%;
   background: var(--color-surface);
+  border: 1px solid var(--color-border);
   color: var(--color-brand-text);
-  box-shadow: var(--shadow-sm);
   display: flex;
   align-items: center;
   justify-content: center;
@@ -71,8 +75,8 @@
 }
 
 .uploadHint {
-  font-size: 12px;
-  color: var(--color-text-muted);
+  font-size: 13px;
+  color: var(--color-text-secondary);
 }
 
 .spin {
@@ -82,14 +86,14 @@
 .errorMessage {
   display: block;
   margin-top: 8px;
-  font-size: 12px;
-  color: var(--color-danger);
+  font-size: 13px;
+  color: var(--color-danger-text);
 }
 
 // превью одного файла
 .previewContainer {
   border: 1px solid var(--color-border);
-  border-radius: var(--radius-lg);
+  border-radius: var(--radius-md);
   overflow: hidden;
   background: #0f172a;
 }
@@ -113,7 +117,7 @@
 }
 
 .previewSize {
-  font-size: 12px;
+  font-size: 13px;
   color: var(--color-text-secondary);
 }
 
@@ -121,12 +125,12 @@
   display: inline-flex;
   align-items: center;
   gap: 6px;
-  height: 32px;
+  height: 36px;
   padding: 0 12px;
   border: 1px solid transparent;
   border-radius: var(--radius-sm);
   background: var(--color-danger-soft);
-  color: var(--color-danger);
+  color: var(--color-danger-text);
   font-size: 13px;
   font-weight: 600;
   cursor: pointer;

@@ -47,8 +47,8 @@
 }
 
 .date {
-  font-size: 12px;
-  color: var(--color-text-muted);
+  font-size: 13px;
+  color: var(--color-text-secondary);
 
   &::first-letter {
     text-transform: uppercase;
@@ -59,14 +59,19 @@
   display: inline-flex;
   align-items: center;
   gap: 8px;
-  height: 34px;
-  padding: 0 12px;
+  height: 38px;
+  padding: 0 14px;
   border: 1px solid transparent;
   border-radius: 999px;
-  font-size: 12px;
+  font-size: 13px;
   font-weight: 600;
   cursor: pointer;
   transition: filter 0.15s ease;
+
+  &:focus-visible {
+    outline: none;
+    box-shadow: var(--focus-ring);
+  }
 
   &:hover:not(:disabled) {
     filter: brightness(0.96);
@@ -94,6 +99,18 @@
     .refreshIcon {
       animation: spin 1s linear infinite;
     }
+  }
+}
+
+// на широком экране раздел назван в заголовке страницы — в шапке не повторяем
+@media (min-width: 769px) {
+  .title {
+    display: none;
+  }
+
+  .date {
+    font-size: 14px;
+    font-weight: 500;
   }
 }
 
@@ -164,7 +181,13 @@
   }
 
   .status {
-    padding: 0 10px;
+    height: 40px;
+    padding: 0 12px;
+  }
+
+  .themeButton {
+    width: 40px;
+    height: 40px;
   }
 
   .statusText {
