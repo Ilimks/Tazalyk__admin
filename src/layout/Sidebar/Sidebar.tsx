@@ -4,6 +4,7 @@ import styles from './Sidebar.module.scss';
 import { useApplicationsStore, useAuthStore, useComplaintsStore, useOrdersStore } from '@/store';
 import { config } from '@/config';
 import { NAV_GROUPS, NAV_ITEMS, ROLE_LABELS } from '../navigation';
+import { pathOf } from '../routes';
 import type { ActiveTab } from '@/types';
 
 interface SidebarProps {
@@ -112,11 +113,16 @@ export const Sidebar: React.FC<SidebarProps> = ({ activeTab, onTabChange, availa
                   (id === 'applications' && newApplications) ||
                   0;
                 return (
-                  <button
+                  <a
                     key={id}
-                    type="button"
+                    href={pathOf(id)}
                     className={`${styles.navItem} ${isActive ? styles.active : ''}`}
-                    onClick={() => onTabChange(id)}
+                    onClick={(e) => {
+                      // Ctrl, Shift и средняя кнопка открывают раздел в новой вкладке, как обычная ссылка
+                      if (e.ctrlKey || e.metaKey || e.shiftKey || e.altKey || e.button !== 0) return;
+                      e.preventDefault();
+                      onTabChange(id);
+                    }}
                     aria-current={isActive ? 'page' : undefined}
                     title={badge ? `${label} · новых: ${badge}` : label}
                   >
@@ -127,7 +133,7 @@ export const Sidebar: React.FC<SidebarProps> = ({ activeTab, onTabChange, availa
                         {badge > 99 ? '99+' : badge}
                       </span>
                     )}
-                  </button>
+                  </a>
                 );
               })}
             </div>

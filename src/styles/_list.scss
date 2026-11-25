@@ -412,6 +412,119 @@
   }
 }
 
+// ---------- строка таблицы — карточка ----------
+
+@mixin table-as-cards {
+  display: block;
+  min-width: 0;
+
+  thead {
+    position: absolute;
+    width: 1px;
+    height: 1px;
+    overflow: hidden;
+    clip: rect(0, 0, 0, 0);
+    white-space: nowrap;
+  }
+
+  tbody {
+    display: block;
+  }
+
+  // сетку и области задаёт раздел
+  tbody tr {
+    display: grid;
+    align-items: center;
+    column-gap: 12px;
+    row-gap: 6px;
+    padding: 14px 16px;
+    border-bottom: 1px solid var(--color-border);
+
+    &:last-child {
+      border-bottom: none;
+    }
+  }
+
+  td,
+  td[class] {
+    display: block;
+    width: auto;
+    max-width: none;
+    min-width: 0;
+    height: auto;
+    padding: 0;
+    border-bottom: none;
+  }
+
+  td.openCell {
+    display: none;
+  }
+
+  .imageCell {
+    align-self: start;
+  }
+
+  .dateCell,
+  .sizeCell {
+    font-size: 13px;
+  }
+}
+
+// Планшет (768–1023): широкая таблица не помещается, и сумма с кнопками уходили за край.
+// Разделы с такими таблицами подключают миксин — строки становятся карточками в две колонки.
+@mixin tablet-cards {
+  @media (min-width: 768px) and (max-width: 1023px) {
+    .tableScroll {
+      width: 100%;
+      overflow-x: visible;
+    }
+
+    .table {
+      @include table-as-cards;
+
+      tbody {
+        display: grid;
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+      }
+
+      tbody tr {
+        align-content: start;
+
+        &:nth-child(odd) {
+          border-right: 1px solid var(--color-border);
+        }
+
+        // последняя карточка без пары занимает всю ширину
+        &:last-child:nth-child(odd) {
+          grid-column: 1 / -1;
+          border-right: none;
+        }
+
+        // последний ряд из двух карточек — без линии снизу
+        &:nth-last-child(2):nth-child(odd) {
+          border-bottom: none;
+        }
+      }
+    }
+
+    .title {
+      white-space: normal;
+      display: -webkit-box;
+      -webkit-line-clamp: 2;
+      -webkit-box-orient: vertical;
+    }
+
+    .iconBtn {
+      width: 40px;
+      height: 40px;
+    }
+
+    .actions {
+      margin-right: -8px;
+    }
+  }
+}
+
 // ---------- планшет: таблица не шире карточки ----------
 
 @media (max-width: 1100px) {
@@ -458,59 +571,7 @@
   }
 
   .table {
-    display: block;
-    min-width: 0;
-
-    thead {
-      position: absolute;
-      width: 1px;
-      height: 1px;
-      overflow: hidden;
-      clip: rect(0, 0, 0, 0);
-      white-space: nowrap;
-    }
-
-    tbody {
-      display: block;
-    }
-
-    // сетку и области задаёт раздел
-    tbody tr {
-      display: grid;
-      align-items: center;
-      column-gap: 12px;
-      row-gap: 6px;
-      padding: 14px 16px;
-      border-bottom: 1px solid var(--color-border);
-
-      &:last-child {
-        border-bottom: none;
-      }
-    }
-
-    td,
-    td[class] {
-      display: block;
-      width: auto;
-      max-width: none;
-      min-width: 0;
-      height: auto;
-      padding: 0;
-      border-bottom: none;
-    }
-
-    td.openCell {
-      display: none;
-    }
-
-    .imageCell {
-      align-self: start;
-    }
-
-    .dateCell,
-    .sizeCell {
-      font-size: 13px;
-    }
+    @include table-as-cards;
   }
 
   .title {

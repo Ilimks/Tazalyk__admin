@@ -11,13 +11,19 @@ interface LocalActsState {
   totalCount: number;
   currentPage: number;
   pageSize: number;
+  // строка поиска, '' — все записи
+  search: string;
   fetchPage: (page?: number, pageSize?: number) => Promise<void>;
+  setSearch: (search: string) => void;
   addItem: (item: Omit<LocalAct, 'id' | 'created_at'>) => Promise<boolean>;
   updateItem: (id: string, item: Partial<LocalAct>) => Promise<boolean>;
   deleteItem: (id: string) => Promise<boolean>;
   goToPage: (page: number) => void;
   changePageSize: (size: number) => void;
 }
+
+// при быстром наборе ответ на старый запрос не должен затереть новый
+let lastRequest = 0;
 
 export const useLocalActsStore = create<LocalActsState>()(
   devtools((set, get) => ({
@@ -27,11 +33,14 @@ export const useLocalActsStore = create<LocalActsState>()(
     totalCount: 0,
     currentPage: 1,
     pageSize: 10,
+    search: '',
 
     fetchPage: async (page = 1, pageSize = 10) => {
+      const requestId = ++lastRequest;
       set({ loading: true, error: null });
       try {
-        const response = await localActsService.getPage(page, pageSize);
+        const response = await localActsService.getPage(page, pageSize, get().search);
+        if (requestId !== lastRequest) return;
         set({ 
           items: response.results,
           totalCount: response.count,
@@ -40,6 +49,7 @@ export const useLocalActsStore = create<LocalActsState>()(
           loading: false 
         });
       } catch (error) {
+        if (requestId !== lastRequest) return;
         console.error('Failed to fetch local acts:', error);
         set({ error: 'Failed to fetch local acts', loading: false, items: [] });
       }
@@ -104,6 +114,11 @@ export const useLocalActsStore = create<LocalActsState>()(
         set({ error: 'Failed to delete local act', loading: false });
         return false;
       }
+    },
+
+    setSearch: (search) => {
+      set({ search });
+      get().fetchPage(1, get().pageSize);
     },
 
     goToPage: (page: number) => {

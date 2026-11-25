@@ -163,7 +163,7 @@ export const ProductsManager: React.FC = () => {
       <PageHeader
         icon={Package}
         title="Товары"
-        description={`Каталог мусорных контейнеров в магазине сайта${totalCount > 0 ? ` · всего ${totalCount}` : ''}`}
+        description={`Каталог мусорных контейнеров в магазине сайта${totalCount > 0 ? ` · всего: ${totalCount}` : ''}`}
         actions={addButton}
       />
 

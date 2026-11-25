@@ -3,6 +3,7 @@ import { BriefcaseBusiness, Plus, SearchX } from 'lucide-react';
 import styles from './VacanciesManager.module.scss';
 import { useAuthStore, useVacanciesStore } from '@/store';
 import { useNotificationStore } from '@/store/notification.store';
+import { useDebounce } from '@/hooks/useDebounce';
 import { Button } from '@/components/common/Button';
 import { Modal } from '@/components/common/Modal';
 import { Pagination } from '@/components/common/Pagination/Pagination';
@@ -10,6 +11,7 @@ import { PageHeader } from '@/components/common/PageHeader';
 import { EmptyState } from '@/components/common/EmptyState';
 import { ConfirmModal } from '@/components/common/ConfirmModal';
 import { TableSkeleton } from '@/components/common/Skeleton';
+import { SearchBox } from '@/components/common/SearchBox';
 import { Select } from '@/components/common/Form';
 import { VacancyForm } from './components/VacancyForm';
 import { VacancyTable } from './components/VacancyTable';
@@ -46,14 +48,17 @@ export const VacanciesManager: React.FC = () => {
   const [itemToDelete, setItemToDelete] = useState<Vacancy | null>(null);
   const [isDeleting, setIsDeleting] = useState(false);
   const [status, setStatus] = useState<StatusFilter>('');
+  const [searchValue, setSearchValue] = useState('');
+  // запрос уходит, когда сотрудник перестал печатать
+  const search = useDebounce(searchValue.trim(), 400);
 
   const allowCreate = canCreate('vacancies');
   const allowEdit = canEdit('vacancies');
   const allowDelete = canDelete('vacancies');
 
   useEffect(() => {
-    fetchPage(1, PAGE_SIZE, { status });
-  }, [fetchPage, status]);
+    fetchPage(1, PAGE_SIZE, { status, search });
+  }, [fetchPage, status, search]);
 
   const totalPages = Math.ceil(totalCount / pageSize);
 
@@ -118,6 +123,21 @@ export const VacanciesManager: React.FC = () => {
       );
     }
 
+    if (vacancies.length === 0 && search) {
+      return (
+        <EmptyState
+          icon={SearchX}
+          title="Ничего не найдено"
+          description="Проверьте написание или сократите запрос."
+          action={
+            <Button variant="outline" onClick={() => setSearchValue('')}>
+              Сбросить поиск
+            </Button>
+          }
+        />
+      );
+    }
+
     if (vacancies.length === 0 && status) {
       return (
         <EmptyState
@@ -161,8 +181,15 @@ export const VacanciesManager: React.FC = () => {
       <PageHeader
         icon={BriefcaseBusiness}
         title="Вакансии"
-        description={`Карточки на странице «Вакансии» сайта${totalCount > 0 ? ` · всего ${totalCount}` : ''}`}
+        description={`Карточки на странице «Вакансии» сайта${totalCount > 0 ? ` · ${search ? 'найдено' : 'всего'}: ${totalCount}` : ''}`}
         actions={addButton}
+      />
+
+      <SearchBox
+        value={searchValue}
+        onChange={setSearchValue}
+        placeholder="Поиск по должности"
+        label="Поиск вакансии по должности"
       />
 
       <div className={styles.toolbar}>

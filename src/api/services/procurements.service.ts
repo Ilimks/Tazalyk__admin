@@ -7,8 +7,8 @@ class ProcurementsService extends BaseService<Procurement> {
     super('/procurements');
   }
 
-  async getPage(page: number = 1, pageSize: number = 10): Promise<PaginatedResponse<Procurement>> {
-    return this.getPaginated({ page, page_size: pageSize });
+  async getPage(page: number = 1, pageSize: number = 10, search = ''): Promise<PaginatedResponse<Procurement>> {
+    return this.getPaginated({ page, page_size: pageSize, search });
   }
   // все закупки файлом Excel, независимо от страницы списка
   exportToExcel(): Promise<Blob> {

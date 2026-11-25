@@ -1,8 +1,9 @@
 import React, { useState, useEffect } from 'react';
-import { ClipboardList, FileSpreadsheet, Plus } from 'lucide-react';
+import { ClipboardList, FileSpreadsheet, Plus, SearchX } from 'lucide-react';
 import styles from './ProcurementsManager.module.scss';
 import { useAuthStore, useProcurementsStore } from '@/store';
 import { useNotificationStore } from '@/store/notification.store';
+import { useListSearch } from '@/hooks/useListSearch';
 import { procurementsService } from '@/api/services/procurements.service';
 import { saveBlob } from '@/utils/download';
 import { Button } from '@/components/common/Button';
@@ -12,6 +13,7 @@ import { PageHeader } from '@/components/common/PageHeader';
 import { EmptyState } from '@/components/common/EmptyState';
 import { ConfirmModal } from '@/components/common/ConfirmModal';
 import { TableSkeleton } from '@/components/common/Skeleton';
+import { SearchBox } from '@/components/common/SearchBox';
 import { ProcurementForm } from './components/ProcurementForm';
 import { ProcurementTable } from './components/ProcurementTable';
 import type { Procurement } from '@/types';
@@ -24,11 +26,14 @@ export const ProcurementsManager: React.FC = () => {
     currentPage,
     pageSize,
     fetchPage,
+    search,
+    setSearch,
     deleteProcurement,
     goToPage,
   } = useProcurementsStore();
   const { canCreate, canEdit, canDelete } = useAuthStore();
 
+  const searchBox = useListSearch(search, setSearch);
   const { showNotification } = useNotificationStore();
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [editingProcurement, setEditingProcurement] = useState<Procurement | null>(null);
@@ -124,7 +129,7 @@ export const ProcurementsManager: React.FC = () => {
 
   const headerActions = (
     <div className={styles.headerActions}>
-      {totalCount > 0 && (
+      {(totalCount > 0 || search) && (
         <Button variant="outline" icon={<FileSpreadsheet />} loading={isExporting} onClick={handleExport}>
           Выгрузить в Excel
         </Button>
@@ -138,6 +143,21 @@ export const ProcurementsManager: React.FC = () => {
     if (loading && procurements.length === 0) {
       return (
         <TableSkeleton />
+      );
+    }
+
+    if (procurements.length === 0 && search) {
+      return (
+        <EmptyState
+          icon={SearchX}
+          title="Ничего не найдено"
+          description="Проверьте написание или сократите запрос."
+          action={
+            <Button variant="outline" onClick={searchBox.reset}>
+              Сбросить поиск
+            </Button>
+          }
+        />
       );
     }
 
@@ -167,8 +187,15 @@ export const ProcurementsManager: React.FC = () => {
       <PageHeader
         icon={ClipboardList}
         title="Закупки"
-        description={`Реестр закупок и заключённых контрактов предприятия${totalCount > 0 ? ` · всего ${totalCount}` : ''}`}
+        description={`Реестр закупок и заключённых контрактов предприятия${totalCount > 0 ? ` · ${search ? 'найдено' : 'всего'}: ${totalCount}` : ''}`}
         actions={headerActions}
+      />
+
+      <SearchBox
+        value={searchBox.value}
+        onChange={searchBox.setValue}
+        placeholder="Поставщик, номер закупки или контракта"
+        label="Поиск закупки по поставщику, номеру или контракту"
       />
 
       {renderContent()}

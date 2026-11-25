@@ -95,7 +95,7 @@ export const PhotosManager: React.FC = () => {
       <PageHeader
         icon={Images}
         title="Фото"
-        description={`Фотогалерея сайта${totalCount > 0 ? ` · всего ${totalCount}` : ''}`}
+        description={`Фотогалерея сайта${totalCount > 0 ? ` · всего: ${totalCount}` : ''}`}
         actions={
           allowCreate && (
             <Button icon={<Plus />} onClick={openCreate}>

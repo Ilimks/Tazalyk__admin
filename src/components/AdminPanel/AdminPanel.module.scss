@@ -14,7 +14,7 @@
     var(--main-art) no-repeat right -3vw bottom -2vw / auto 62vh fixed,
     radial-gradient(48% 36% at 88% 96%, rgba(34, 197, 94, 0.05), transparent 70%) fixed;
 
-  @media (min-width: 769px) and (max-width: 1024px) {
+  @media (min-width: 769px) and (max-width: 1200px) {
     margin-left: var(--sidebar-width-collapsed);
   }
 

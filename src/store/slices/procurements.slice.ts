@@ -10,13 +10,19 @@ interface ProcurementsState {
   totalCount: number;
   currentPage: number;
   pageSize: number;
+  // строка поиска, '' — все записи
+  search: string;
   fetchPage: (page?: number, pageSize?: number) => Promise<void>;
+  setSearch: (search: string) => void;
   addProcurement: (procurement: Omit<Procurement, 'id' | 'number' | 'created_at' | 'updated_at'>) => Promise<boolean>;
   updateProcurement: (id: string, procurement: Partial<Procurement>) => Promise<boolean>;
   deleteProcurement: (id: string) => Promise<boolean>;
   goToPage: (page: number) => void;
   changePageSize: (size: number) => void;
 }
+
+// при быстром наборе ответ на старый запрос не должен затереть новый
+let lastRequest = 0;
 
 export const useProcurementsStore = create<ProcurementsState>()(
   devtools((set, get) => ({
@@ -26,11 +32,14 @@ export const useProcurementsStore = create<ProcurementsState>()(
     totalCount: 0,
     currentPage: 1,
     pageSize: 12,
+    search: '',
 
     fetchPage: async (page = 1, pageSize = 12) => {
+      const requestId = ++lastRequest;
       set({ loading: true, error: null });
       try {
-        const response = await procurementsService.getPage(page, pageSize);
+        const response = await procurementsService.getPage(page, pageSize, get().search);
+        if (requestId !== lastRequest) return;
         set({ 
           procurements: response.results,
           totalCount: response.count,
@@ -39,6 +48,7 @@ export const useProcurementsStore = create<ProcurementsState>()(
           loading: false 
         });
       } catch (error) {
+        if (requestId !== lastRequest) return;
         console.error('Failed to fetch procurements page:', error);
         set({ error: 'Failed to fetch procurements', loading: false, procurements: [] });
       }
@@ -103,6 +113,11 @@ export const useProcurementsStore = create<ProcurementsState>()(
         set({ error: 'Failed to delete procurement', loading: false });
         return false;
       }
+    },
+
+    setSearch: (search) => {
+      set({ search });
+      get().fetchPage(1, get().pageSize);
     },
 
     goToPage: (page: number) => {

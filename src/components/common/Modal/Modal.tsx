@@ -3,6 +3,7 @@ import { createPortal } from 'react-dom';
 import { X } from 'lucide-react';
 import styles from './Modal.module.scss';
 import { Button } from '../Button';
+import { useDialog } from '@/hooks/useDialog';
 
 interface ModalProps {
   isOpen: boolean;
@@ -27,27 +28,22 @@ export const Modal: React.FC<ModalProps> = ({
   confirmText = 'Сохранить',
   isLoading = false,
 }) => {
+  const dialogRef = useDialog<HTMLDivElement>(isOpen, onClose);
+
   useEffect(() => {
-    const handleEscape = (e: KeyboardEvent) => {
-      if (e.key === 'Escape') onClose();
-    };
-
-    if (isOpen) {
-      document.addEventListener('keydown', handleEscape);
-      document.body.style.overflow = 'hidden';
-    }
-
+    if (isOpen) document.body.style.overflow = 'hidden';
     return () => {
-      document.removeEventListener('keydown', handleEscape);
       document.body.style.overflow = 'unset';
     };
-  }, [isOpen, onClose]);
+  }, [isOpen]);
 
   if (!isOpen) return null;
 
   return createPortal(
     <div className={styles.overlay} onClick={onClose}>
       <div
+        ref={dialogRef}
+        tabIndex={-1}
         className={`${styles.modal} ${styles[size]}`}
         onClick={(e) => e.stopPropagation()}
         role="dialog"

@@ -9,6 +9,7 @@ import { Login } from '@/features/Auth/Login';
 import { Loader } from '@/components/common/Loader';
 import { EmptyState } from '@/components/common/EmptyState';
 import { useAuthStore } from '@/store';
+import { useSectionRoute } from '@/hooks/useSectionRoute';
 import { ProtectedRoute } from '../common/Protected/ProtectedRoute';
 import type { ActiveTab } from '@/types';
 
@@ -37,7 +38,7 @@ const SECTION_COMPONENTS: Record<Section, React.LazyExoticComponent<React.FC>> =
 
 export const AdminPanel: React.FC = () => {
   const { isAuthenticated, checkServer, refreshPermissions, canView, logout } = useAuthStore();
-  const [activeTab, setActiveTab] = useState<ActiveTab>('dashboard');
+  const { tab: activeTab, go, fix } = useSectionRoute();
   const [menuOpen, setMenuOpen] = useState(false);
 
   useEffect(() => {
@@ -78,15 +79,22 @@ export const AdminPanel: React.FC = () => {
     };
   }, [menuOpen]);
 
+  const availableTabs: ActiveTab[] = ['dashboard', ...SECTIONS.filter((section) => canView(section))];
+  const currentTab = availableTabs.includes(activeTab) ? activeTab : 'dashboard';
+
+  // до входа адрес не меняем: после входа откроется раздел, на который вела ссылка
+  useEffect(() => {
+    if (!isAuthenticated) return;
+    fix(currentTab);
+    document.title = `${NAV_ITEMS[currentTab].label} · Админ-панель МП «Тазалык»`;
+  }, [isAuthenticated, currentTab, fix]);
+
   if (!isAuthenticated) {
     return <Login />;
   }
 
-  const availableTabs: ActiveTab[] = ['dashboard', ...SECTIONS.filter((section) => canView(section))];
-  const currentTab = availableTabs.includes(activeTab) ? activeTab : 'dashboard';
-
   const handleTabChange = (tab: ActiveTab) => {
-    setActiveTab(tab);
+    go(tab);
     setMenuOpen(false);
     window.scrollTo({ top: 0 });
   };

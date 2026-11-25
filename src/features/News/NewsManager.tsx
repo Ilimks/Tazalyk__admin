@@ -1,8 +1,9 @@
 import React, { useState, useEffect } from 'react';
-import { Newspaper, Plus } from 'lucide-react';
+import { Newspaper, Plus, SearchX } from 'lucide-react';
 import styles from './NewsManager.module.scss';
 import { useAuthStore, useNewsStore } from '@/store';
 import { useNotificationStore } from '@/store/notification.store';
+import { useListSearch } from '@/hooks/useListSearch';
 import { Button } from '@/components/common/Button';
 import { Modal } from '@/components/common/Modal';
 import { Pagination } from '@/components/common/Pagination/Pagination';
@@ -10,6 +11,7 @@ import { PageHeader } from '@/components/common/PageHeader';
 import { EmptyState } from '@/components/common/EmptyState';
 import { ConfirmModal } from '@/components/common/ConfirmModal';
 import { TableSkeleton } from '@/components/common/Skeleton';
+import { SearchBox } from '@/components/common/SearchBox';
 import { NewsForm } from './components/NewsForm';
 import { NewsTable } from './components/NewsTable';
 import type { News } from '@/types';
@@ -22,11 +24,14 @@ export const NewsManager: React.FC = () => {
     currentPage,
     pageSize,
     fetchPage,
+    search,
+    setSearch,
     deleteNews,
     goToPage,
   } = useNewsStore();
   const { canCreate, canEdit, canDelete } = useAuthStore();
 
+  const searchBox = useListSearch(search, setSearch);
   const { showNotification } = useNotificationStore();
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [editingNews, setEditingNews] = useState<News | null>(null);
@@ -113,6 +118,21 @@ export const NewsManager: React.FC = () => {
       );
     }
 
+    if (news.length === 0 && search) {
+      return (
+        <EmptyState
+          icon={SearchX}
+          title="Ничего не найдено"
+          description="Проверьте написание или сократите запрос."
+          action={
+            <Button variant="outline" onClick={searchBox.reset}>
+              Сбросить поиск
+            </Button>
+          }
+        />
+      );
+    }
+
     if (news.length === 0) {
       return (
         <EmptyState
@@ -139,8 +159,15 @@ export const NewsManager: React.FC = () => {
       <PageHeader
         icon={Newspaper}
         title="Новости"
-        description={`Публикации сайта на русском и кыргызском языках${totalCount > 0 ? ` · всего ${totalCount}` : ''}`}
+        description={`Публикации сайта на русском и кыргызском языках${totalCount > 0 ? ` · ${search ? 'найдено' : 'всего'}: ${totalCount}` : ''}`}
         actions={addButton}
+      />
+
+      <SearchBox
+        value={searchBox.value}
+        onChange={searchBox.setValue}
+        placeholder="Поиск по заголовку и тексту"
+        label="Поиск новости по заголовку и тексту"
       />
 
       {renderContent()}

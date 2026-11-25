@@ -11,6 +11,7 @@ class OrdersService extends BaseService<Order> {
   async getPage(page: number = 1, pageSize: number = 10, filters: OrderFilters = {}): Promise<PaginatedResponse<Order>> {
     const params = new URLSearchParams({ page: String(page), page_size: String(pageSize) });
     if (filters.status) params.append('status', filters.status);
+    if (filters.search) params.append('search', filters.search);
 
     try {
       return await apiClient.get<PaginatedResponse<Order>>(`${this.endpoint}?${params.toString()}`);

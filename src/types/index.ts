@@ -232,6 +232,7 @@ export interface Order {
 
 export interface OrderFilters {
   status?: OrderStatus | '';
+  search?: string;
 }
 
 // менеджер меняет только статус и свою заметку, остальное — только чтение
@@ -266,6 +267,7 @@ export type VacancyInput = Omit<Vacancy, 'id' | 'created_at' | 'updated_at'>;
 export interface VacancyFilters {
   // '' — все, 'active' — только активные, 'inactive' — только отключённые
   status?: '' | 'active' | 'inactive';
+  search?: string;
 }
 
 // результат сохранения формы
@@ -289,6 +291,8 @@ export interface PaginatedResponse<T> {
 export interface PaginationParams {
   page?: number;
   page_size?: number;
+  // слова из строки поиска над списком
+  search?: string;
 }
 
 export interface FilterParams {
@@ -329,6 +333,7 @@ export interface VacancyApplication {
 
 export interface ApplicationFilters {
   status?: ApplicationStatus | '';
+  search?: string;
 }
 
 // отдел кадров меняет только статус и свою заметку
@@ -372,6 +377,7 @@ export interface Complaint {
 export interface ComplaintFilters {
   status?: ComplaintStatus | '';
   complaint_type?: ComplaintType | '';
+  search?: string;
 }
 
 // сотрудник меняет только статус и свою заметку

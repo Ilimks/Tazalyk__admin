@@ -12,6 +12,7 @@ class ComplaintsService extends BaseService<Complaint> {
     const params = new URLSearchParams({ page: String(page), page_size: String(pageSize) });
     if (filters.status) params.append('status', filters.status);
     if (filters.complaint_type) params.append('complaint_type', filters.complaint_type);
+    if (filters.search) params.append('search', filters.search);
 
     try {
       return await apiClient.get<PaginatedResponse<Complaint>>(`${this.endpoint}?${params.toString()}`);

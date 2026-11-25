@@ -10,13 +10,19 @@ interface NewsState {
   totalCount: number;
   currentPage: number;
   pageSize: number;
+  // строка поиска, '' — все записи
+  search: string;
   fetchPage: (page?: number, pageSize?: number) => Promise<void>;
+  setSearch: (search: string) => void;
   addNews: (newsItem: Omit<News, 'id' | 'createdAt'>) => Promise<boolean>;
   updateNews: (id: string, newsItem: Partial<News>) => Promise<boolean>;
   deleteNews: (id: string) => Promise<boolean>;
   goToPage: (page: number) => void;
   changePageSize: (size: number) => void;
 }
+
+// при быстром наборе ответ на старый запрос не должен затереть новый
+let lastRequest = 0;
 
 export const useNewsStore = create<NewsState>()(
   devtools((set, get) => ({
@@ -26,11 +32,14 @@ export const useNewsStore = create<NewsState>()(
     totalCount: 0,
     currentPage: 1,
     pageSize: 12,
+    search: '',
 
     fetchPage: async (page = 1, pageSize = 12) => {
+      const requestId = ++lastRequest;
       set({ loading: true, error: null });
       try {
-        const response = await newsService.getPage(page, pageSize);
+        const response = await newsService.getPage(page, pageSize, get().search);
+        if (requestId !== lastRequest) return;
         set({ 
           news: response.results,
           totalCount: response.count,
@@ -39,6 +48,7 @@ export const useNewsStore = create<NewsState>()(
           loading: false 
         });
       } catch (error) {
+        if (requestId !== lastRequest) return;
         console.error('Failed to fetch news page:', error);
         set({ error: 'Failed to fetch news', loading: false, news: [] });
       }
@@ -103,6 +113,11 @@ export const useNewsStore = create<NewsState>()(
         set({ error: 'Failed to delete news', loading: false });
         return false;
       }
+    },
+
+    setSearch: (search) => {
+      set({ search });
+      get().fetchPage(1, get().pageSize);
     },
 
     goToPage: (page: number) => {

@@ -13,10 +13,14 @@ interface OrdersState {
   pageSize: number;
   // фильтр по статусу, '' — все заказы
   status: OrderStatus | '';
+  // строка поиска, '' — без поиска
+  search: string;
   // сколько новых заказов ждут ответа (бейдж в меню и на «Обзоре»), null — ещё не загружено
   newCount: number | null;
   fetchPage: (page?: number, pageSize?: number) => Promise<void>;
   setStatus: (status: OrderStatus | '') => void;
+  setSearch: (search: string) => void;
+  resetFilters: () => void;
   fetchNewCount: () => Promise<void>;
   updateOrder: (id: number, data: OrderUpdate) => Promise<SaveResult<Order>>;
   deleteOrder: (id: number) => Promise<boolean>;
@@ -36,14 +40,15 @@ export const useOrdersStore = create<OrdersState>()(
     currentPage: 1,
     pageSize: 10,
     status: '',
+    search: '',
     newCount: null,
 
     fetchPage: async (page = 1, pageSize = 10) => {
       const requestId = ++lastRequest;
-      const { status } = get();
+      const { status, search } = get();
       set({ loading: true, error: null });
       try {
-        const response = await ordersService.getPage(page, pageSize, { status });
+        const response = await ordersService.getPage(page, pageSize, { status, search });
         if (requestId !== lastRequest) return;
         set({
           orders: response.results,
@@ -52,7 +57,7 @@ export const useOrdersStore = create<OrdersState>()(
           pageSize: pageSize,
           loading: false,
           // список новых заказов заодно обновляет счётчик
-          ...(status === 'new' ? { newCount: response.count } : {}),
+          ...(status === 'new' && !search ? { newCount: response.count } : {}),
         });
       } catch (error) {
         if (requestId !== lastRequest) return;
@@ -63,6 +68,16 @@ export const useOrdersStore = create<OrdersState>()(
 
     setStatus: (status) => {
       set({ status });
+      get().fetchPage(1, get().pageSize);
+    },
+
+    setSearch: (search) => {
+      set({ search });
+      get().fetchPage(1, get().pageSize);
+    },
+
+    resetFilters: () => {
+      set({ status: '', search: '' });
       get().fetchPage(1, get().pageSize);
     },
 

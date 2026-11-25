@@ -2,6 +2,8 @@
 @use '@/styles/list';
 @use '@/styles/form';
 
+@include list.tablet-cards;
+
 .table {
   min-width: 860px;
 
@@ -28,8 +30,8 @@
     white-space: nowrap;
   }
 
-  // телефон: «должность + действия / зарплата, график / переключатель, дата»
-  @media (max-width: 767px) {
+  // телефон и планшет: «должность + действия / зарплата, график / переключатель, дата»
+  @media (max-width: 1023px) {
     min-width: 0;
 
     tbody tr {

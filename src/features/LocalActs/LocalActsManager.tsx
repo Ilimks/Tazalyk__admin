@@ -1,8 +1,9 @@
 import React, { useState, useEffect } from 'react';
-import { Plus, ScrollText } from 'lucide-react';
+import { Plus, ScrollText, SearchX } from 'lucide-react';
 import styles from './LocalActsManager.module.scss';
 import { useAuthStore, useLocalActsStore } from '@/store';
 import { useNotificationStore } from '@/store/notification.store';
+import { useListSearch } from '@/hooks/useListSearch';
 import { Button } from '@/components/common/Button';
 import { Modal } from '@/components/common/Modal';
 import { Pagination } from '@/components/common/Pagination';
@@ -10,6 +11,7 @@ import { PageHeader } from '@/components/common/PageHeader';
 import { EmptyState } from '@/components/common/EmptyState';
 import { ConfirmModal } from '@/components/common/ConfirmModal';
 import { TableSkeleton } from '@/components/common/Skeleton';
+import { SearchBox } from '@/components/common/SearchBox';
 import { LocalActForm } from './components/LocalActForm';
 import { LocalActTable } from './components/LocalActTable';
 import type { LocalAct } from '@/types';
@@ -22,11 +24,14 @@ export const LocalActsManager: React.FC = () => {
         currentPage,
         pageSize,
         fetchPage,
+        search,
+        setSearch,
         deleteItem,
         goToPage,
     } = useLocalActsStore();
     const { canCreate, canEdit, canDelete } = useAuthStore();
 
+    const searchBox = useListSearch(search, setSearch);
     const { showNotification } = useNotificationStore();
     const [isModalOpen, setIsModalOpen] = useState(false);
     const [editingDocument, setEditingDocument] = useState<LocalAct | null>(null);
@@ -114,6 +119,21 @@ export const LocalActsManager: React.FC = () => {
             );
         }
 
+        if (documents.length === 0 && search) {
+            return (
+                <EmptyState
+                    icon={SearchX}
+                    title="Ничего не найдено"
+                    description="Проверьте написание или сократите запрос."
+                    action={
+                        <Button variant="outline" onClick={searchBox.reset}>
+                            Сбросить поиск
+                        </Button>
+                    }
+                />
+            );
+        }
+
         if (documents.length === 0) {
             return (
                 <EmptyState
@@ -140,8 +160,15 @@ export const LocalActsManager: React.FC = () => {
             <PageHeader
                 icon={ScrollText}
                 title="Локальные акты"
-                description={`Приказы, положения и другие внутренние документы предприятия${totalCount > 0 ? ` · всего ${totalCount}` : ''}`}
+                description={`Приказы, положения и другие внутренние документы предприятия${totalCount > 0 ? ` · ${search ? 'найдено' : 'всего'}: ${totalCount}` : ''}`}
                 actions={addButton}
+            />
+
+            <SearchBox
+                value={searchBox.value}
+                onChange={searchBox.setValue}
+                placeholder="Поиск по названию документа"
+                label="Поиск документа по названию"
             />
 
             {renderContent()}

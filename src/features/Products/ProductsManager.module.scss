@@ -2,6 +2,8 @@
 @use '@/styles/list';
 @use '@/styles/form';
 
+@include list.tablet-cards;
+
 .table {
   min-width: 880px;
 
@@ -30,8 +32,8 @@
     width: 1%;
   }
 
-  // телефон: «фото | название + действия / объём, материал, цена / статусы»
-  @media (max-width: 767px) {
+  // телефон и планшет: «фото | название + действия / объём, материал, цена / статусы»
+  @media (max-width: 1023px) {
     min-width: 0;
 
     tbody tr {
@@ -86,7 +88,7 @@
   }
 }
 
-@media (max-width: 767px) {
+@media (max-width: 1023px) {
   .badges {
     min-width: 0;
     max-width: none;

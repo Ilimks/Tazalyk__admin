@@ -1,0 +1,45 @@
+.box {
+  position: relative;
+  margin-bottom: 16px;
+
+  // два класса — сильнее отступа .formGroup из общих полей
+  .field {
+    margin-bottom: 0;
+  }
+
+  input {
+    padding-right: 48px;
+
+    // свой крестик вместо крестика браузера: одинаковый везде и нажимается пальцем
+    &::-webkit-search-cancel-button {
+      display: none;
+    }
+  }
+}
+
+.clear {
+  position: absolute;
+  top: 50%;
+  right: 4px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 40px;
+  height: 40px;
+  border: none;
+  border-radius: var(--radius-sm);
+  background: none;
+  color: var(--color-text-secondary);
+  cursor: pointer;
+  transform: translateY(-50%);
+  transition: color 0.15s ease;
+
+  &:hover {
+    color: var(--color-text);
+  }
+
+  &:focus-visible {
+    outline: none;
+    box-shadow: var(--focus-ring);
+  }
+}

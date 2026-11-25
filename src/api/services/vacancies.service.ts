@@ -18,6 +18,7 @@ class VacanciesService extends BaseService<Vacancy> {
     const params = new URLSearchParams({ page: String(page), page_size: String(pageSize), all: '1' });
     const isActive = STATUS_PARAMS[filters.status || ''];
     if (isActive) params.append('is_active', isActive);
+    if (filters.search) params.append('search', filters.search);
 
     try {
       return await apiClient.get<PaginatedResponse<Vacancy>>(`${this.endpoint}?${params.toString()}`);

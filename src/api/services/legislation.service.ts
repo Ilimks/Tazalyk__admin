@@ -6,8 +6,8 @@ class LegislationService extends BaseService<Legislation> {
     super('/legislation');
   }
 
-  async getPage(page: number = 1, pageSize: number = 10): Promise<PaginatedResponse<Legislation>> {
-    return this.getPaginated({ page, page_size: pageSize });
+  async getPage(page: number = 1, pageSize: number = 10, search = ''): Promise<PaginatedResponse<Legislation>> {
+    return this.getPaginated({ page, page_size: pageSize, search });
   }
 }
 

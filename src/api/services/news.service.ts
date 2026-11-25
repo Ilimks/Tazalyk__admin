@@ -6,8 +6,8 @@ class NewsService extends BaseService<News> {
     super('/news');
   }
 
-  async getPage(page: number = 1, pageSize: number = 10): Promise<PaginatedResponse<News>> {
-    return this.getPaginated({ page, page_size: pageSize });
+  async getPage(page: number = 1, pageSize: number = 10, search = ''): Promise<PaginatedResponse<News>> {
+    return this.getPaginated({ page, page_size: pageSize, search });
   }
 }
 

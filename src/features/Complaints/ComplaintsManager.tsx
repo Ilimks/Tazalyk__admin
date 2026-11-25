@@ -1,13 +1,15 @@
 import React, { useEffect, useState } from 'react';
-import { MessageSquareWarning } from 'lucide-react';
+import { MessageSquareWarning, SearchX } from 'lucide-react';
 import styles from '@/features/Orders/OrdersManager.module.scss';
 import own from './ComplaintsManager.module.scss';
 import { useAuthStore, useComplaintsStore } from '@/store';
 import { useNotificationStore } from '@/store/notification.store';
+import { useListSearch } from '@/hooks/useListSearch';
 import { Button } from '@/components/common/Button';
 import { ConfirmModal } from '@/components/common/ConfirmModal';
 import { EmptyState } from '@/components/common/EmptyState';
 import { TableSkeleton } from '@/components/common/Skeleton';
+import { SearchBox } from '@/components/common/SearchBox';
 import { Modal } from '@/components/common/Modal';
 import { PageHeader } from '@/components/common/PageHeader';
 import { Pagination } from '@/components/common/Pagination/Pagination';
@@ -34,6 +36,8 @@ export const ComplaintsManager: React.FC = () => {
     complaintType,
     newCount,
     fetchPage,
+    search,
+    setSearch,
     fetchNewCount,
     setStatus,
     setComplaintType,
@@ -42,6 +46,7 @@ export const ComplaintsManager: React.FC = () => {
     goToPage,
   } = useComplaintsStore();
   const { canEdit, canDelete } = useAuthStore();
+  const searchBox = useListSearch(search, setSearch);
   const { showNotification } = useNotificationStore();
 
   const [selected, setSelected] = useState<Complaint | null>(null);
@@ -55,9 +60,14 @@ export const ComplaintsManager: React.FC = () => {
   }, [fetchPage, fetchNewCount]);
 
   const totalPages = Math.ceil(totalCount / pageSize);
+
+  const showAll = () => {
+    searchBox.setValue('');
+    resetFilters();
+  };
   const isFiltered = Boolean(status || complaintType);
   // с фильтром по типу «новые: 3» вводило бы в заблуждение — это не все новые жалобы
-  const countLabel = complaintType ? 'найдено' : status ? COMPLAINT_FILTER_LABELS[status].toLowerCase() : 'всего';
+  const countLabel = complaintType || search ? 'найдено' : status ? COMPLAINT_FILTER_LABELS[status].toLowerCase() : 'всего';
 
   const handleSaved = (complaint: Complaint) => {
     setSelected(null);
@@ -85,6 +95,21 @@ export const ComplaintsManager: React.FC = () => {
       );
     }
 
+    if (complaints.length === 0 && search) {
+      return (
+        <EmptyState
+          icon={SearchX}
+          title="Ничего не найдено"
+          description="Проверьте написание или посмотрите все жалобы."
+          action={
+            <Button variant="outline" onClick={showAll}>
+              Показать все
+            </Button>
+          }
+        />
+      );
+    }
+
     if (complaints.length === 0 && isFiltered) {
       return (
         <EmptyState
@@ -92,7 +117,7 @@ export const ComplaintsManager: React.FC = () => {
           title="Нет жалоб по выбранному фильтру"
           description="Выберите другой статус или тип либо посмотрите все жалобы."
           action={
-            <Button variant="outline" onClick={resetFilters}>
+            <Button variant="outline" onClick={showAll}>
               Показать все
             </Button>
           }
@@ -119,6 +144,13 @@ export const ComplaintsManager: React.FC = () => {
         icon={MessageSquareWarning}
         title="Жалобы"
         description={`Обращения граждан с сайта${totalCount > 0 ? ` · ${countLabel}: ${totalCount}` : ''}`}
+      />
+
+      <SearchBox
+        value={searchBox.value}
+        onChange={searchBox.setValue}
+        placeholder="ФИО, телефон, тема, текст или адрес"
+        label="Поиск жалобы по ФИО, телефону, теме, тексту или адресу"
       />
 
       <div className={own.filters}>

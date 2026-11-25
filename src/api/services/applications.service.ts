@@ -15,6 +15,7 @@ class ApplicationsService extends BaseService<VacancyApplication> {
   ): Promise<PaginatedResponse<VacancyApplication>> {
     const params = new URLSearchParams({ page: String(page), page_size: String(pageSize) });
     if (filters.status) params.append('status', filters.status);
+    if (filters.search) params.append('search', filters.search);
 
     try {
       return await apiClient.get<PaginatedResponse<VacancyApplication>>(`${this.endpoint}?${params.toString()}`);

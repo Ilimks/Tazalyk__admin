@@ -1,8 +1,9 @@
 import React, { useEffect, useState } from 'react';
-import { FileSpreadsheet, ShoppingCart } from 'lucide-react';
+import { FileSpreadsheet, SearchX, ShoppingCart } from 'lucide-react';
 import styles from './OrdersManager.module.scss';
 import { useAuthStore, useOrdersStore } from '@/store';
 import { useNotificationStore } from '@/store/notification.store';
+import { useListSearch } from '@/hooks/useListSearch';
 import { ordersService } from '@/api/services';
 import { saveBlob } from '@/utils/download';
 import { Button } from '@/components/common/Button';
@@ -12,6 +13,7 @@ import { PageHeader } from '@/components/common/PageHeader';
 import { EmptyState } from '@/components/common/EmptyState';
 import { ConfirmModal } from '@/components/common/ConfirmModal';
 import { TableSkeleton } from '@/components/common/Skeleton';
+import { SearchBox } from '@/components/common/SearchBox';
 import { OrderTable } from './components/OrderTable';
 import { OrderDetails } from './components/OrderDetails';
 import { ORDER_FILTER_LABELS, ORDER_STATUSES } from './statuses';
@@ -34,6 +36,9 @@ export const OrdersManager: React.FC = () => {
     status,
     newCount,
     fetchPage,
+    search,
+    setSearch,
+    resetFilters,
     fetchNewCount,
     setStatus,
     deleteOrder,
@@ -41,6 +46,7 @@ export const OrdersManager: React.FC = () => {
   } = useOrdersStore();
   const { canEdit, canDelete } = useAuthStore();
 
+  const searchBox = useListSearch(search, setSearch);
   const { showNotification } = useNotificationStore();
   const [selectedOrder, setSelectedOrder] = useState<Order | null>(null);
   // отдельно от selectedOrder: карточку под окном подтверждения могут закрыть клавишей Esc
@@ -57,6 +63,11 @@ export const OrdersManager: React.FC = () => {
   }, [fetchPage, fetchNewCount]);
 
   const totalPages = Math.ceil(totalCount / pageSize);
+
+  const showAll = () => {
+    searchBox.setValue('');
+    resetFilters();
+  };
 
   const handleCloseDetails = () => setSelectedOrder(null);
 
@@ -101,6 +112,21 @@ export const OrdersManager: React.FC = () => {
       );
     }
 
+    if (orders.length === 0 && search) {
+      return (
+        <EmptyState
+          icon={SearchX}
+          title="Ничего не найдено"
+          description="Проверьте написание или посмотрите все статусы."
+          action={
+            <Button variant="outline" onClick={showAll}>
+              Показать все
+            </Button>
+          }
+        />
+      );
+    }
+
     if (orders.length === 0 && status) {
       return (
         <EmptyState
@@ -140,8 +166,15 @@ export const OrdersManager: React.FC = () => {
           </Button>
         }
         description={`Заказы покупателей из магазина на сайте${
-          totalCount > 0 ? ` · ${status ? ORDER_FILTER_LABELS[status].toLowerCase() : 'всего'}: ${totalCount}` : ''
+          totalCount > 0 ? ` · ${search ? 'найдено' : status ? ORDER_FILTER_LABELS[status].toLowerCase() : 'всего'}: ${totalCount}` : ''
         }`}
+      />
+
+      <SearchBox
+        value={searchBox.value}
+        onChange={searchBox.setValue}
+        placeholder="Имя, телефон, номер заказа или товар"
+        label="Поиск заказа по имени, телефону, номеру или товару"
       />
 
       <div className={styles.pills} role="group" aria-label="Фильтр по статусу">

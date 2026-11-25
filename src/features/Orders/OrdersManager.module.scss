@@ -3,8 +3,10 @@
 @use '@/styles/list';
 @use '@/styles/form';
 
+@include list.tablet-cards;
+
 .table {
-  min-width: 900px;
+  min-width: 880px;
 
   .numberCell,
   .itemsCell,
@@ -27,8 +29,8 @@
     width: 1%;
   }
 
-  // телефон: «номер + статус / покупатель / получение / товары + сумма»
-  @media (max-width: 767px) {
+  // телефон и планшет: «номер + статус / покупатель / получение / товары + сумма»
+  @media (max-width: 1023px) {
     min-width: 0;
 
     tbody tr {

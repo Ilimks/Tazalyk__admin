@@ -1,13 +1,15 @@
 import React, { useEffect, useState } from 'react';
-import { FileSpreadsheet, Inbox } from 'lucide-react';
+import { FileSpreadsheet, Inbox, SearchX } from 'lucide-react';
 import styles from '@/features/Orders/OrdersManager.module.scss';
 import { applicationsService } from '@/api/services';
 import { useApplicationsStore, useAuthStore } from '@/store';
 import { useNotificationStore } from '@/store/notification.store';
+import { useListSearch } from '@/hooks/useListSearch';
 import { Button } from '@/components/common/Button';
 import { ConfirmModal } from '@/components/common/ConfirmModal';
 import { EmptyState } from '@/components/common/EmptyState';
 import { TableSkeleton } from '@/components/common/Skeleton';
+import { SearchBox } from '@/components/common/SearchBox';
 import { Modal } from '@/components/common/Modal';
 import { PageHeader } from '@/components/common/PageHeader';
 import { Pagination } from '@/components/common/Pagination/Pagination';
@@ -34,12 +36,16 @@ export const ApplicationsManager: React.FC = () => {
     status,
     newCount,
     fetchPage,
+    search,
+    setSearch,
+    resetFilters,
     fetchNewCount,
     setStatus,
     deleteApplication,
     goToPage,
   } = useApplicationsStore();
   const { canEdit, canDelete } = useAuthStore();
+  const searchBox = useListSearch(search, setSearch);
   const { showNotification } = useNotificationStore();
 
   const [selected, setSelected] = useState<VacancyApplication | null>(null);
@@ -54,6 +60,11 @@ export const ApplicationsManager: React.FC = () => {
   }, [fetchPage, fetchNewCount]);
 
   const totalPages = Math.ceil(totalCount / pageSize);
+
+  const showAll = () => {
+    searchBox.setValue('');
+    resetFilters();
+  };
 
   const handleSaved = (application: VacancyApplication) => {
     setSelected(null);
@@ -92,6 +103,21 @@ export const ApplicationsManager: React.FC = () => {
     if (loading && applications.length === 0) {
       return (
         <TableSkeleton />
+      );
+    }
+
+    if (applications.length === 0 && search) {
+      return (
+        <EmptyState
+          icon={SearchX}
+          title="Ничего не найдено"
+          description="Проверьте написание или посмотрите все статусы."
+          action={
+            <Button variant="outline" onClick={showAll}>
+              Показать все
+            </Button>
+          }
+        />
       );
     }
 
@@ -134,8 +160,15 @@ export const ApplicationsManager: React.FC = () => {
           </Button>
         }
         description={`Резюме кандидатов с сайта${
-          totalCount > 0 ? ` · ${status ? APPLICATION_FILTER_LABELS[status].toLowerCase() : 'всего'}: ${totalCount}` : ''
+          totalCount > 0 ? ` · ${search ? 'найдено' : status ? APPLICATION_FILTER_LABELS[status].toLowerCase() : 'всего'}: ${totalCount}` : ''
         }`}
+      />
+
+      <SearchBox
+        value={searchBox.value}
+        onChange={searchBox.setValue}
+        placeholder="ФИО, телефон, почта или вакансия"
+        label="Поиск отклика по ФИО, телефону, почте или вакансии"
       />
 
       <div className={styles.pills} role="group" aria-label="Фильтр по статусу">

@@ -12,10 +12,14 @@ interface ApplicationsState {
   pageSize: number;
   // фильтр по статусу, '' — все отклики
   status: ApplicationStatus | '';
+  // строка поиска, '' — без поиска
+  search: string;
   // сколько новых откликов ждут ответа (бейдж в меню и на «Обзоре»)
   newCount: number | null;
   fetchPage: (page?: number, pageSize?: number) => Promise<void>;
   setStatus: (status: ApplicationStatus | '') => void;
+  setSearch: (search: string) => void;
+  resetFilters: () => void;
   fetchNewCount: () => Promise<void>;
   updateApplication: (id: string, data: ApplicationUpdate) => Promise<SaveResult<VacancyApplication>>;
   deleteApplication: (id: string) => Promise<boolean>;
@@ -33,13 +37,14 @@ export const useApplicationsStore = create<ApplicationsState>()(
     currentPage: 1,
     pageSize: 10,
     status: '',
+    search: '',
     newCount: null,
 
     fetchPage: async (page = 1, pageSize = 10) => {
       const requestId = ++lastRequest;
-      const { status } = get();
+      const { status, search } = get();
       set({ loading: true });
-      const response = await applicationsService.getPage(page, pageSize, { status });
+      const response = await applicationsService.getPage(page, pageSize, { status, search });
       if (requestId !== lastRequest) return;
       set({
         applications: response.results,
@@ -48,12 +53,22 @@ export const useApplicationsStore = create<ApplicationsState>()(
         pageSize,
         loading: false,
         // список новых откликов заодно обновляет счётчик
-        ...(status === 'new' ? { newCount: response.count } : {}),
+        ...(status === 'new' && !search ? { newCount: response.count } : {}),
       });
     },
 
     setStatus: (status) => {
       set({ status });
+      get().fetchPage(1, get().pageSize);
+    },
+
+    setSearch: (search) => {
+      set({ search });
+      get().fetchPage(1, get().pageSize);
+    },
+
+    resetFilters: () => {
+      set({ status: '', search: '' });
       get().fetchPage(1, get().pageSize);
     },
 

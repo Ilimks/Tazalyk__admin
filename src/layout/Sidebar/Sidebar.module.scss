@@ -268,7 +268,7 @@
 }
 
 // планшет: узкая панель только с иконками
-@media (min-width: 769px) and (max-width: 1024px) {
+@media (min-width: 769px) and (max-width: 1200px) {
   .sidebar {
     width: var(--sidebar-width-collapsed);
   }

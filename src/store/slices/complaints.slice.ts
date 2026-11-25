@@ -13,11 +13,14 @@ interface ComplaintsState {
   // фильтры списка, '' — все. По умолчанию показываются все жалобы любого типа
   status: ComplaintStatus | '';
   complaintType: ComplaintType | '';
+  // строка поиска, '' — без поиска
+  search: string;
   // сколько новых жалоб ждут ответа (бейдж в меню и на «Обзоре»)
   newCount: number | null;
   fetchPage: (page?: number, pageSize?: number) => Promise<void>;
   setStatus: (status: ComplaintStatus | '') => void;
   setComplaintType: (complaintType: ComplaintType | '') => void;
+  setSearch: (search: string) => void;
   resetFilters: () => void;
   fetchNewCount: () => Promise<void>;
   updateComplaint: (id: string, data: ComplaintUpdate) => Promise<SaveResult<Complaint>>;
@@ -37,13 +40,14 @@ export const useComplaintsStore = create<ComplaintsState>()(
     pageSize: 10,
     status: '',
     complaintType: '',
+    search: '',
     newCount: null,
 
     fetchPage: async (page = 1, pageSize = 10) => {
       const requestId = ++lastRequest;
-      const { status, complaintType } = get();
+      const { status, complaintType, search } = get();
       set({ loading: true });
-      const response = await complaintsService.getPage(page, pageSize, { status, complaint_type: complaintType });
+      const response = await complaintsService.getPage(page, pageSize, { status, complaint_type: complaintType, search });
       if (requestId !== lastRequest) return;
       set({
         complaints: response.results,
@@ -52,7 +56,7 @@ export const useComplaintsStore = create<ComplaintsState>()(
         pageSize,
         loading: false,
         // список новых жалоб без фильтра по типу заодно обновляет счётчик
-        ...(status === 'new' && !complaintType ? { newCount: response.count } : {}),
+        ...(status === 'new' && !complaintType && !search ? { newCount: response.count } : {}),
       });
     },
 
@@ -66,8 +70,13 @@ export const useComplaintsStore = create<ComplaintsState>()(
       get().fetchPage(1, get().pageSize);
     },
 
+    setSearch: (search) => {
+      set({ search });
+      get().fetchPage(1, get().pageSize);
+    },
+
     resetFilters: () => {
-      set({ status: '', complaintType: '' });
+      set({ status: '', complaintType: '', search: '' });
       get().fetchPage(1, get().pageSize);
     },
 

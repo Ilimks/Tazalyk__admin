@@ -6,8 +6,8 @@ class LocalActsService extends BaseService<LocalAct> {
     super('/local-acts');
   }
 
-  async getPage(page: number = 1, pageSize: number = 10): Promise<PaginatedResponse<LocalAct>> {
-    return this.getPaginated({ page, page_size: pageSize });
+  async getPage(page: number = 1, pageSize: number = 10, search = ''): Promise<PaginatedResponse<LocalAct>> {
+    return this.getPaginated({ page, page_size: pageSize, search });
   }
 }
 

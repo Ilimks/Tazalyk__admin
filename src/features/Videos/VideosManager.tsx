@@ -117,7 +117,7 @@ export const VideosManager: React.FC = () => {
       <PageHeader
         icon={Clapperboard}
         title="Видео"
-        description={`Видеогалерея сайта${totalCount > 0 ? ` · всего ${totalCount}` : ''}`}
+        description={`Видеогалерея сайта${totalCount > 0 ? ` · всего: ${totalCount}` : ''}`}
         actions={
           allowCreate && (
             <Button icon={<Plus />} onClick={openCreate}>

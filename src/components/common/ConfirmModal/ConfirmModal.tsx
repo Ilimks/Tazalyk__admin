@@ -1,6 +1,7 @@
 import { createPortal } from 'react-dom';
 import { Info, TriangleAlert, Trash2, X } from 'lucide-react';
 import { Button } from '../Button';
+import { useDialog } from '@/hooks/useDialog';
 import styles from './ConfirmModal.module.scss';
 
 interface ConfirmModalProps {
@@ -32,13 +33,26 @@ export const ConfirmModal: React.FC<ConfirmModalProps> = ({
     isLoading = false,
     type = 'danger',
 }) => {
+    const dialogRef = useDialog<HTMLDivElement>(isOpen, () => {
+        if (!isLoading) onCancel();
+    });
+
     if (!isOpen) return null;
 
     const Icon = typeIcons[type];
 
     return createPortal(
         <div className={styles.overlay} onClick={onCancel}>
-            <div className={styles.modal} onClick={(e) => e.stopPropagation()} role="alertdialog" aria-modal="true">
+            <div
+                ref={dialogRef}
+                tabIndex={-1}
+                className={styles.modal}
+                onClick={(e) => e.stopPropagation()}
+                role="alertdialog"
+                aria-modal="true"
+                aria-label={title}
+                aria-describedby="confirm-message"
+            >
                 <button type="button" className={styles.closeBtn} onClick={onCancel} aria-label="Закрыть" title="Закрыть">
                     <X size={20} />
                 </button>
@@ -48,10 +62,11 @@ export const ConfirmModal: React.FC<ConfirmModalProps> = ({
                         <Icon size={26} />
                     </div>
                     <h3>{title}</h3>
-                    <p>{message}</p>
+                    <p id="confirm-message">{message}</p>
                 </div>
 
-                <div className={styles.footer}>
+                {/* фокус начинается с «Отмена»: Enter сразу после открытия ничего не удалит */}
+                <div className={styles.footer} data-dialog-first>
                     <Button variant="outline" onClick={onCancel} disabled={isLoading}>
                         {cancelText}
                     </Button>
