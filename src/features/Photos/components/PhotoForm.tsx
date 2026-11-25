@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { CalendarDays, Camera } from 'lucide-react';
+import { CalendarDays, Camera, Captions } from 'lucide-react';
 import styles from '../PhotosManager.module.scss';
 import { usePhotosStore } from '@/store';
 import { Button } from '@/components/common/Button/Button';
@@ -25,6 +25,8 @@ export const PhotoForm: React.FC<PhotoFormProps> = ({
   const [formData, setFormData] = useState({
     date: initialData?.date || new Date().toISOString().split('T')[0],
     main_image: initialData?.main_image || '',
+    caption_ru: initialData?.caption_ru || '',
+    caption_ky: initialData?.caption_ky || '',
   });
 
   const handleSubmit = async (e: React.FormEvent) => {
@@ -78,6 +80,32 @@ export const PhotoForm: React.FC<PhotoFormProps> = ({
           required
         />
         {errors.image && <span className={styles.fieldError} role="alert">{errors.image}</span>}
+      </section>
+
+      <section className={styles.formSection}>
+        <div className={styles.formSectionHead}>
+          <span className={styles.sectionIcon}>
+            <Captions size={16} />
+          </span>
+          <div className={styles.formSectionText}>
+            <h4 className={styles.formSectionTitle}>Подпись</h4>
+            <p className={styles.formSectionHint}>Необязательно: что на фото. Видна на сайте и в списке</p>
+          </div>
+        </div>
+        <Input
+          label="На русском"
+          value={formData.caption_ru}
+          onChange={(e) => setFormData((prev) => ({ ...prev, caption_ru: e.target.value }))}
+          placeholder="Например: субботник на бульваре Эркиндик"
+          maxLength={160}
+        />
+        <Input
+          label="На кыргызском"
+          value={formData.caption_ky}
+          onChange={(e) => setFormData((prev) => ({ ...prev, caption_ky: e.target.value }))}
+          placeholder="Мисалы: Эркиндик бульварындагы ишембилик"
+          maxLength={160}
+        />
       </section>
 
       <section className={styles.formSection}>

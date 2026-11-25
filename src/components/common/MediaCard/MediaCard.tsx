@@ -5,6 +5,8 @@ interface MediaCardProps {
   kind: 'photo' | 'video';
   // картинка для карточки: фото или кадр-превью видео. Само видео в сетке не загружается
   previewSrc?: string | null;
+  // подпись, если задана: по ней карточки и различают
+  caption?: string;
   // сколько ещё файлов в галерее, кроме главного
   extraCount?: number;
   date: string;
@@ -16,6 +18,7 @@ interface MediaCardProps {
 export const MediaCard: React.FC<MediaCardProps> = ({
   kind,
   previewSrc,
+  caption,
   extraCount = 0,
   date,
   onOpen,
@@ -31,7 +34,7 @@ export const MediaCard: React.FC<MediaCardProps> = ({
         type="button"
         className={styles.preview}
         onClick={onOpen}
-        aria-label={isVideo ? 'Смотреть видео' : 'Открыть фото'}
+        aria-label={`${isVideo ? 'Смотреть видео' : 'Открыть фото'}${caption ? `: ${caption}` : ''}`}
       >
         {previewSrc ? (
           <img src={previewSrc} alt="" loading="lazy" decoding="async" />
@@ -56,6 +59,12 @@ export const MediaCard: React.FC<MediaCardProps> = ({
           </span>
         )}
       </button>
+
+      {caption && (
+        <p className={styles.caption} title={caption}>
+          {caption}
+        </p>
+      )}
 
       <div className={styles.footer}>
         <span className={styles.date}>

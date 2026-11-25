@@ -128,6 +128,7 @@ export const PhotosManager: React.FC = () => {
               key={photo.id}
               kind="photo"
               previewSrc={photo.main_image}
+              caption={photo.caption_ru || photo.caption_ky}
               date={photo.date}
               onOpen={() => setViewing(photo)}
               onEdit={allowEdit ? () => handleEdit(photo) : undefined}
@@ -162,7 +163,7 @@ export const PhotosManager: React.FC = () => {
       <Modal
         isOpen={Boolean(viewing)}
         onClose={() => setViewing(null)}
-        title={viewing ? new Date(viewing.date).toLocaleDateString('ru-RU') : ''}
+        title={viewing ? viewing.caption_ru || viewing.caption_ky || new Date(viewing.date).toLocaleDateString('ru-RU') : ''}
         size="xl"
       >
         {viewing && (

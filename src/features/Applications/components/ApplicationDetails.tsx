@@ -92,6 +92,38 @@ export const ApplicationDetails: React.FC<ApplicationDetailsProps> = ({
         </span>
       </div>
 
+      {/* обработка — первой: длинный текст ниже не приходится прокручивать ради статуса */}
+      <section className={styles.formSection}>
+        <div className={styles.formSectionHead}>
+          <span className={styles.sectionIcon}>
+            <ClipboardCheck size={16} />
+          </span>
+          <div className={styles.formSectionText}>
+            <h4 className={styles.formSectionTitle}>Обработка</h4>
+            <p className={styles.formSectionHint}>Статус и заметка видны только сотрудникам</p>
+          </div>
+        </div>
+        <div className={styles.processing}>
+          <Select
+            label="Статус отклика"
+            value={status}
+            onChange={(e) => setStatus(e.target.value as ApplicationStatus)}
+            options={APPLICATION_STATUS_OPTIONS}
+            error={errors.status}
+            disabled={!allowEdit}
+          />
+          <Textarea
+            label="Заметка отдела кадров"
+            value={note}
+            onChange={(e) => setNote(e.target.value)}
+            error={errors.hr_note}
+            rows={2}
+            placeholder="Например: созвонились, собеседование в среду в 10:00"
+            disabled={!allowEdit}
+          />
+        </div>
+      </section>
+
       <div className={styles.infoGrid}>
         <section className={styles.formSection}>
           <div className={styles.formSectionHead}>
@@ -172,35 +204,6 @@ export const ApplicationDetails: React.FC<ApplicationDetailsProps> = ({
           </div>
         </section>
       </div>
-
-      <section className={styles.formSection}>
-        <div className={styles.formSectionHead}>
-          <span className={styles.sectionIcon}>
-            <ClipboardCheck size={16} />
-          </span>
-          <div className={styles.formSectionText}>
-            <h4 className={styles.formSectionTitle}>Обработка</h4>
-            <p className={styles.formSectionHint}>Статус и заметка видны только сотрудникам</p>
-          </div>
-        </div>
-        <Select
-          label="Статус отклика"
-          value={status}
-          onChange={(e) => setStatus(e.target.value as ApplicationStatus)}
-          options={APPLICATION_STATUS_OPTIONS}
-          error={errors.status}
-          disabled={!allowEdit}
-        />
-        <Textarea
-          label="Заметка отдела кадров"
-          value={note}
-          onChange={(e) => setNote(e.target.value)}
-          error={errors.hr_note}
-          rows={3}
-          placeholder="Например: созвонились, собеседование в среду в 10:00"
-          disabled={!allowEdit}
-        />
-      </section>
 
       <div className={styles.formActions}>
         {allowDelete && (

@@ -3,6 +3,7 @@ import { FileSpreadsheet, SearchX, ShoppingCart } from 'lucide-react';
 import styles from './OrdersManager.module.scss';
 import { useAuthStore, useOrdersStore } from '@/store';
 import { useNotificationStore } from '@/store/notification.store';
+import { useOpenRecordStore } from '@/store/openRecord.store';
 import { useListSearch } from '@/hooks/useListSearch';
 import { ordersService } from '@/api/services';
 import { saveBlob } from '@/utils/download';
@@ -61,6 +62,12 @@ export const OrdersManager: React.FC = () => {
     fetchPage(1, PAGE_SIZE);
     fetchNewCount();
   }, [fetchPage, fetchNewCount]);
+
+  // пришли с «Обзора» за конкретной записью
+  useEffect(() => {
+    const record = useOpenRecordStore.getState().take('orders');
+    if (record) setSelectedOrder(record);
+  }, []);
 
   const totalPages = Math.ceil(totalCount / pageSize);
 

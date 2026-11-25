@@ -91,6 +91,9 @@ export interface Video {
   gallery_videos: string[];
   // кадр-превью (JPEG data URL); у старых видео может отсутствовать
   thumbnail?: string | null;
+  // подпись под видео на сайте; необязательная
+  caption_ru?: string;
+  caption_ky?: string;
   date: string;
   created_at?: string;
 }
@@ -99,6 +102,9 @@ export interface Video {
 export interface Photo {
   id: string;
   main_image: string;
+  // подпись под фото на сайте; необязательная
+  caption_ru?: string;
+  caption_ky?: string;
   date: string;
   created_at: string;
 }

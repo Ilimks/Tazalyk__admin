@@ -80,6 +80,38 @@ export const OrderDetails: React.FC<OrderDetailsProps> = ({ order, allowEdit, al
         </div>
       )}
 
+      {/* обработка — первой: длинный текст ниже не приходится прокручивать ради статуса */}
+      <section className={styles.formSection}>
+        <div className={styles.formSectionHead}>
+          <span className={styles.sectionIcon}>
+            <ClipboardCheck size={16} />
+          </span>
+          <div className={styles.formSectionText}>
+            <h4 className={styles.formSectionTitle}>Обработка</h4>
+            <p className={styles.formSectionHint}>Статус и заметка видны только сотрудникам</p>
+          </div>
+        </div>
+        <div className={styles.processing}>
+          <Select
+            label="Статус заказа"
+            value={status}
+            onChange={(e) => setStatus(e.target.value as OrderStatus)}
+            options={ORDER_STATUS_OPTIONS}
+            error={errors.status}
+            disabled={!allowEdit}
+          />
+          <Textarea
+            label="Заметка менеджера"
+            value={note}
+            onChange={(e) => setNote(e.target.value)}
+            error={errors.manager_note}
+            rows={2}
+            placeholder="Например: созвонились, оплата при получении"
+            disabled={!allowEdit}
+          />
+        </div>
+      </section>
+
       <div className={styles.infoGrid}>
         <section className={styles.formSection}>
           <div className={styles.formSectionHead}>
@@ -196,35 +228,6 @@ export const OrderDetails: React.FC<OrderDetailsProps> = ({ order, allowEdit, al
             </tfoot>
           </table>
         </div>
-      </section>
-
-      <section className={styles.formSection}>
-        <div className={styles.formSectionHead}>
-          <span className={styles.sectionIcon}>
-            <ClipboardCheck size={16} />
-          </span>
-          <div className={styles.formSectionText}>
-            <h4 className={styles.formSectionTitle}>Обработка</h4>
-            <p className={styles.formSectionHint}>Статус и заметка видны только сотрудникам</p>
-          </div>
-        </div>
-        <Select
-          label="Статус заказа"
-          value={status}
-          onChange={(e) => setStatus(e.target.value as OrderStatus)}
-          options={ORDER_STATUS_OPTIONS}
-          error={errors.status}
-          disabled={!allowEdit}
-        />
-        <Textarea
-          label="Заметка менеджера"
-          value={note}
-          onChange={(e) => setNote(e.target.value)}
-          error={errors.manager_note}
-          rows={3}
-          placeholder="Например: созвонились, оплата при получении"
-          disabled={!allowEdit}
-        />
       </section>
 
       <div className={styles.formActions}>

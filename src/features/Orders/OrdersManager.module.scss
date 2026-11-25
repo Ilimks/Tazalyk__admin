@@ -72,6 +72,18 @@
   }
 }
 
+// ---------- обработка: статус и заметка в один ряд ----------
+
+.processing {
+  display: grid;
+  grid-template-columns: 220px minmax(0, 1fr);
+  gap: 0 16px;
+
+  @media (max-width: 767px) {
+    grid-template-columns: minmax(0, 1fr);
+  }
+}
+
 // ---------- состав заказа ----------
 
 .itemsSection {

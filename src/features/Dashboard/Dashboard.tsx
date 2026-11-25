@@ -2,6 +2,7 @@ import React, { useEffect, useState } from 'react';
 import { CircleCheck, ExternalLink, Gauge, ImageDown, MonitorPlay } from 'lucide-react';
 import styles from './Dashboard.module.scss';
 import { AttentionCard } from './components/AttentionCard';
+import { RECENT_SECTIONS, RecentList } from './components/RecentList';
 import { SectionRow } from './components/SectionRow';
 import { useApplicationsStore, useAuthStore, useComplaintsStore, useOrdersStore } from '@/store';
 import { config } from '@/config';
@@ -84,9 +85,12 @@ export const Dashboard: React.FC<DashboardProps> = ({ availableTabs, onNavigate 
   const { newCount: newApplications } = useApplicationsStore();
   const { newCount: newComplaints } = useComplaintsStore();
   const sections = SECTIONS.filter((section) => availableTabs.includes(section));
+  const hasRecent = RECENT_SECTIONS.some((section) => sections.includes(section));
   const [counts, setCounts] = useState<Partial<Record<Section, number>>>(() => countsCache?.counts || {});
 
   useEffect(() => {
+    // счётчики разделов нужны, только когда показан их список
+    if (hasRecent) return;
     if (countsCache && Date.now() - countsCache.time < CACHE_TTL) return;
 
     let cancelled = false;
@@ -127,7 +131,8 @@ export const Dashboard: React.FC<DashboardProps> = ({ availableTabs, onNavigate 
             {getGreeting()}, {user?.username}
           </h1>
           <p>
-            {user ? ROLE_LABELS[user.role] || user.role : ''} · выберите раздел, чтобы обновить информацию на сайте
+            {user ? ROLE_LABELS[user.role] || user.role : ''}
+            {hasRecent ? ' · вот что пришло с сайта' : ' · выберите раздел, чтобы обновить информацию на сайте'}
           </p>
         </div>
         <a className={styles.siteButton} href={config.siteUrl} target="_blank" rel="noreferrer">
@@ -171,28 +176,37 @@ export const Dashboard: React.FC<DashboardProps> = ({ availableTabs, onNavigate 
         </section>
       )}
 
-      <section aria-labelledby="dashboard-sections">
-        <h2 id="dashboard-sections" className={styles.sectionTitle}>
-          Разделы
-        </h2>
-        <div className={styles.groups}>
-          {groups.map((group, index) => (
-            <div key={group.title || index} className={styles.group}>
-              {group.title && <h3 className={styles.groupTitle}>{group.title}</h3>}
-              {group.items.map((id) => (
-                <SectionRow
-                  key={id}
-                  label={NAV_ITEMS[id].label}
-                  description={NAV_ITEMS[id].description}
-                  icon={NAV_ITEMS[id].icon}
-                  value={counts[id]}
-                  onClick={() => onNavigate(id)}
-                />
-              ))}
-            </div>
-          ))}
-        </div>
-      </section>
+      {hasRecent ? (
+        <RecentList
+          sections={sections}
+          version={[newComplaints, newOrders, newApplications].join()}
+          onNavigate={onNavigate}
+        />
+      ) : (
+        // у этих ролей обращений с сайта нет — показываем их разделы
+        <section aria-labelledby="dashboard-sections">
+          <h2 id="dashboard-sections" className={styles.sectionTitle}>
+            Разделы
+          </h2>
+          <div className={styles.groups}>
+            {groups.map((group, index) => (
+              <div key={group.title || index} className={styles.group}>
+                {group.title && <h3 className={styles.groupTitle}>{group.title}</h3>}
+                {group.items.map((id) => (
+                  <SectionRow
+                    key={id}
+                    label={NAV_ITEMS[id].label}
+                    description={NAV_ITEMS[id].description}
+                    icon={NAV_ITEMS[id].icon}
+                    value={counts[id]}
+                    onClick={() => onNavigate(id)}
+                  />
+                ))}
+              </div>
+            ))}
+          </div>
+        </section>
+      )}
 
       {/* советы про фото и видео — только тем, кто их загружает (отделу кадров не нужны) */}
       {sections.some((section) => MEDIA_SECTIONS.includes(section)) && (

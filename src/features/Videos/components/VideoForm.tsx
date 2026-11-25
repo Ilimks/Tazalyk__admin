@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from 'react';
-import { CalendarDays, Clapperboard, ImageOff } from 'lucide-react';
+import { CalendarDays, Captions, Clapperboard, ImageOff } from 'lucide-react';
 import styles from '../VideosManager.module.scss';
 import { useVideosStore } from '@/store';
 import { Button } from '@/components/common/Button/Button';
@@ -29,6 +29,8 @@ export const VideoForm: React.FC<VideoFormProps> = ({
     main_video_url: initialData?.main_video_url || '',
     gallery_videos: initialData?.gallery_videos || [],
     thumbnail: initialData?.thumbnail || '',
+    caption_ru: initialData?.caption_ru || '',
+    caption_ky: initialData?.caption_ky || '',
   });
 
   // у старых видео нет превью — снимаем кадр из уже загруженного ролика,
@@ -124,6 +126,32 @@ export const VideoForm: React.FC<VideoFormProps> = ({
             }
           }}
           multiple
+        />
+      </section>
+
+      <section className={styles.formSection}>
+        <div className={styles.formSectionHead}>
+          <span className={styles.sectionIcon}>
+            <Captions size={16} />
+          </span>
+          <div className={styles.formSectionText}>
+            <h4 className={styles.formSectionTitle}>Подпись</h4>
+            <p className={styles.formSectionHint}>Необязательно: что на видео. Видна на сайте и в списке</p>
+          </div>
+        </div>
+        <Input
+          label="На русском"
+          value={formData.caption_ru}
+          onChange={(e) => setFormData((prev) => ({ ...prev, caption_ru: e.target.value }))}
+          placeholder="Например: субботник на бульваре Эркиндик"
+          maxLength={160}
+        />
+        <Input
+          label="На кыргызском"
+          value={formData.caption_ky}
+          onChange={(e) => setFormData((prev) => ({ ...prev, caption_ky: e.target.value }))}
+          placeholder="Мисалы: Эркиндик бульварындагы ишембилик"
+          maxLength={160}
         />
       </section>
 

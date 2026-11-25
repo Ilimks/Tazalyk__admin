@@ -87,6 +87,38 @@ export const ComplaintDetails: React.FC<ComplaintDetailsProps> = ({
         </span>
       </div>
 
+      {/* обработка — первой: длинный текст ниже не приходится прокручивать ради статуса */}
+      <section className={styles.formSection}>
+        <div className={styles.formSectionHead}>
+          <span className={styles.sectionIcon}>
+            <ClipboardCheck size={16} />
+          </span>
+          <div className={styles.formSectionText}>
+            <h4 className={styles.formSectionTitle}>Обработка</h4>
+            <p className={styles.formSectionHint}>Статус и заметка видны только сотрудникам</p>
+          </div>
+        </div>
+        <div className={styles.processing}>
+          <Select
+            label="Статус жалобы"
+            value={status}
+            onChange={(e) => setStatus(e.target.value as ComplaintStatus)}
+            options={COMPLAINT_STATUS_OPTIONS}
+            error={errors.status}
+            disabled={!allowEdit}
+          />
+          <Textarea
+            label="Заметка сотрудника"
+            value={note}
+            onChange={(e) => setNote(e.target.value)}
+            error={errors.manager_note}
+            rows={2}
+            placeholder="Например: передали бригаде, вывоз в четверг утром"
+            disabled={!allowEdit}
+          />
+        </div>
+      </section>
+
       <div className={styles.infoGrid}>
         <section className={`${styles.formSection} ${own.wide}`}>
           <div className={styles.formSectionHead}>
@@ -103,10 +135,6 @@ export const ComplaintDetails: React.FC<ComplaintDetailsProps> = ({
               <span className={styles.infoValue}>
                 {complaint.type_label || COMPLAINT_TYPE_LABELS[complaint.complaint_type]}
               </span>
-            </div>
-            <div className={styles.infoRow}>
-              <span className={styles.infoLabel}>Тема</span>
-              <span className={styles.infoValue}>{complaint.subject}</span>
             </div>
             <div className={styles.infoRow}>
               <span className={styles.infoLabel}>Текст обращения</span>
@@ -208,35 +236,6 @@ export const ComplaintDetails: React.FC<ComplaintDetailsProps> = ({
           </section>
         )}
       </div>
-
-      <section className={styles.formSection}>
-        <div className={styles.formSectionHead}>
-          <span className={styles.sectionIcon}>
-            <ClipboardCheck size={16} />
-          </span>
-          <div className={styles.formSectionText}>
-            <h4 className={styles.formSectionTitle}>Обработка</h4>
-            <p className={styles.formSectionHint}>Статус и заметка видны только сотрудникам</p>
-          </div>
-        </div>
-        <Select
-          label="Статус жалобы"
-          value={status}
-          onChange={(e) => setStatus(e.target.value as ComplaintStatus)}
-          options={COMPLAINT_STATUS_OPTIONS}
-          error={errors.status}
-          disabled={!allowEdit}
-        />
-        <Textarea
-          label="Заметка сотрудника"
-          value={note}
-          onChange={(e) => setNote(e.target.value)}
-          error={errors.manager_note}
-          rows={3}
-          placeholder="Например: передали бригаде, вывоз в четверг утром"
-          disabled={!allowEdit}
-        />
-      </section>
 
       <div className={styles.formActions}>
         {allowDelete && (

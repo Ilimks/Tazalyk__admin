@@ -112,11 +112,26 @@
   font-weight: 600;
 }
 
+.caption {
+  display: -webkit-box;
+  -webkit-line-clamp: 2;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+  padding: 10px 14px 0;
+  font-size: 14px;
+  font-weight: 600;
+  line-height: 1.35;
+  color: var(--color-text);
+  overflow-wrap: anywhere;
+}
+
 .footer {
   display: flex;
   align-items: center;
   justify-content: space-between;
   gap: 8px;
+  // в ряду карточки с подписью и без неё: дата и кнопки на одной линии
+  margin-top: auto;
   padding: 8px 8px 8px 14px;
 }
 

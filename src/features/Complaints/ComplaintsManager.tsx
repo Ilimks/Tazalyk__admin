@@ -4,6 +4,7 @@ import styles from '@/features/Orders/OrdersManager.module.scss';
 import own from './ComplaintsManager.module.scss';
 import { useAuthStore, useComplaintsStore } from '@/store';
 import { useNotificationStore } from '@/store/notification.store';
+import { useOpenRecordStore } from '@/store/openRecord.store';
 import { useListSearch } from '@/hooks/useListSearch';
 import { Button } from '@/components/common/Button';
 import { ConfirmModal } from '@/components/common/ConfirmModal';
@@ -58,6 +59,12 @@ export const ComplaintsManager: React.FC = () => {
     fetchPage(1, PAGE_SIZE);
     fetchNewCount();
   }, [fetchPage, fetchNewCount]);
+
+  // пришли с «Обзора» за конкретной записью
+  useEffect(() => {
+    const record = useOpenRecordStore.getState().take('complaints');
+    if (record) setSelected(record);
+  }, []);
 
   const totalPages = Math.ceil(totalCount / pageSize);
 

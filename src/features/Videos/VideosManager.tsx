@@ -161,6 +161,7 @@ export const VideosManager: React.FC = () => {
               key={video.id}
               kind="video"
               previewSrc={video.thumbnail}
+              caption={video.caption_ru || video.caption_ky}
               extraCount={video.gallery_videos?.length || 0}
               date={video.date}
               onOpen={() => setViewing({ video, index: 0 })}
