@@ -8,6 +8,7 @@ import { Modal } from '@/components/common/Modal';
 import { Pagination } from '@/components/common/Pagination/Pagination';
 import { PageHeader } from '@/components/common/PageHeader';
 import { EmptyState } from '@/components/common/EmptyState';
+import { LoadError } from '@/components/common/LoadError';
 import { MediaCard, mediaCardStyles, useMediaGrid } from '@/components/common/MediaCard';
 import { PhotoForm } from './components/PhotoForm';
 import { GridSkeleton } from '@/components/common/Skeleton';
@@ -25,6 +26,11 @@ export const PhotosManager: React.FC = () => {
     deletePhoto,
     goToPage,
   } = usePhotosStore();
+  const loadError = usePhotosStore((state) => state.loadError);
+  const retryLoad = () => {
+    const { currentPage, pageSize, fetchPage } = usePhotosStore.getState();
+    fetchPage(currentPage, pageSize);
+  };
   const { canCreate, canEdit, canDelete } = useAuthStore();
 
   const { showNotification } = useNotificationStore();
@@ -39,7 +45,6 @@ export const PhotosManager: React.FC = () => {
   const allowEdit = canEdit('photos');
   const allowDelete = canDelete('photos');
 
-  // сколько фото на странице, решает ширина сетки: последний ряд всегда полный
   const grid = useMediaGrid<HTMLDivElement>(fetchPage, { currentPage, pageSize });
 
   const totalPages = Math.ceil(totalCount / pageSize);
@@ -105,9 +110,10 @@ export const PhotosManager: React.FC = () => {
         }
       />
 
-      {/* первая загрузка: шапка на месте, вместо карточек — заглушки */}
       {loading && photos.length === 0 ? (
         <GridSkeleton />
+      ) : loadError ? (
+        <LoadError message={loadError} onRetry={retryLoad} />
       ) : photos.length === 0 ? (
         <EmptyState
           icon={Images}

@@ -1,34 +1,34 @@
-// src/store/slices/localActs.slice.ts
+import { isMissingPage, toLoadError, toSaveError } from '@/utils/apiErrors';
 import { create } from 'zustand';
 import { devtools } from 'zustand/middleware';
 import { localActsService } from '@/api/services/localActs.service';
-import type { LocalAct } from '@/types';
+import type { LocalAct, SaveResult } from '@/types';
 
 interface LocalActsState {
   items: LocalAct[];
   loading: boolean;
+  loadError: string | null;
   error: string | null;
   totalCount: number;
   currentPage: number;
   pageSize: number;
-  // строка поиска, '' — все записи
   search: string;
   fetchPage: (page?: number, pageSize?: number) => Promise<void>;
   setSearch: (search: string) => void;
-  addItem: (item: Omit<LocalAct, 'id' | 'created_at'>) => Promise<boolean>;
-  updateItem: (id: string, item: Partial<LocalAct>) => Promise<boolean>;
+  addItem: (item: Omit<LocalAct, 'id' | 'created_at'>) => Promise<SaveResult<LocalAct>>;
+  updateItem: (id: string, item: Partial<LocalAct>) => Promise<SaveResult<LocalAct>>;
   deleteItem: (id: string) => Promise<boolean>;
   goToPage: (page: number) => void;
   changePageSize: (size: number) => void;
 }
 
-// при быстром наборе ответ на старый запрос не должен затереть новый
 let lastRequest = 0;
 
 export const useLocalActsStore = create<LocalActsState>()(
   devtools((set, get) => ({
     items: [],
     loading: false,
+    loadError: null,
     error: null,
     totalCount: 0,
     currentPage: 1,
@@ -37,7 +37,7 @@ export const useLocalActsStore = create<LocalActsState>()(
 
     fetchPage: async (page = 1, pageSize = 10) => {
       const requestId = ++lastRequest;
-      set({ loading: true, error: null });
+      set({ loading: true, error: null, loadError: null });
       try {
         const response = await localActsService.getPage(page, pageSize, get().search);
         if (requestId !== lastRequest) return;
@@ -50,46 +50,40 @@ export const useLocalActsStore = create<LocalActsState>()(
         });
       } catch (error) {
         if (requestId !== lastRequest) return;
+        if (isMissingPage(error) && page > 1) {
+          get().fetchPage(page - 1, pageSize);
+          return;
+        }
         console.error('Failed to fetch local acts:', error);
-        set({ error: 'Failed to fetch local acts', loading: false, items: [] });
+        set({ loadError: toLoadError(error), loading: false, items: [] });
       }
     },
 
     addItem: async (item) => {
       set({ loading: true });
       try {
-        const newItem = await localActsService.create(item);
-        if (newItem) {
-          await get().fetchPage(1, get().pageSize);
-          set({ loading: false });
-          return true;
-        }
+        const created = await localActsService.create(item);
+        await get().fetchPage(1, get().pageSize);
         set({ loading: false });
-        return false;
+        return { success: true, data: created };
       } catch (error) {
-        console.error('Failed to add local act:', error);
-        set({ error: 'Failed to add local act', loading: false });
-        return false;
+        set({ loading: false });
+        return toSaveError(error);
       }
     },
 
     updateItem: async (id, item) => {
       set({ loading: true });
       try {
-        const updatedItem = await localActsService.update(id, item);
-        if (updatedItem) {
-          set((state) => ({
-            items: state.items.map((i) => (i.id === id ? updatedItem : i)),
-            loading: false,
-          }));
-          return true;
-        }
-        set({ loading: false });
-        return false;
+        const updated = await localActsService.update(id, item);
+        set((state) => ({
+          items: state.items.map((i) => (i.id === id ? updated : i)),
+          loading: false,
+        }));
+        return { success: true, data: updated };
       } catch (error) {
-        console.error('Failed to update local act:', error);
-        set({ error: 'Failed to update local act', loading: false });
-        return false;
+        set({ loading: false });
+        return toSaveError(error);
       }
     },
 

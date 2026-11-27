@@ -62,7 +62,6 @@
   cursor: pointer;
 }
 
-// 12 пунктов в 7 группах помещаются в 900px без прокрутки: строка 36px, группы через 12px
 .nav {
   flex: 1;
   min-height: 0;
@@ -79,7 +78,6 @@
   }
 }
 
-// на низком экране меню прокручивается: край тает — видно, что ниже есть ещё пункты
 .navFadeBottom {
   mask-image: linear-gradient(to bottom, #000 calc(100% - 44px), transparent);
 }
@@ -171,7 +169,6 @@
   text-overflow: ellipsis;
 }
 
-// число новых заказов рядом с «Заказы»
 .navBadge {
   flex-shrink: 0;
   min-width: 20px;
@@ -267,7 +264,6 @@
   display: none;
 }
 
-// планшет: узкая панель только с иконками
 @media (min-width: 769px) and (max-width: 1200px) {
   .sidebar {
     width: var(--sidebar-width-collapsed);
@@ -296,7 +292,6 @@
     padding: 0;
   }
 
-  // без подписей бейдж садится на угол иконки
   .navBadge {
     position: absolute;
     top: 4px;
@@ -314,7 +309,6 @@
   }
 }
 
-// телефон: меню выезжает слева
 @media (max-width: 768px) {
   .sidebar {
     width: min(300px, 85vw);
@@ -332,7 +326,6 @@
     }
   }
 
-  // строка под палец
   .navItem,
   .siteLink {
     height: 44px;

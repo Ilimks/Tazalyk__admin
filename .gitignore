@@ -144,3 +144,4 @@ settings.local.*
 *.tar.gz
 *.rar
 *.7z
+*.tsbuildinfo

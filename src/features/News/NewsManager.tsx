@@ -9,6 +9,7 @@ import { Modal } from '@/components/common/Modal';
 import { Pagination } from '@/components/common/Pagination/Pagination';
 import { PageHeader } from '@/components/common/PageHeader';
 import { EmptyState } from '@/components/common/EmptyState';
+import { LoadError } from '@/components/common/LoadError';
 import { ConfirmModal } from '@/components/common/ConfirmModal';
 import { TableSkeleton } from '@/components/common/Skeleton';
 import { SearchBox } from '@/components/common/SearchBox';
@@ -29,6 +30,11 @@ export const NewsManager: React.FC = () => {
     deleteNews,
     goToPage,
   } = useNewsStore();
+  const loadError = useNewsStore((state) => state.loadError);
+  const retryLoad = () => {
+    const { currentPage, pageSize, fetchPage } = useNewsStore.getState();
+    fetchPage(currentPage, pageSize);
+  };
   const { canCreate, canEdit, canDelete } = useAuthStore();
 
   const searchBox = useListSearch(search, setSearch);
@@ -111,11 +117,14 @@ export const NewsManager: React.FC = () => {
   );
 
   const renderContent = () => {
-    // первая загрузка: шапка остаётся на месте, заглушка — вместо таблицы
     if (loading && news.length === 0) {
       return (
         <TableSkeleton withThumb />
       );
+    }
+
+    if (loadError) {
+      return <LoadError message={loadError} onRetry={retryLoad} />;
     }
 
     if (news.length === 0 && search) {

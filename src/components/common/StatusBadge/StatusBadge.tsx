@@ -17,7 +17,6 @@ interface StatusBadgeProps {
   showDot?: boolean;
   className?: string;
   size?: 'sm' | 'md' | 'lg';
-  // своя подпись, например в женском роде для «закупки»
   label?: string;
 }
 

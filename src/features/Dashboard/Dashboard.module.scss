@@ -1,13 +1,9 @@
-// «Обзор»: приветствие строкой, новое с сайта, разделы группами меню, советы
-
 .dashboard {
   display: grid;
   grid-template-columns: minmax(0, 1fr);
   gap: 28px;
   animation: fadeIn 0.2s ease;
 }
-
-// ---------- приветствие ----------
 
 .welcome {
   display: flex;
@@ -71,8 +67,6 @@
   line-height: 1.3;
   color: var(--color-text);
 }
-
-// ---------- требует внимания ----------
 
 .attentionGrid {
   display: grid;
@@ -168,7 +162,6 @@
   }
 }
 
-// есть новое: фирменная заливка значка и полоса слева
 .attentionHot {
   border-color: color-mix(in srgb, var(--color-brand) 32%, var(--color-border));
 
@@ -230,8 +223,6 @@
   color: var(--color-success-text);
 }
 
-// ---------- последние обращения ----------
-
 .recent {
   border: 1px solid var(--color-border);
   border-radius: var(--radius-lg);
@@ -256,7 +247,6 @@
   cursor: pointer;
   transition: background-color 0.12s ease;
 
-  // статус шириной по тексту, а не во всю колонку
   > :nth-last-child(2) {
     justify-self: start;
   }
@@ -336,7 +326,6 @@
   }
 }
 
-// телефон: «значок | тема, кто / время + статус»
 @media (max-width: 767px) {
   .recentRow {
     grid-template-columns: 36px minmax(0, 1fr) auto;
@@ -373,8 +362,6 @@
     animation: none;
   }
 }
-
-// ---------- разделы: группы меню колонками ----------
 
 .groups {
   columns: 3;
@@ -499,8 +486,6 @@
   flex-shrink: 0;
 }
 
-// ---------- советы: тихая полоса ----------
-
 .tips {
   margin-top: -12px;
   padding: 16px 18px;
@@ -595,5 +580,160 @@
   }
   to {
     background-position: -200% 0;
+  }
+}
+
+.winter {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 14px 18px;
+  padding: 16px 18px;
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-lg);
+  background: var(--color-surface);
+  box-shadow: var(--shadow-sm);
+}
+
+.winterIcon {
+  width: 48px;
+  height: 48px;
+  flex-shrink: 0;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: var(--radius-md);
+  background: var(--color-surface-muted);
+  color: var(--color-text-muted);
+  transition: background-color 0.2s ease, color 0.2s ease;
+}
+
+.winterIconOn {
+  background: var(--color-brand-soft);
+  color: var(--color-brand-text);
+}
+
+.winterText {
+  flex: 1 1 200px;
+  min-width: 0;
+
+  h2 {
+    font-size: 15px;
+    font-weight: 700;
+    line-height: 1.3;
+    color: var(--color-text);
+  }
+
+  p {
+    margin-top: 2px;
+    font-size: 13px;
+    line-height: 1.45;
+    color: var(--color-text-secondary);
+  }
+}
+
+.winterRetry {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  height: 36px;
+  padding: 0 12px;
+  border: 1px solid var(--color-border-strong);
+  border-radius: var(--radius-md);
+  background: var(--color-surface);
+  color: var(--color-text);
+  font: inherit;
+  font-size: 13px;
+  font-weight: 600;
+  cursor: pointer;
+
+  &:focus-visible {
+    outline: none;
+    box-shadow: var(--focus-ring);
+  }
+}
+
+.switch {
+  display: inline-flex;
+  align-items: center;
+  gap: 10px;
+  min-height: 40px;
+  padding: 4px 12px 4px 6px;
+  border: none;
+  border-radius: 999px;
+  background: none;
+  font: inherit;
+  font-size: 14px;
+  font-weight: 600;
+  color: var(--color-text-secondary);
+  cursor: pointer;
+
+  &:focus-visible {
+    outline: none;
+    box-shadow: var(--focus-ring);
+  }
+
+  &:disabled {
+    cursor: progress;
+    opacity: 0.6;
+  }
+}
+
+.switchTrack {
+  position: relative;
+  width: 44px;
+  height: 26px;
+  flex-shrink: 0;
+  border-radius: 999px;
+  background: var(--color-switch-off);
+  transition: background-color 0.15s ease;
+
+  &::after {
+    content: '';
+    position: absolute;
+    top: 3px;
+    left: 3px;
+    width: 20px;
+    height: 20px;
+    border-radius: 50%;
+    background: #fff;
+    box-shadow: 0 1px 2px rgb(0 0 0 / 0.25);
+    transition: transform 0.15s ease;
+  }
+}
+
+.switchOn {
+  color: var(--color-success-text);
+
+  .switchTrack {
+    background: var(--color-success-fill);
+
+    &::after {
+      transform: translateX(18px);
+    }
+  }
+}
+
+.attentionFailed svg {
+  color: var(--color-danger-text);
+}
+
+.recentFailed {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 14px 18px;
+  font-size: 14px;
+  color: var(--color-text);
+  border-bottom: 1px solid var(--color-border);
+
+  > svg {
+    flex-shrink: 0;
+    color: var(--color-danger-text);
+  }
+
+  > span {
+    flex: 1;
+    min-width: 0;
   }
 }

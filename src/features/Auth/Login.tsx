@@ -15,8 +15,6 @@ import {
 import styles from './Login.module.scss';
 import { useAuthStore } from '@/store';
 
-// Экран входа сделан в одном стиле с ассистентом поручений (tazalyk-assistant/web/src/features/auth)
-
 const features = [
   { icon: Newspaper, text: 'Новости, фото и видео' },
   { icon: ClipboardList, text: 'Закупки и документы' },
@@ -44,7 +42,6 @@ export const Login: React.FC = () => {
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     if (isLoading) return;
-    // кнопка всегда активна: пустые поля подсказываем текстом, а не бледной кнопкой
     if (!username.trim() || !password) {
       setEmptyError('Введите логин и пароль');
       return;
@@ -61,7 +58,6 @@ export const Login: React.FC = () => {
   return (
     <div className={styles.page}>
       <aside className={styles.brand}>
-        {/* арка и здания с герба предприятия — водяным знаком */}
         <img className={styles.arch} src="/arch.svg" alt="" aria-hidden="true" draggable={false} />
 
         <header className={styles.brandTop}>

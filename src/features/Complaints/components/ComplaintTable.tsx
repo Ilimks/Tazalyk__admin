@@ -8,7 +8,6 @@ import type { Complaint } from '@/types';
 
 interface ComplaintTableProps {
   complaints: Complaint[];
-  // идёт перезагрузка списка (фильтр, смена страницы)
   busy?: boolean;
   onOpen: (complaint: Complaint) => void;
 }

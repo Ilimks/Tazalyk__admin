@@ -1,5 +1,6 @@
 import { useEffect, useState } from 'react';
-import { ChevronRight, Inbox } from 'lucide-react';
+import { ChevronRight, CloudOff, Inbox } from 'lucide-react';
+import { Button } from '@/components/common/Button';
 import styles from '../Dashboard.module.scss';
 import { applicationsService, complaintsService, ordersService } from '@/api/services';
 import { StatusBadge } from '@/components/common/StatusBadge';
@@ -21,7 +22,6 @@ interface RecentItem {
   person: string;
   createdAt: string;
   status: { tone: React.ComponentProps<typeof StatusBadge>['status']; label: string };
-  // запомнить запись: раздел откроет её сразу
   remember: () => void;
 }
 
@@ -71,20 +71,27 @@ const load: Record<RecentSection, () => Promise<RecentItem[]>> = {
 
 interface RecentListProps {
   sections: Section[];
-  // меняется, когда приходит новое обращение: список загружается заново
   version: string;
   onNavigate: (tab: ActiveTab) => void;
 }
 
-// Последние жалобы, заказы и отклики одним списком: с них начинается рабочий день
 export const RecentList: React.FC<RecentListProps> = ({ sections, version, onNavigate }) => {
   const [items, setItems] = useState<RecentItem[] | null>(null);
+  const [failed, setFailed] = useState<RecentSection[]>([]);
+  const [attempt, setAttempt] = useState(0);
   const allowed = RECENT_SECTIONS.filter((section) => sections.includes(section));
 
   useEffect(() => {
     let cancelled = false;
-    Promise.all(allowed.map((section) => load[section]())).then((lists) => {
+    Promise.allSettled(allowed.map((section) => load[section]())).then((results) => {
       if (cancelled) return;
+      const lists: RecentItem[][] = [];
+      const broken: RecentSection[] = [];
+      results.forEach((result, index) => {
+        if (result.status === 'fulfilled') lists.push(result.value);
+        else broken.push(allowed[index]);
+      });
+      setFailed(broken);
       setItems(
         lists
           .flat()
@@ -95,9 +102,8 @@ export const RecentList: React.FC<RecentListProps> = ({ sections, version, onNav
     return () => {
       cancelled = true;
     };
-    // список разделов зависит только от прав пользователя
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [allowed.join(), version]);
+  }, [allowed.join(), version, attempt]);
 
   return (
     <section aria-labelledby="dashboard-recent">
@@ -108,7 +114,23 @@ export const RecentList: React.FC<RecentListProps> = ({ sections, version, onNav
       <div className={styles.recent} aria-busy={items === null}>
         {items === null && [0, 1, 2].map((n) => <span key={n} className={styles.recentSkeleton} />)}
 
-        {items?.length === 0 && (
+        {items !== null && failed.length > 0 && (
+          <div className={styles.recentFailed} role="alert">
+            <CloudOff size={20} />
+            <span>Не удалось загрузить: {failed.map((section) => NAV_ITEMS[section].label).join(', ')}</span>
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={() => {
+                setItems(null);
+                setAttempt((n) => n + 1);
+              }}
+            >
+              Повторить
+            </Button>
+          </div>
+        )}
+        {items?.length === 0 && failed.length === 0 && (
           <p className={styles.recentEmpty}>
             <Inbox size={20} />
             С сайта пока ничего не присылали

@@ -6,9 +6,7 @@ import type { Product } from '@/types';
 
 interface ProductTableProps {
   products: Product[];
-  // идёт перезагрузка списка (поиск, смена страницы, удаление) — таблица приглушается
   busy?: boolean;
-  // без обработчика кнопка не показывается (нет прав)
   onEdit?: (product: Product) => void;
   onDelete?: (id: string) => void;
 }

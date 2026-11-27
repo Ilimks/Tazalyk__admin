@@ -13,7 +13,6 @@ class VacanciesService extends BaseService<Vacancy> {
     super('/vacancies');
   }
 
-  // all=1 — отделу кадров нужны и отключённые вакансии, которых нет на сайте
   async getPage(page: number = 1, pageSize: number = 10, filters: VacancyFilters = {}): Promise<PaginatedResponse<Vacancy>> {
     const params = new URLSearchParams({ page: String(page), page_size: String(pageSize), all: '1' });
     const isActive = STATUS_PARAMS[filters.status || ''];
@@ -24,16 +23,14 @@ class VacanciesService extends BaseService<Vacancy> {
       return await apiClient.get<PaginatedResponse<Vacancy>>(`${this.endpoint}?${params.toString()}`);
     } catch (error) {
       this.handleError(error);
-      return { count: 0, next: null, previous: null, results: [] };
+      throw error;
     }
   }
 
-  // в отличие от BaseService ошибки не глотаются: форме нужны тексты ошибок по полям
   save(data: VacancyInput, id?: string): Promise<Vacancy> {
     return id ? apiClient.put<Vacancy>(`${this.endpoint}${id}/`, data) : apiClient.post<Vacancy>(this.endpoint, data);
   }
 
-  // включить или отключить вакансию, не трогая остальные поля
   setActive(id: string, isActive: boolean): Promise<Vacancy> {
     return apiClient.patch<Vacancy>(`${this.endpoint}${id}/`, { is_active: isActive });
   }

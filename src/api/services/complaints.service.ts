@@ -2,7 +2,6 @@ import { BaseService } from './base.service';
 import { apiClient } from '../client';
 import type { Complaint, ComplaintFilters, ComplaintUpdate, PaginatedResponse } from '@/types';
 
-// жалобы присылают граждане с сайта; админка их только обрабатывает
 class ComplaintsService extends BaseService<Complaint> {
   constructor() {
     super('/complaints');
@@ -18,16 +17,14 @@ class ComplaintsService extends BaseService<Complaint> {
       return await apiClient.get<PaginatedResponse<Complaint>>(`${this.endpoint}?${params.toString()}`);
     } catch (error) {
       this.handleError(error);
-      return { count: 0, next: null, previous: null, results: [] };
+      throw error;
     }
   }
 
-  // ошибки пробрасываются, чтобы показать текст сервера в форме
   patch(id: string, data: ComplaintUpdate): Promise<Complaint> {
     return apiClient.patch<Complaint>(`${this.endpoint}${id}/`, data);
   }
 
-  // фото отдаются только с входом сотрудника, поэтому <img src> на сервер не сработает — качаем файлом
   downloadPhoto(complaintId: string, photoId: number): Promise<Blob> {
     return apiClient.download(`${this.endpoint}${complaintId}/photos/${photoId}/`);
   }

@@ -1,3 +1,4 @@
+import { splitSaveErrors } from '@/utils/apiErrors';
 import React, { useState } from 'react';
 import { Banknote, Building, FilePenLine, Hash, SlidersHorizontal } from 'lucide-react';
 import styles from '../ProcurementsManager.module.scss';
@@ -8,6 +9,7 @@ import { Select } from '@/components/common/Form';
 import { FormError } from '@/components/common/FormError';
 import { formatters } from '@/utils/formatters';
 import type { Procurement } from '@/types';
+import { localToday } from '@/utils/date';
 
 interface ProcurementFormProps {
   initialData?: Procurement;
@@ -48,8 +50,7 @@ export const ProcurementForm: React.FC<ProcurementFormProps> = ({
     type: initialData?.type || 'goods',
     method: initialData?.method || 'direct',
     status: initialData?.status || 'active',
-    date: initialData?.date || new Date().toISOString().split('T')[0],
-    // сервер отдаёт «12450000.00» — в поле показываем как в таблице: «12 450 000»
+    date: initialData?.date || localToday(),
     amount: initialData?.amount ? formatters.amount(initialData.amount).replace(/\u00a0/g, ' ') : '',
   });
 
@@ -72,24 +73,19 @@ export const ProcurementForm: React.FC<ProcurementFormProps> = ({
       amount: amountNumber,
     };
 
-    let success = false;
-    if (initialData) {
-      success = await updateProcurement(initialData.id, procurementData);
-    } else {
-      success = await addProcurement(procurementData);
-    }
+    const result = initialData ? await updateProcurement(initialData.id, procurementData) : await addProcurement(procurementData);
 
-    if (success) {
+    if (result.success) {
       onSuccess();
     } else {
-      setErrors({ form: 'Не удалось сохранить. Проверьте поля и связь с сервером и попробуйте ещё раз.' });
+      const { fieldErrors, message } = splitSaveErrors(result, { contractNumber: 'contractNumber', supplier: 'supplier', amount: 'amount', date: 'date' });
+      setErrors({ ...fieldErrors, form: message });
     }
     setLoading(false);
   };
 
   return (
     <form onSubmit={handleSubmit} className={styles.form} noValidate>
-      {/* Контракт: номер, поставщик, сумма */}
       <section className={styles.formSection}>
         <div className={styles.formSectionHead}>
           <span className={styles.sectionIcon}>
@@ -105,7 +101,7 @@ export const ProcurementForm: React.FC<ProcurementFormProps> = ({
           <Input
             label="Номер контракта"
             value={formData.contractNumber}
-            onChange={(e) => setFormData({ ...formData, contractNumber: e.target.value })}
+            onChange={(e) => setFormData((prev) => ({ ...prev, contractNumber: e.target.value }))}
             error={errors.contractNumber}
             required
             placeholder="Введите номер контракта"
@@ -117,7 +113,7 @@ export const ProcurementForm: React.FC<ProcurementFormProps> = ({
             type="text"
             inputMode="decimal"
             value={formData.amount}
-            onChange={(e) => setFormData({ ...formData, amount: e.target.value })}
+            onChange={(e) => setFormData((prev) => ({ ...prev, amount: e.target.value }))}
             error={errors.amount}
             required
             placeholder="Например, 860 000"
@@ -128,7 +124,7 @@ export const ProcurementForm: React.FC<ProcurementFormProps> = ({
             className={styles.formGridFull}
             label="Поставщик"
             value={formData.supplier}
-            onChange={(e) => setFormData({ ...formData, supplier: e.target.value })}
+            onChange={(e) => setFormData((prev) => ({ ...prev, supplier: e.target.value }))}
             error={errors.supplier}
             required
             placeholder="Введите название поставщика"
@@ -137,7 +133,6 @@ export const ProcurementForm: React.FC<ProcurementFormProps> = ({
         </div>
       </section>
 
-      {/* Параметры закупки: короткие поля в две колонки */}
       <section className={styles.formSection}>
         <div className={styles.formSectionHead}>
           <span className={styles.sectionIcon}>
@@ -153,7 +148,7 @@ export const ProcurementForm: React.FC<ProcurementFormProps> = ({
           <Select
             label="Тип закупки"
             value={formData.type}
-            onChange={(e) => setFormData({ ...formData, type: e.target.value as Procurement['type'] })}
+            onChange={(e) => setFormData((prev) => ({ ...prev, type: e.target.value as Procurement['type'] }))}
             options={typeOptions}
             required
           />
@@ -161,7 +156,7 @@ export const ProcurementForm: React.FC<ProcurementFormProps> = ({
           <Select
             label="Способ закупки"
             value={formData.method}
-            onChange={(e) => setFormData({ ...formData, method: e.target.value as Procurement['method'] })}
+            onChange={(e) => setFormData((prev) => ({ ...prev, method: e.target.value as Procurement['method'] }))}
             options={methodOptions}
             required
           />
@@ -169,7 +164,7 @@ export const ProcurementForm: React.FC<ProcurementFormProps> = ({
           <Select
             label="Статус"
             value={formData.status}
-            onChange={(e) => setFormData({ ...formData, status: e.target.value as Procurement['status'] })}
+            onChange={(e) => setFormData((prev) => ({ ...prev, status: e.target.value as Procurement['status'] }))}
             options={statusOptions}
             required
           />
@@ -178,7 +173,7 @@ export const ProcurementForm: React.FC<ProcurementFormProps> = ({
             label="Дата"
             type="date"
             value={formData.date}
-            onChange={(e) => setFormData({ ...formData, date: e.target.value })}
+            onChange={(e) => setFormData((prev) => ({ ...prev, date: e.target.value }))}
             error={errors.date}
             required
           />

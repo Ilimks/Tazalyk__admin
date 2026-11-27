@@ -9,6 +9,7 @@ import { Modal } from '@/components/common/Modal';
 import { Pagination } from '@/components/common/Pagination';
 import { PageHeader } from '@/components/common/PageHeader';
 import { EmptyState } from '@/components/common/EmptyState';
+import { LoadError } from '@/components/common/LoadError';
 import { ConfirmModal } from '@/components/common/ConfirmModal';
 import { TableSkeleton } from '@/components/common/Skeleton';
 import { SearchBox } from '@/components/common/SearchBox';
@@ -29,6 +30,11 @@ export const LegislationManager: React.FC = () => {
         deleteItem,
         goToPage,
     } = useLegislationStore();
+    const loadError = useLegislationStore((state) => state.loadError);
+    const retryLoad = () => {
+      const { currentPage, pageSize, fetchPage } = useLegislationStore.getState();
+      fetchPage(currentPage, pageSize);
+    };
     const { canCreate, canEdit, canDelete } = useAuthStore();
 
     const searchBox = useListSearch(search, setSearch);
@@ -112,11 +118,14 @@ export const LegislationManager: React.FC = () => {
     );
 
     const renderContent = () => {
-        // первая загрузка: шапка остаётся на месте, заглушка — вместо таблицы
         if (loading && documents.length === 0) {
             return (
                 <TableSkeleton withThumb />
             );
+        }
+
+        if (loadError) {
+          return <LoadError message={loadError} onRetry={retryLoad} />;
         }
 
         if (documents.length === 0 && search) {

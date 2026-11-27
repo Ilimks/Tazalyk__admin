@@ -1,6 +1,5 @@
 import { useEffect, useRef } from 'react';
 
-// открытые окна снизу вверх: Esc и Tab относятся только к верхнему
 const openDialogs: symbol[] = [];
 
 const FOCUSABLE = [
@@ -12,11 +11,6 @@ const FOCUSABLE = [
   '[tabindex]:not([tabindex="-1"])',
 ].join(',');
 
-/**
- * Клавиатура в окне: при открытии фокус уходит внутрь, Tab ходит по кругу, Esc закрывает,
- * после закрытия фокус возвращается туда, откуда окно открыли.
- * Без этого Tab попадал на таблицу под окном, и можно было нажать «Удалить» у записи, которой не видно.
- */
 export const useDialog = <T extends HTMLElement>(isOpen: boolean, onClose: () => void) => {
   const ref = useRef<T>(null);
   const closeRef = useRef(onClose);
@@ -65,7 +59,6 @@ export const useDialog = <T extends HTMLElement>(isOpen: boolean, onClose: () =>
     return () => {
       document.removeEventListener('keydown', handleKeyDown);
       openDialogs.splice(openDialogs.indexOf(id), 1);
-      // запись могла быть удалена вместе со своей кнопкой
       if (opener?.isConnected) opener.focus({ preventScroll: true });
     };
   }, [isOpen]);

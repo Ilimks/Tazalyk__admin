@@ -9,6 +9,7 @@ import { useListSearch } from '@/hooks/useListSearch';
 import { Button } from '@/components/common/Button';
 import { ConfirmModal } from '@/components/common/ConfirmModal';
 import { EmptyState } from '@/components/common/EmptyState';
+import { LoadError } from '@/components/common/LoadError';
 import { TableSkeleton } from '@/components/common/Skeleton';
 import { SearchBox } from '@/components/common/SearchBox';
 import { Modal } from '@/components/common/Modal';
@@ -46,12 +47,16 @@ export const ComplaintsManager: React.FC = () => {
     deleteComplaint,
     goToPage,
   } = useComplaintsStore();
+  const loadError = useComplaintsStore((state) => state.loadError);
+  const retryLoad = () => {
+    const { currentPage, pageSize, fetchPage } = useComplaintsStore.getState();
+    fetchPage(currentPage, pageSize);
+  };
   const { canEdit, canDelete } = useAuthStore();
   const searchBox = useListSearch(search, setSearch);
   const { showNotification } = useNotificationStore();
 
   const [selected, setSelected] = useState<Complaint | null>(null);
-  // отдельно от selected: карточку под окном подтверждения можно закрыть клавишей Esc
   const [toDelete, setToDelete] = useState<Complaint | null>(null);
   const [isDeleting, setIsDeleting] = useState(false);
 
@@ -60,7 +65,6 @@ export const ComplaintsManager: React.FC = () => {
     fetchNewCount();
   }, [fetchPage, fetchNewCount]);
 
-  // пришли с «Обзора» за конкретной записью
   useEffect(() => {
     const record = useOpenRecordStore.getState().take('complaints');
     if (record) setSelected(record);
@@ -73,7 +77,6 @@ export const ComplaintsManager: React.FC = () => {
     resetFilters();
   };
   const isFiltered = Boolean(status || complaintType);
-  // с фильтром по типу «новые: 3» вводило бы в заблуждение — это не все новые жалобы
   const countLabel = complaintType || search ? 'найдено' : status ? COMPLAINT_FILTER_LABELS[status].toLowerCase() : 'всего';
 
   const handleSaved = (complaint: Complaint) => {
@@ -100,6 +103,10 @@ export const ComplaintsManager: React.FC = () => {
       return (
         <TableSkeleton />
       );
+    }
+
+    if (loadError) {
+      return <LoadError message={loadError} onRetry={retryLoad} />;
     }
 
     if (complaints.length === 0 && search) {
@@ -179,7 +186,6 @@ export const ComplaintsManager: React.FC = () => {
           })}
         </div>
 
-        {/* по умолчанию — все типы: в админку приходят все жалобы, фильтр только помогает их разобрать */}
         <select
           className={`${own.typeSelect} ${complaintType ? own.typeSelectActive : ''}`}
           value={complaintType}

@@ -1,13 +1,9 @@
-// Общий вид форм и карточек в модальных окнах: секции, сетки полей, липкая нижняя панель.
-// Отступ --modal-pad задаёт Modal: нижняя панель выходит на всю ширину окна.
-
 .form,
 .details {
   display: flex;
   flex-direction: column;
   gap: 16px;
 
-  // на весь экран (телефон) короткая форма всё равно держит кнопки внизу
   min-height: 100%;
 }
 
@@ -18,7 +14,6 @@
   border-radius: var(--radius-lg);
 }
 
-// секция без полей Input в конце — нижний отступ задаём сами
 .formSectionPadded {
   padding-bottom: 18px;
 }
@@ -79,7 +74,6 @@
   letter-spacing: 0.04em;
 }
 
-// короткие поля — в две/три колонки, длинные — на всю ширину
 .formGrid {
   display: grid;
   grid-template-columns: repeat(2, minmax(0, 1fr));
@@ -95,15 +89,12 @@
   grid-column: 1 / -1;
 }
 
-// ошибка у поля без собственного вывода ошибок (фото, файл)
 .fieldError {
   display: block;
   margin: -10px 0 18px;
   font-size: 13px;
   color: var(--color-danger-text);
 }
-
-// ---------- флажки с пояснением ----------
 
 .checkList {
   display: flex;
@@ -174,8 +165,6 @@
   color: var(--color-text-secondary);
 }
 
-// ---------- карточка записи: сведения ----------
-
 .detailsHead {
   display: flex;
   align-items: center;
@@ -208,7 +197,6 @@
   }
 }
 
-// сведения — в две колонки, на телефоне друг под другом
 .infoGrid {
   display: grid;
   grid-template-columns: repeat(2, minmax(0, 1fr));
@@ -285,11 +273,8 @@
   }
 }
 
-// ---------- кнопки внизу окна: всегда на виду ----------
-
 .formActions {
   position: sticky;
-  // прилипает к краю окна, а не к внутреннему отступу
   bottom: calc(-1 * var(--modal-pad, 24px));
   z-index: 3;
   display: flex;
@@ -303,12 +288,10 @@
   border-top: 1px solid var(--color-border);
 }
 
-// «Удалить» отодвигается влево от «Закрыть» и «Сохранить»
 .actionsStart {
   margin-right: auto;
 }
 
-// контурная кнопка красного цвета; button в селекторе — чтобы перебить стили .outline
 .formActions button.deleteButton {
   color: var(--color-danger-text);
 
@@ -339,7 +322,6 @@
     gap: 12px;
   }
 
-  // строкой во всю ширину, высота под палец
   .formActions {
     gap: 10px;
     padding-top: 12px;

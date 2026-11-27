@@ -1,18 +1,20 @@
 import { create } from 'zustand';
+import { isMissingPage, toLoadError, toSaveError } from '@/utils/apiErrors';
 import { devtools } from 'zustand/middleware';
 import { photosService } from '@/api/services/photos.service';
-import type { Photo } from '@/types';
+import type { Photo, SaveResult } from '@/types';
 
 interface PhotosState {
   photos: Photo[];
   loading: boolean;
+  loadError: string | null;
   error: string | null;
   totalCount: number;
   currentPage: number;
   pageSize: number;
   fetchPage: (page?: number, pageSize?: number) => Promise<void>;
-  addPhoto: (photo: Omit<Photo, 'id' | 'created_at'>) => Promise<boolean>;
-  updatePhoto: (id: string, photo: Partial<Photo>) => Promise<boolean>;
+  addPhoto: (photo: Omit<Photo, 'id' | 'created_at'>) => Promise<SaveResult<Photo>>;
+  updatePhoto: (id: string, photo: Partial<Photo>) => Promise<SaveResult<Photo>>;
   deletePhoto: (id: string) => Promise<boolean>;
   goToPage: (page: number) => void;
   changePageSize: (size: number) => void;
@@ -22,13 +24,14 @@ export const usePhotosStore = create<PhotosState>()(
   devtools((set, get) => ({
     photos: [],
     loading: false,
+    loadError: null,
     error: null,
     totalCount: 0,
     currentPage: 1,
     pageSize: 8,
 
     fetchPage: async (page = 1, pageSize = 8) => {
-      set({ loading: true, error: null });
+      set({ loading: true, error: null, loadError: null });
       try {
         const response = await photosService.getPage(page, pageSize);
         set({ 
@@ -39,46 +42,40 @@ export const usePhotosStore = create<PhotosState>()(
           loading: false 
         });
       } catch (error) {
+        if (isMissingPage(error) && page > 1) {
+          get().fetchPage(page - 1, pageSize);
+          return;
+        }
         console.error('Failed to fetch photos page:', error);
-        set({ error: 'Failed to fetch photos', loading: false, photos: [] });
+        set({ loadError: toLoadError(error), loading: false, photos: [] });
       }
     },
 
     addPhoto: async (photo) => {
       set({ loading: true });
       try {
-        const newPhoto = await photosService.create(photo);
-        if (newPhoto) {
-          await get().fetchPage(1, get().pageSize);
-          set({ loading: false });
-          return true;
-        }
+        const created = await photosService.create(photo);
+        await get().fetchPage(1, get().pageSize);
         set({ loading: false });
-        return false;
+        return { success: true, data: created };
       } catch (error) {
-        console.error('Failed to add photo:', error);
-        set({ error: 'Failed to add photo', loading: false });
-        return false;
+        set({ loading: false });
+        return toSaveError(error);
       }
     },
 
     updatePhoto: async (id, photo) => {
       set({ loading: true });
       try {
-        const updatedPhoto = await photosService.update(id, photo);
-        if (updatedPhoto) {
-          set((state) => ({
-            photos: state.photos.map((p) => (p.id === id ? updatedPhoto : p)),
-            loading: false,
-          }));
-          return true;
-        }
-        set({ loading: false });
-        return false;
+        const updated = await photosService.update(id, photo);
+        set((state) => ({
+          photos: state.photos.map((p) => (p.id === id ? updated : p)),
+          loading: false,
+        }));
+        return { success: true, data: updated };
       } catch (error) {
-        console.error('Failed to update photo:', error);
-        set({ error: 'Failed to update photo', loading: false });
-        return false;
+        set({ loading: false });
+        return toSaveError(error);
       }
     },
 

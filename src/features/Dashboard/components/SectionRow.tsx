@@ -5,12 +5,12 @@ interface SectionRowProps {
   label: string;
   description: string;
   icon: LucideIcon;
-  // undefined — число ещё загружается
   value?: number;
+  failed?: boolean;
   onClick: () => void;
 }
 
-export const SectionRow: React.FC<SectionRowProps> = ({ label, description, icon: Icon, value, onClick }) => (
+export const SectionRow: React.FC<SectionRowProps> = ({ label, description, icon: Icon, value, failed, onClick }) => (
   <button type="button" className={styles.row} onClick={onClick}>
     <span className={styles.rowIcon}>
       <Icon size={18} />
@@ -19,7 +19,9 @@ export const SectionRow: React.FC<SectionRowProps> = ({ label, description, icon
       <span className={styles.rowLabel}>{label}</span>
       <span className={styles.rowDescription} title={description}>{description}</span>
     </span>
-    {value === undefined ? (
+    {failed && value === undefined ? (
+      <span className={styles.rowValue} title="Не удалось загрузить" aria-label="Не удалось загрузить">—</span>
+    ) : value === undefined ? (
       <span className={`${styles.skeleton} ${styles.skeletonSmall}`} aria-label="Загрузка" />
     ) : (
       <span className={styles.rowValue}>{value}</span>

@@ -1,4 +1,3 @@
-# Панель собирается внутри образа: папки dist в репозитории нет
 FROM node:22-alpine AS build
 WORKDIR /app
 
@@ -6,7 +5,6 @@ COPY package*.json ./
 RUN npm ci
 
 COPY . .
-# адрес API встраивается в панель при сборке
 ARG VITE_API_URL=https://api.mptazalyk.kg/api
 ENV VITE_API_URL=$VITE_API_URL
 RUN npm run build

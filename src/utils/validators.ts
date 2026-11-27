@@ -1,7 +1,7 @@
 import { config } from "@/config";
 
 export const validators = {
-  required: (value: any): string | null => {
+  required: (value: unknown): string | null => {
     if (!value || (typeof value === 'string' && !value.trim())) {
       return 'Обязательное поле';
     }

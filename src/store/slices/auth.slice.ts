@@ -9,7 +9,6 @@ interface AuthState {
   user: User | null;
   serverStatus: 'checking' | 'online' | 'offline';
   isLoading: boolean;
-  // текст ошибки входа для формы (вместо alert)
   loginError: string | null;
   clearLoginError: () => void;
   permissions: UserPermissions;
@@ -17,7 +16,6 @@ interface AuthState {
   logout: () => void;
   checkServer: () => Promise<void>;
   setServerStatus: (status: 'checking' | 'online' | 'offline') => void;
-  // перечитать роль и права с сервера (GET /me/) после перезагрузки страницы
   refreshPermissions: () => Promise<void>;
   hasPermission: (permission: string) => boolean;
   canView: (section: PermissionSection) => boolean;
@@ -218,7 +216,6 @@ export const useAuthStore = create<AuthState>()(
         });
       },
 
-      // любой ответ сервера (даже 401) значит, что он доступен; сетевая ошибка — недоступен
       checkServer: async () => {
         set({ serverStatus: 'checking' });
         try {
@@ -231,14 +228,13 @@ export const useAuthStore = create<AuthState>()(
 
       clearLoginError: () => set({ loginError: null }),
 
-      setServerStatus: (status) => set({ serverStatus: status }),
+      setServerStatus: (status) => {
+        if (get().serverStatus !== status) set({ serverStatus: status });
+      },
 
       refreshPermissions: async () => {
         const result = await authService.refreshCurrentUser();
-        // пока шёл запрос, сотрудник мог выйти
         if (!result || !get().isAuthenticated) return;
-        // сохранённый вход больше не действует (например, сменился ключ сервера) — входим заново,
-        // иначе остались бы права старой версии админки без новых разделов
         if (result === 'expired') {
           get().logout();
           set({ loginError: 'Сессия истекла — войдите снова.' });
@@ -267,7 +263,6 @@ export const useAuthStore = create<AuthState>()(
           vacancies: permissions.canViewVacancies,
           applications: permissions.canViewVacancies,
         };
-        // в сохранённых старой версией правах новых ключей может не быть
         return Boolean(map[section]);
       },
 
@@ -282,10 +277,8 @@ export const useAuthStore = create<AuthState>()(
           legislation: permissions.canCreateLegislation,
           products: permissions.canCreateProducts,
           orders: permissions.canCreateOrders,
-          // жалобы, как и отклики, приходят только с сайта
           complaints: false,
           vacancies: permissions.canCreateVacancies,
-          // отклики приходят только с сайта
           applications: false,
         };
         return Boolean(map[section]);

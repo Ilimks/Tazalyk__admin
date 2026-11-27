@@ -1,8 +1,19 @@
 import { ApiError } from '@/api/client';
 import type { SaveResult } from '@/types';
 
-// Ошибка сохранения для формы. DRF при 400 отвечает {поле: ["текст", …]},
-// общие ошибки приходят в non_field_errors или detail.
+export const isMissingPage = (error: unknown): boolean => error instanceof ApiError && error.status === 404;
+
+export const toLoadError = (error: unknown): string => {
+  if (!(error instanceof ApiError)) return 'Неизвестная ошибка. Попробуйте ещё раз.';
+  if (error.status === 0) return 'Нет связи с сервером. Проверьте интернет или попробуйте позже.';
+  if (error.status === 408) return 'Сервер слишком долго не отвечает. Попробуйте ещё раз.';
+  if (error.status === 401) return 'Сессия истекла — войдите снова.';
+  if (error.status === 403) return 'Недостаточно прав для этого раздела.';
+  if (error.status === 404) return 'Такой страницы списка больше нет. Откройте первую страницу.';
+  if (error.status >= 500) return 'Ошибка на сервере. Попробуйте позже.';
+  return error.message && !error.message.startsWith('HTTP ') ? error.message : 'Не удалось загрузить данные.';
+};
+
 export const toSaveError = (error: unknown): SaveResult<never> => {
   const fieldErrors: Record<string, string> = {};
   let message = 'Не удалось сохранить. Попробуйте ещё раз.';
@@ -16,7 +27,6 @@ export const toSaveError = (error: unknown): SaveResult<never> => {
   } else if (error.status >= 500) {
     message = 'Ошибка сервера. Попробуйте позже.';
   } else if (error.status !== 400 && error.message && !error.message.startsWith('HTTP ')) {
-    // нет связи, таймаут, истёкшая сессия — у клиента уже есть понятный текст
     message = error.message;
   }
 
@@ -33,4 +43,16 @@ export const toSaveError = (error: unknown): SaveResult<never> => {
   }
 
   return { success: false, message, fieldErrors };
+};
+
+export const splitSaveErrors = (result: SaveResult, fields: Record<string, string>) => {
+  const fieldErrors: Record<string, string> = {};
+  const other: string[] = [];
+  Object.entries(result.fieldErrors || {}).forEach(([field, text]) => {
+    const key = fields[field];
+    if (key) fieldErrors[key] = text;
+    else other.push(text);
+  });
+  const message = [result.message, ...other].filter(Boolean).join(' ');
+  return { fieldErrors, message };
 };

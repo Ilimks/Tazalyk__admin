@@ -14,10 +14,8 @@ interface OpenedPhoto {
   fileName: string;
 }
 
-// HEIC (фото с iPhone) показывает только Safari; в остальных браузерах его можно лишь скачать
 const isHeic = (contentType: string) => /hei[cf]/i.test(contentType);
 
-// имя скачанного файла: image/jpeg → «Жалоба, фото 1.jpg»
 const photoFileName = (contentType: string, index: number) => {
   const subtype = contentType.split('/')[1]?.split(/[;+]/)[0] || 'jpg';
   return `Жалоба, фото ${index + 1}.${subtype === 'jpeg' ? 'jpg' : subtype}`;
@@ -34,7 +32,6 @@ interface PhotoThumbProps {
 const PhotoThumb: React.FC<PhotoThumbProps> = ({ complaintId, photo, index, onOpen, onRetry }) => {
   const [file, setFile] = useState<{ url: string; blob: Blob } | null>(null);
   const [failed, setFailed] = useState(false);
-  // файл скачан, но браузер не смог его показать (HEIC не в Safari, битый файл)
   const [unreadable, setUnreadable] = useState(false);
 
   useEffect(() => {
@@ -50,7 +47,6 @@ const PhotoThumb: React.FC<PhotoThumbProps> = ({ complaintId, photo, index, onOp
       .catch(() => {
         if (!cancelled) setFailed(true);
       });
-    // ссылка держит файл в памяти вкладки: отпускаем при закрытии карточки и смене жалобы
     return () => {
       cancelled = true;
       if (url) URL.revokeObjectURL(url);
@@ -114,7 +110,6 @@ const PhotoViewer: React.FC<PhotoViewerProps> = ({ photo, onClose }) => {
 
   useEffect(() => {
     closeRef.current?.focus();
-    // Esc закрывает только фото: перехватываем раньше карточки жалобы (Modal слушает document)
     const handleKeyDown = (e: KeyboardEvent) => {
       if (e.key !== 'Escape') return;
       e.stopPropagation();
@@ -149,7 +144,6 @@ interface ComplaintPhotosProps {
 }
 
 export const ComplaintPhotos: React.FC<ComplaintPhotosProps> = ({ complaintId, photos }) => {
-  // номер попытки у каждого фото: новый key пересоздаёт миниатюру, и она качает файл заново
   const [attempts, setAttempts] = useState<Record<number, number>>({});
   const [opened, setOpened] = useState<OpenedPhoto | null>(null);
   const closeViewer = useCallback(() => setOpened(null), []);

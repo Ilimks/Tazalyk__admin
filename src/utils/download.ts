@@ -1,4 +1,3 @@
-// Сохраняет файл, полученный от сервера: браузер показывает обычную загрузку
 export const saveBlob = (blob: Blob, filename: string) => {
   const url = URL.createObjectURL(blob);
   const link = document.createElement('a');

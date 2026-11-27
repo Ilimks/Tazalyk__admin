@@ -1,4 +1,4 @@
-// src/features/News/components/NewsForm.tsx
+import { splitSaveErrors } from '@/utils/apiErrors';
 import React, { useId, useState } from 'react';
 import { CalendarDays, ChevronDown } from 'lucide-react';
 import styles from '../NewsManager.module.scss';
@@ -9,6 +9,7 @@ import { Textarea } from '@/components/common/Form/Textarea';
 import { ImageUpload } from '@/components/common/FileUpload/ImageUpload';
 import { FormError } from '@/components/common/FormError';
 import type { News } from '@/types';
+import { localToday } from '@/utils/date';
 
 interface NewsFormProps {
     initialData?: News;
@@ -24,14 +25,13 @@ export const NewsForm: React.FC<NewsFormProps> = ({
     const { addNews, updateNews } = useNewsStore();
     const [loading, setLoading] = useState(false);
     const [errors, setErrors] = useState<{ title_ru?: string; description_ru?: string; form?: string }>({});
-    const [uploadProgress, setUploadProgress] = useState(0);
     const [showKyLanguage, setShowKyLanguage] = useState(!!initialData?.title_ky);
     const [formData, setFormData] = useState({
         title_ru: initialData?.title_ru || '',
         description_ru: initialData?.description_ru || '',
         title_ky: initialData?.title_ky || '',
         description_ky: initialData?.description_ky || '',
-        date: initialData?.date || new Date().toISOString().split('T')[0],
+        date: initialData?.date || localToday(),
         image: initialData?.image || '',
     });
     const kySectionId = useId();
@@ -46,26 +46,20 @@ export const NewsForm: React.FC<NewsFormProps> = ({
         if (Object.keys(problems).length > 0) return;
 
         setLoading(true);
-        setUploadProgress(0);
 
-        let success = false;
-        if (initialData) {
-            success = await updateNews(initialData.id, formData);
-        } else {
-            success = await addNews(formData);
-        }
+        const result = initialData ? await updateNews(initialData.id, formData) : await addNews(formData);
 
-        if (success) {
+        if (result.success) {
             onSuccess();
         } else {
-            setErrors({ form: 'Не удалось сохранить. Проверьте поля и связь с сервером и попробуйте ещё раз.' });
+            const { fieldErrors, message } = splitSaveErrors(result, { title_ru: 'title_ru', description_ru: 'description_ru' });
+            setErrors({ ...fieldErrors, form: message });
         }
         setLoading(false);
     };
 
     return (
         <form onSubmit={handleSubmit} className={styles.form} noValidate>
-            {/* Русский язык (обязательный) */}
             <section className={styles.formSection}>
                 <div className={styles.formSectionHead}>
                     <span className={styles.langBadge}>RU</span>
@@ -79,7 +73,7 @@ export const NewsForm: React.FC<NewsFormProps> = ({
                 <Input
                     label="Заголовок"
                     value={formData.title_ru}
-                    onChange={(e) => setFormData({ ...formData, title_ru: e.target.value })}
+                    onChange={(e) => setFormData((prev) => ({ ...prev, title_ru: e.target.value }))}
                     error={errors.title_ru}
                     required
                     placeholder="Введите заголовок на русском"
@@ -87,7 +81,7 @@ export const NewsForm: React.FC<NewsFormProps> = ({
                 <Textarea
                     label="Описание"
                     value={formData.description_ru}
-                    onChange={(e) => setFormData({ ...formData, description_ru: e.target.value })}
+                    onChange={(e) => setFormData((prev) => ({ ...prev, description_ru: e.target.value }))}
                     error={errors.description_ru}
                     required
                     placeholder="Введите описание на русском"
@@ -95,7 +89,6 @@ export const NewsForm: React.FC<NewsFormProps> = ({
                 />
             </section>
 
-            {/* Кыргызский язык (опциональный, раскрывается по кнопке) */}
             <section className={`${styles.formSection} ${styles.formSectionCollapsible}`}>
                 <button
                     type="button"
@@ -117,13 +110,13 @@ export const NewsForm: React.FC<NewsFormProps> = ({
                         <Input
                             label="Заголовок"
                             value={formData.title_ky}
-                            onChange={(e) => setFormData({ ...formData, title_ky: e.target.value })}
+                            onChange={(e) => setFormData((prev) => ({ ...prev, title_ky: e.target.value }))}
                             placeholder="Кыргызча аталыш"
                         />
                         <Textarea
                             label="Описание"
                             value={formData.description_ky}
-                            onChange={(e) => setFormData({ ...formData, description_ky: e.target.value })}
+                            onChange={(e) => setFormData((prev) => ({ ...prev, description_ky: e.target.value }))}
                             placeholder="Кыргызча сүрөттөмө"
                             rows={5}
                         />
@@ -131,7 +124,6 @@ export const NewsForm: React.FC<NewsFormProps> = ({
                 )}
             </section>
 
-            {/* Публикация: дата и обложка */}
             <section className={styles.formSection}>
                 <div className={styles.formSectionHead}>
                     <span className={styles.sectionIcon}>
@@ -148,19 +140,18 @@ export const NewsForm: React.FC<NewsFormProps> = ({
                         label="Дата публикации"
                         type="date"
                         value={formData.date}
-                        onChange={(e) => setFormData({ ...formData, date: e.target.value })}
+                        onChange={(e) => setFormData((prev) => ({ ...prev, date: e.target.value }))}
                         required
                     />
 
                     <div className={styles.formGridFull}>
                         <ImageUpload
+                            section="news"
                             label="Изображение"
                             value={formData.image}
                             onChange={(url) => {
                                 if (typeof url === 'string') {
-                                    setFormData({ ...formData, image: url });
-                                    setUploadProgress(50);
-                                    setTimeout(() => setUploadProgress(100), 500);
+                                    setFormData((prev) => ({ ...prev, image: url }));
                                 }
                             }}
                             required
@@ -168,12 +159,6 @@ export const NewsForm: React.FC<NewsFormProps> = ({
                     </div>
                 </div>
 
-                {uploadProgress > 0 && uploadProgress < 100 && (
-                    <div className={styles.progressBar} role="progressbar" aria-valuenow={uploadProgress} aria-valuemin={0} aria-valuemax={100}>
-                        <div className={styles.progressFill} style={{ width: `${uploadProgress}%` }} />
-                        <span className={styles.progressText}>Загрузка: {uploadProgress}%</span>
-                    </div>
-                )}
             </section>
 
             <FormError message={errors.form} />

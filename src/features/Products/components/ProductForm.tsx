@@ -23,7 +23,6 @@ type FormState = {
   volume: string;
   material: ProductMaterial | '';
   price: string;
-  // ссылка на текущее фото, data URL нового или '' — без фото
   image: string;
   in_stock: boolean;
   is_featured: boolean;
@@ -31,13 +30,11 @@ type FormState = {
   sort_order: string;
 };
 
-// поля, у которых форма сама показывает ошибку сервера
 const FORM_FIELDS = new Set([
   'name_ru', 'name_ky', 'description_ru', 'description_ky',
   'volume', 'material', 'price', 'image', 'sort_order',
 ]);
 
-// «3 500,50» → «3500.50»; null — не число
 const parsePrice = (raw: string): string | null => {
   const value = raw.replace(/\s/g, '').replace(',', '.');
   return /^\d+(\.\d{1,2})?$/.test(value) ? value : null;
@@ -50,7 +47,6 @@ const toFormState = (product?: Product): FormState => ({
   description_ky: product?.description_ky || '',
   volume: product ? String(product.volume) : '',
   material: product?.material || '',
-  // "3500.00" → "3500"
   price: product ? String(Number(product.price)) : '',
   image: product?.image || '',
   in_stock: product?.in_stock ?? true,
@@ -67,7 +63,6 @@ const validate = (data: FormState): Record<string, string> => {
   if (!data.material) errors.material = 'Выберите материал';
   if (parsePrice(data.price) === null) errors.price = 'Цена — число от 0, например 3500';
   if (!/^-?\d+$/.test(data.sort_order.trim())) errors.sort_order = 'Целое число, например 0';
-  // ImageUpload пропускает GIF без пересжатия, а сервер принимает только JPEG, PNG и WebP
   if (data.image.startsWith('data:image/gif')) errors.image = 'GIF не подходит — выберите JPEG, PNG или WebP';
   return errors;
 };
@@ -107,7 +102,6 @@ export const ProductForm: React.FC<ProductFormProps> = ({ initialData, onSuccess
       is_active: formData.is_active,
       sort_order: Number(formData.sort_order),
     };
-    // фото отправляем, только если его сменили ('' — удалить); иначе сервер оставит прежнее
     if (formData.image !== initialImage) payload.image = formData.image;
 
     setLoading(true);
@@ -133,7 +127,6 @@ export const ProductForm: React.FC<ProductFormProps> = ({ initialData, onSuccess
 
   return (
     <form onSubmit={handleSubmit} className={styles.form} noValidate>
-      {/* Основное: название, объём, материал, цена */}
       <section className={styles.formSection}>
         <div className={styles.formSectionHead}>
           <span className={styles.sectionIcon}>
@@ -200,7 +193,6 @@ export const ProductForm: React.FC<ProductFormProps> = ({ initialData, onSuccess
         </div>
       </section>
 
-      {/* Описание на двух языках */}
       <section className={styles.formSection}>
         <div className={styles.formSectionHead}>
           <span className={styles.sectionIcon}>
@@ -230,7 +222,6 @@ export const ProductForm: React.FC<ProductFormProps> = ({ initialData, onSuccess
         />
       </section>
 
-      {/* Фото */}
       <section className={styles.formSection}>
         <div className={styles.formSectionHead}>
           <span className={styles.sectionIcon}>
@@ -258,7 +249,6 @@ export const ProductForm: React.FC<ProductFormProps> = ({ initialData, onSuccess
         )}
       </section>
 
-      {/* Публикация */}
       <section className={styles.formSection}>
         <div className={styles.formSectionHead}>
           <span className={styles.sectionIcon}>

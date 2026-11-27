@@ -1,20 +1,19 @@
 import { create } from 'zustand';
 import { devtools } from 'zustand/middleware';
 import { vacanciesService } from '@/api/services/vacancies.service';
-import { toSaveError } from '@/utils/apiErrors';
+import { isMissingPage, toLoadError, toSaveError } from '@/utils/apiErrors';
 import type { SaveResult, Vacancy, VacancyFilters, VacancyInput } from '@/types';
 
 interface VacanciesState {
   vacancies: Vacancy[];
   loading: boolean;
+  loadError: string | null;
   error: string | null;
   totalCount: number;
   currentPage: number;
   pageSize: number;
   filters: VacancyFilters;
-  // id вакансий, у которых сейчас переключается «активна/неактивна»
   toggling: string[];
-  // без filters — с текущими фильтрами
   fetchPage: (page?: number, pageSize?: number, filters?: VacancyFilters) => Promise<void>;
   addVacancy: (vacancy: VacancyInput) => Promise<SaveResult<Vacancy>>;
   updateVacancy: (id: string, vacancy: VacancyInput) => Promise<SaveResult<Vacancy>>;
@@ -23,13 +22,13 @@ interface VacanciesState {
   goToPage: (page: number) => void;
 }
 
-// смена фильтра шлёт новый запрос: ответ на устаревший не должен затереть свежий
 let lastRequest = 0;
 
 export const useVacanciesStore = create<VacanciesState>()(
   devtools((set, get) => ({
     vacancies: [],
     loading: false,
+    loadError: null,
     error: null,
     totalCount: 0,
     currentPage: 1,
@@ -40,7 +39,7 @@ export const useVacanciesStore = create<VacanciesState>()(
     fetchPage: async (page = 1, pageSize = 10, filters) => {
       const requestId = ++lastRequest;
       const activeFilters = filters ?? get().filters;
-      set({ loading: true, error: null, filters: activeFilters });
+      set({ loading: true, error: null, loadError: null, filters: activeFilters });
       try {
         const response = await vacanciesService.getPage(page, pageSize, activeFilters);
         if (requestId !== lastRequest) return;
@@ -53,8 +52,12 @@ export const useVacanciesStore = create<VacanciesState>()(
         });
       } catch (error) {
         if (requestId !== lastRequest) return;
+        if (isMissingPage(error) && page > 1) {
+          get().fetchPage(page - 1, pageSize);
+          return;
+        }
         console.error('Failed to fetch vacancies page:', error);
-        set({ error: 'Failed to fetch vacancies', loading: false, vacancies: [] });
+        set({ loadError: toLoadError(error), loading: false, vacancies: [] });
       }
     },
 
@@ -106,7 +109,6 @@ export const useVacanciesStore = create<VacanciesState>()(
         return false;
       }
       const { currentPage, pageSize, vacancies } = get();
-      // удалили последнюю вакансию на странице — переходим на предыдущую
       const newPage = vacancies.length === 1 && currentPage > 1 ? currentPage - 1 : currentPage;
       await get().fetchPage(newPage, pageSize);
       return true;

@@ -1,5 +1,3 @@
-// Разделы с файлами («Локальные акты», «Законодательство КР»): строка документа и загрузка файла.
-
 .table {
   min-width: 560px;
 
@@ -8,7 +6,6 @@
     max-width: 0;
   }
 
-  // телефон: «документ / размер · дата + действия»
   @media (max-width: 767px) {
     min-width: 0;
 
@@ -26,7 +23,7 @@
 
     td.sizeCell {
       grid-area: size;
-      padding-left: 48px; // выравнивание по тексту, а не по плашке
+      padding-left: 48px;
     }
 
     .dateCell {
@@ -65,7 +62,6 @@
   white-space: nowrap;
 }
 
-// плашка с иконкой файла; цвет — по расширению
 .fileIcon {
   width: 36px;
   height: 36px;
@@ -93,8 +89,6 @@
   color: var(--color-success-text);
 }
 
-// ---------- форма: файл ----------
-
 .dropzone {
   display: flex;
   flex-direction: column;
@@ -121,7 +115,6 @@
   }
 }
 
-// файл не выбран, а форму уже отправляли
 .dropzoneError {
   border-color: var(--color-danger);
 }

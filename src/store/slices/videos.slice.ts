@@ -1,18 +1,20 @@
 import { create } from 'zustand';
+import { isMissingPage, toLoadError, toSaveError } from '@/utils/apiErrors';
 import { devtools } from 'zustand/middleware';
 import { videosService } from '@/api/services/videos.service';
-import type { Video } from '@/types';
+import type { SaveResult, Video } from '@/types';
 
 interface VideosState {
   videos: Video[];
   loading: boolean;
+  loadError: string | null;
   error: string | null;
   totalCount: number;
   currentPage: number;
   pageSize: number;
   fetchPage: (page?: number, pageSize?: number) => Promise<void>;
-  addVideo: (video: Omit<Video, 'created_at'>) => Promise<boolean>;
-  updateVideo: (id: string, video: Partial<Video>) => Promise<boolean>;
+  addVideo: (video: Omit<Video, 'created_at'>) => Promise<SaveResult<Video>>;
+  updateVideo: (id: string, video: Partial<Video>) => Promise<SaveResult<Video>>;
   deleteVideo: (id: string) => Promise<boolean>;
   goToPage: (page: number) => void;
   changePageSize: (size: number) => void;
@@ -22,13 +24,14 @@ export const useVideosStore = create<VideosState>()(
   devtools((set, get) => ({
     videos: [],
     loading: false,
+    loadError: null,
     error: null,
     totalCount: 0,
     currentPage: 1,
     pageSize: 8,
 
     fetchPage: async (page = 1, pageSize = 8) => {
-      set({ loading: true, error: null });
+      set({ loading: true, error: null, loadError: null });
       try {
         const response = await videosService.getPage(page, pageSize);
         set({ 
@@ -39,8 +42,12 @@ export const useVideosStore = create<VideosState>()(
           loading: false 
         });
       } catch (error) {
+        if (isMissingPage(error) && page > 1) {
+          get().fetchPage(page - 1, pageSize);
+          return;
+        }
         console.error('Failed to fetch videos page:', error);
-        set({ error: 'Failed to fetch videos', loading: false, videos: [] });
+        set({ loadError: toLoadError(error), loading: false, videos: [] });
       }
     },
 
@@ -52,38 +59,28 @@ export const useVideosStore = create<VideosState>()(
           id: video.id || Date.now().toString(),
         };
         
-        const newVideo = await videosService.create(videoWithId);
-        if (newVideo) {
-          await get().fetchPage(1, get().pageSize);
-          set({ loading: false });
-          return true;
-        }
+        const created = await videosService.create(videoWithId);
+        await get().fetchPage(1, get().pageSize);
         set({ loading: false });
-        return false;
+        return { success: true, data: created };
       } catch (error) {
-        console.error('Failed to add video:', error);
-        set({ error: 'Failed to add video', loading: false });
-        return false;
+        set({ loading: false });
+        return toSaveError(error);
       }
     },
 
     updateVideo: async (id, video) => {
       set({ loading: true });
       try {
-        const updatedVideo = await videosService.update(id, video);
-        if (updatedVideo) {
-          set((state) => ({
-            videos: state.videos.map((v) => (v.id === id ? updatedVideo : v)),
-            loading: false,
-          }));
-          return true;
-        }
-        set({ loading: false });
-        return false;
+        const updated = await videosService.update(id, video);
+        set((state) => ({
+          videos: state.videos.map((v) => (v.id === id ? updated : v)),
+          loading: false,
+        }));
+        return { success: true, data: updated };
       } catch (error) {
-        console.error('Failed to update video:', error);
-        set({ error: 'Failed to update video', loading: false });
-        return false;
+        set({ loading: false });
+        return toSaveError(error);
       }
     },
 

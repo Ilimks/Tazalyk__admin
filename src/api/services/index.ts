@@ -11,3 +11,4 @@ export { vacanciesService } from './vacancies.service';
 export { applicationsService } from './applications.service';
 export { ordersService } from './orders.service';
 export { complaintsService } from './complaints.service';
+export { siteSettingsService } from './siteSettings.service';

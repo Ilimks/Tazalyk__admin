@@ -39,14 +39,12 @@ export const NAV_ITEMS: Record<ActiveTab, NavItem> = {
   applications: { id: 'applications', label: 'Отклики', description: 'Резюме кандидатов с сайта', icon: Inbox },
 };
 
-// группы бокового меню
 export const NAV_GROUPS: { title?: string; items: ActiveTab[] }[] = [
   { items: ['dashboard'] },
   { title: 'Контент', items: ['news', 'photos', 'videos'] },
   { title: 'Закупки', items: ['procurements'] },
   { title: 'Документы', items: ['local_acts', 'legislation'] },
   { title: 'Магазин', items: ['products', 'orders'] },
-  // между заказами и откликами: всё, что присылают с сайта, рядом
   { title: 'Обращения', items: ['complaints'] },
   { title: 'Отдел кадров', items: ['vacancies', 'applications'] },
 ];

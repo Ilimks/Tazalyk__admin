@@ -25,7 +25,7 @@ export class BaseService<T> {
       return await apiClient.get<PaginatedResponse<T>>(url);
     } catch (error) {
       this.handleError(error);
-      return { count: 0, next: null, previous: null, results: [] };
+      throw error;
     }
   }
 
@@ -38,22 +38,12 @@ export class BaseService<T> {
     }
   }
 
-  async create(data: Partial<T>): Promise<T | null> {
-    try {
-      return await apiClient.post<T>(this.endpoint, data);
-    } catch (error) {
-      this.handleError(error);
-      return null;
-    }
+  create(data: Partial<T>): Promise<T> {
+    return apiClient.post<T>(this.endpoint, data);
   }
 
-  async update(id: string, data: Partial<T>): Promise<T | null> {
-    try {
-      return await apiClient.put<T>(`${this.endpoint}${id}/`, data);
-    } catch (error) {
-      this.handleError(error);
-      return null;
-    }
+  update(id: string, data: Partial<T>): Promise<T> {
+    return apiClient.put<T>(`${this.endpoint}${id}/`, data);
   }
 
   async delete(id: string): Promise<boolean> {

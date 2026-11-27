@@ -1,18 +1,18 @@
 import { create } from 'zustand';
 import { devtools } from 'zustand/middleware';
 import { productsService } from '@/api/services/products.service';
-import { toSaveError } from '@/utils/apiErrors';
+import { isMissingPage, toLoadError, toSaveError } from '@/utils/apiErrors';
 import type { Product, ProductFilters, ProductInput, SaveResult } from '@/types';
 
 interface ProductsState {
   products: Product[];
   loading: boolean;
+  loadError: string | null;
   error: string | null;
   totalCount: number;
   currentPage: number;
   pageSize: number;
   filters: ProductFilters;
-  // без filters — с текущими фильтрами
   fetchPage: (page?: number, pageSize?: number, filters?: ProductFilters) => Promise<void>;
   addProduct: (product: ProductInput) => Promise<SaveResult<Product>>;
   updateProduct: (id: string, product: ProductInput) => Promise<SaveResult<Product>>;
@@ -21,13 +21,13 @@ interface ProductsState {
   changePageSize: (size: number) => void;
 }
 
-// поиск шлёт запросы на ходу: ответ на устаревший запрос не должен затереть свежий
 let lastRequest = 0;
 
 export const useProductsStore = create<ProductsState>()(
   devtools((set, get) => ({
     products: [],
     loading: false,
+    loadError: null,
     error: null,
     totalCount: 0,
     currentPage: 1,
@@ -37,7 +37,7 @@ export const useProductsStore = create<ProductsState>()(
     fetchPage: async (page = 1, pageSize = 10, filters) => {
       const requestId = ++lastRequest;
       const activeFilters = filters ?? get().filters;
-      set({ loading: true, error: null, filters: activeFilters });
+      set({ loading: true, error: null, loadError: null, filters: activeFilters });
       try {
         const response = await productsService.getPage(page, pageSize, activeFilters);
         if (requestId !== lastRequest) return;
@@ -50,8 +50,12 @@ export const useProductsStore = create<ProductsState>()(
         });
       } catch (error) {
         if (requestId !== lastRequest) return;
+        if (isMissingPage(error) && page > 1) {
+          get().fetchPage(page - 1, pageSize);
+          return;
+        }
         console.error('Failed to fetch products page:', error);
-        set({ error: 'Failed to fetch products', loading: false, products: [] });
+        set({ loadError: toLoadError(error), loading: false, products: [] });
       }
     },
 

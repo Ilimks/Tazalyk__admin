@@ -4,6 +4,7 @@ import styles from './Dashboard.module.scss';
 import { AttentionCard } from './components/AttentionCard';
 import { RECENT_SECTIONS, RecentList } from './components/RecentList';
 import { SectionRow } from './components/SectionRow';
+import { WinterCard } from './components/WinterCard';
 import { useApplicationsStore, useAuthStore, useComplaintsStore, useOrdersStore } from '@/store';
 import { config } from '@/config';
 import { NAV_GROUPS, NAV_ITEMS, ROLE_LABELS, SECTIONS, type Section } from '@/layout/navigation';
@@ -41,7 +42,6 @@ const services: Record<Section, { getPage: (page: number, pageSize: number) => P
   applications: applicationsService,
 };
 
-// «1 новый заказ», «2 новых заказа», «5 новых заказов»
 const plural = (count: number, [one, few, many]: [string, string, string]) => {
   const tens = count % 100;
   const units = count % 10;
@@ -50,15 +50,12 @@ const plural = (count: number, [one, few, many]: [string, string, string]) => {
   return many;
 };
 
-// то, что присылают с сайта и на что ждут ответа: заказы, жалобы, отклики
 const ATTENTION: { id: Section; forms: [string, string, string]; empty: string }[] = [
   { id: 'orders', forms: ['новый заказ', 'новых заказа', 'новых заказов'], empty: 'Новых заказов нет' },
   { id: 'complaints', forms: ['новая жалоба', 'новые жалобы', 'новых жалоб'], empty: 'Новых жалоб нет' },
   { id: 'applications', forms: ['новый отклик', 'новых отклика', 'новых откликов'], empty: 'Новых откликов нет' },
 ];
 
-// API не отдаёт отдельные счётчики, поэтому запрашиваем по одной записи из раздела.
-// Кэш на минуту, чтобы при возврате на «Обзор» не скачивать их заново.
 const CACHE_TTL = 60_000;
 let countsCache: { counts: Partial<Record<Section, number>>; time: number } | null = null;
 
@@ -79,17 +76,16 @@ const getGreeting = () => {
 };
 
 export const Dashboard: React.FC<DashboardProps> = ({ availableTabs, onNavigate }) => {
-  const { user } = useAuthStore();
-  // счётчики новых общие с меню: их загружает и обновляет боковая панель
-  const { newCount: newOrders } = useOrdersStore();
-  const { newCount: newApplications } = useApplicationsStore();
-  const { newCount: newComplaints } = useComplaintsStore();
+  const { user, canEdit } = useAuthStore();
+  const { newCount: newOrders, newCountError: ordersFailed } = useOrdersStore();
+  const { newCount: newApplications, newCountError: applicationsFailed } = useApplicationsStore();
+  const { newCount: newComplaints, newCountError: complaintsFailed } = useComplaintsStore();
   const sections = SECTIONS.filter((section) => availableTabs.includes(section));
   const hasRecent = RECENT_SECTIONS.some((section) => sections.includes(section));
   const [counts, setCounts] = useState<Partial<Record<Section, number>>>(() => countsCache?.counts || {});
+  const [failedCounts, setFailedCounts] = useState<Partial<Record<Section, boolean>>>({});
 
   useEffect(() => {
-    // счётчики разделов нужны, только когда показан их список
     if (hasRecent) return;
     if (countsCache && Date.now() - countsCache.time < CACHE_TTL) return;
 
@@ -100,12 +96,13 @@ export const Dashboard: React.FC<DashboardProps> = ({ availableTabs, onNavigate 
         fresh[section] = count;
         countsCache = { counts: { ...countsCache?.counts, ...fresh }, time: Date.now() };
         if (!cancelled) setCounts((prev) => ({ ...prev, [section]: count }));
+      }).catch(() => {
+        if (!cancelled) setFailedCounts((prev) => ({ ...prev, [section]: true }));
       });
     });
     return () => {
       cancelled = true;
     };
-    // список разделов зависит только от прав пользователя
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [availableTabs.join()]);
 
@@ -114,9 +111,14 @@ export const Dashboard: React.FC<DashboardProps> = ({ availableTabs, onNavigate 
     complaints: newComplaints,
     applications: newApplications,
   };
+  const failedNew: Partial<Record<Section, boolean>> = {
+    orders: ordersFailed,
+    complaints: complaintsFailed,
+    applications: applicationsFailed,
+  };
+
   const attention = ATTENTION.filter(({ id }) => availableTabs.includes(id));
-  // null — счётчик ещё загружается, «всё обработано» показываем только по факту
-  const allDone = attention.length > 0 && attention.every(({ id }) => newCounts[id] === 0);
+  const allDone = attention.length > 0 && attention.every(({ id }) => newCounts[id] === 0 && !failedNew[id]);
 
   const groups = NAV_GROUPS.map((group) => ({
     title: group.title,
@@ -140,6 +142,8 @@ export const Dashboard: React.FC<DashboardProps> = ({ availableTabs, onNavigate 
           Открыть сайт
         </a>
       </section>
+
+      {canEdit('news') && <WinterCard />}
 
       {attention.length > 0 && (
         <section aria-labelledby="dashboard-attention">
@@ -166,6 +170,7 @@ export const Dashboard: React.FC<DashboardProps> = ({ availableTabs, onNavigate 
                     label={NAV_ITEMS[id].label}
                     icon={NAV_ITEMS[id].icon}
                     value={value}
+                    failed={failedNew[id]}
                     caption={value ? plural(value, forms) : empty}
                     onClick={() => onNavigate(id)}
                   />
@@ -183,7 +188,6 @@ export const Dashboard: React.FC<DashboardProps> = ({ availableTabs, onNavigate 
           onNavigate={onNavigate}
         />
       ) : (
-        // у этих ролей обращений с сайта нет — показываем их разделы
         <section aria-labelledby="dashboard-sections">
           <h2 id="dashboard-sections" className={styles.sectionTitle}>
             Разделы
@@ -199,6 +203,7 @@ export const Dashboard: React.FC<DashboardProps> = ({ availableTabs, onNavigate 
                     description={NAV_ITEMS[id].description}
                     icon={NAV_ITEMS[id].icon}
                     value={counts[id]}
+                    failed={failedCounts[id]}
                     onClick={() => onNavigate(id)}
                   />
                 ))}
@@ -208,7 +213,6 @@ export const Dashboard: React.FC<DashboardProps> = ({ availableTabs, onNavigate 
         </section>
       )}
 
-      {/* советы про фото и видео — только тем, кто их загружает (отделу кадров не нужны) */}
       {sections.some((section) => MEDIA_SECTIONS.includes(section)) && (
         <section className={styles.tips} aria-labelledby="dashboard-tips">
           <h2 id="dashboard-tips" className={styles.tipsTitle}>

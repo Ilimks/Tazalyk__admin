@@ -1,5 +1,9 @@
 import { config } from '@/config';
 
+const reportServer = (status: 'online' | 'offline') => {
+  window.dispatchEvent(new CustomEvent('api:server', { detail: status }));
+};
+
 class ApiClient {
   private baseUrl: string;
   private timeout: number;
@@ -10,8 +14,6 @@ class ApiClient {
     this.timeout = config.api.timeout;
   }
 
-  // Токены лежат в cookie, недоступных скриптам. В браузере хранится только имя и права для меню.
-  // access_token и refresh_token остались от прежних версий админки
   private clearSession(): void {
     localStorage.removeItem('access_token');
     localStorage.removeItem('refresh_token');
@@ -22,7 +24,6 @@ class ApiClient {
     return Boolean(localStorage.getItem('current_user'));
   }
 
-  // одно обновление токена на все запросы, получившие 401 одновременно
   private refreshAccessToken(): Promise<boolean> {
     if (!this.refreshPromise) {
       this.refreshPromise = this.refreshToken().finally(() => {
@@ -67,11 +68,10 @@ class ApiClient {
 
     try {
       let response = await makeRequest();
+      reportServer('online');
 
-      // Если токен истек (401), пробуем обновить
       if (response.status === 401 && this.hasSession()) {
         if (!(await this.refreshAccessToken())) {
-          // AdminPanel ловит событие и возвращает на экран входа
           this.clearSession();
           window.dispatchEvent(new Event('auth:expired'));
           throw new ApiError(401, 'Сессия истекла, войдите снова');
@@ -85,7 +85,6 @@ class ApiClient {
       if (!response.ok) {
         let errorMessage = `HTTP ${response.status}`;
         let errorData: unknown;
-        // тело читается один раз: сначала текстом, потом пробуем разобрать JSON
         const text = await response.text().catch(() => '');
         try {
           errorData = JSON.parse(text);
@@ -101,7 +100,6 @@ class ApiClient {
             errorMessage = text.substring(0, 200);
           }
         }
-        // errorData — ответ сервера целиком: для 400 там ошибки по полям {поле: [текст]}
         throw new ApiError(response.status, errorMessage, errorData);
       }
 
@@ -112,55 +110,24 @@ class ApiClient {
       return await parse(response);
     } catch (error) {
       clearTimeout(timeoutId);
-      console.error('Request failed:', error);
-      
+
       if (error instanceof ApiError) throw error;
       if (error instanceof DOMException && error.name === 'AbortError') {
+        reportServer('offline');
         throw new ApiError(408, 'Превышено время ожидания ответа от сервера');
       }
       if (error instanceof TypeError && error.message === 'Failed to fetch') {
+        reportServer('offline');
         throw new ApiError(0, 'Не удается подключиться к серверу. Убедитесь, что сервер запущен.');
       }
       throw new ApiError(500, 'Ошибка сети: ' + (error as Error).message);
     }
   }
 
-  async uploadFile<T>(endpoint: string, file: File, additionalData?: Record<string, any>): Promise<T> {
-    const formData = new FormData();
-    formData.append('file', file);
-    
-    if (additionalData) {
-      Object.entries(additionalData).forEach(([key, value]) => {
-        formData.append(key, String(value));
-      });
-    }
-
-    const controller = new AbortController();
-    const timeoutId = setTimeout(() => controller.abort(), this.timeout);
-    const url = `${this.baseUrl}${endpoint}`;
-
-    try {
-      const response = await fetch(url, {
-        method: 'POST',
-        body: formData,
-        credentials: 'include',
-        signal: controller.signal,
-      });
-
-      clearTimeout(timeoutId);
-
-      if (!response.ok) {
-        throw new ApiError(response.status, await response.text());
-      }
-
-      return await response.json();
-    } catch (error) {
-      clearTimeout(timeoutId);
-      throw error;
-    }
+  refreshSession(): Promise<boolean> {
+    return this.refreshAccessToken();
   }
 
-  // файл с сервера: авторизация и обновление токена те же, что у обычных запросов
   download(endpoint: string): Promise<Blob> {
     return this.request<Blob>(endpoint, { method: 'GET' }, (response) => response.blob());
   }
@@ -169,21 +136,21 @@ class ApiClient {
     return this.request<T>(endpoint, { method: 'GET' });
   }
 
-  post<T>(endpoint: string, data?: any): Promise<T> {
+  post<T>(endpoint: string, data?: unknown): Promise<T> {
     return this.request<T>(endpoint, {
       method: 'POST',
       body: JSON.stringify(data),
     });
   }
 
-  put<T>(endpoint: string, data?: any): Promise<T> {
+  put<T>(endpoint: string, data?: unknown): Promise<T> {
     return this.request<T>(endpoint, {
       method: 'PUT',
       body: JSON.stringify(data),
     });
   }
 
-  patch<T>(endpoint: string, data?: any): Promise<T> {
+  patch<T>(endpoint: string, data?: unknown): Promise<T> {
     return this.request<T>(endpoint, {
       method: 'PATCH',
       body: JSON.stringify(data),

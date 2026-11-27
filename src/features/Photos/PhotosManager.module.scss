@@ -1,8 +1,6 @@
-// Раздел «Фото»: сетка карточек — MediaCard, форма — src/styles.
 @use '@/styles/list';
 @use '@/styles/form';
 
-// окно просмотра: фото целиком
 .viewer {
   display: flex;
   flex-direction: column;

@@ -7,7 +7,6 @@ class ProductsService extends BaseService<Product> {
     super('/shop/products');
   }
 
-  // all=1 — менеджеру нужны и скрытые с сайта товары
   async getPage(page: number = 1, pageSize: number = 10, filters: ProductFilters = {}): Promise<PaginatedResponse<Product>> {
     const params = new URLSearchParams({ page: String(page), page_size: String(pageSize), all: '1' });
     if (filters.q?.trim()) params.append('q', filters.q.trim());
@@ -17,11 +16,10 @@ class ProductsService extends BaseService<Product> {
       return await apiClient.get<PaginatedResponse<Product>>(`${this.endpoint}?${params.toString()}`);
     } catch (error) {
       this.handleError(error);
-      return { count: 0, next: null, previous: null, results: [] };
+      throw error;
     }
   }
 
-  // в отличие от BaseService ошибки не глотаются: форме нужны тексты ошибок по полям
   save(data: ProductInput, id?: string): Promise<Product> {
     return id ? apiClient.put<Product>(`${this.endpoint}${id}/`, data) : apiClient.post<Product>(this.endpoint, data);
   }

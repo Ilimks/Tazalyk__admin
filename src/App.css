@@ -1,4 +1,3 @@
-/* Дизайн-токены админки: цвета из фирменного стиля сайта МП «Тазалык» */
 :root {
   --color-brand: #102382;
   --color-brand-hover: #0b1a66;
@@ -8,9 +7,7 @@
   --color-accent: #22c55e;
   --color-accent-hover: #16a34a;
   --color-accent-soft: #e9f9ef;
-  /* надпись на зелёной заливке: белый на #22c55e не читается (2,3:1) */
   --color-on-accent: #052e16;
-  /* зелёная заливка под белую надпись и белый ползунок */
   --color-success-fill: #15803d;
   --color-success-fill-hover: #166534;
 
@@ -30,7 +27,6 @@
 
   --color-text: #0f172a;
   --color-text-secondary: #475569;
-  /* второстепенный текст: 5,7:1 на белом и 5,3:1 на фоне страницы */
   --color-text-muted: #5b677a;
 
   --radius-sm: 8px;
@@ -42,12 +38,10 @@
   --shadow-md: 0 4px 16px rgba(15, 23, 42, 0.08);
   --shadow-lg: 0 20px 48px rgba(15, 23, 42, 0.16);
 
-  /* рамка клавиатурного фокуса: цвет — для контуров, двойное кольцо — для кнопок, мягкое — для полей */
   --color-focus: #3b57e0;
   --focus-ring: 0 0 0 2px var(--color-surface), 0 0 0 4px var(--color-focus);
   --focus-ring-input: 0 0 0 3px rgba(59, 87, 224, 0.18);
 
-  /* текст фирменного цвета: в тёмной теме синий на тёмном не читается, поэтому отдельная роль */
   --color-brand-text: #102382;
   --color-hover: #eef1f6;
   --color-row-hover: #f5f7fc;
@@ -58,7 +52,6 @@
   --color-skeleton: #eef1f6;
   --color-skeleton-shine: #e2e7f0;
 
-  /* надписи на цветных подложках статусов */
   --color-success-text: #15803d;
   --color-danger-text: #b91c1c;
   --color-danger-border: #fecaca;
@@ -67,10 +60,8 @@
   --color-warning-border: #fde4b0;
   --color-info-text: #1d4ed8;
 
-  /* боковая панель */
   --sidebar-bg: linear-gradient(180deg, #0a1450 0%, #0d1a5e 100%);
 
-  /* герб предприятия водяным знаком в рабочей области — как в ассистенте */
   --main-art: url('/main-art.svg');
 
   --sidebar-width: 264px;
@@ -82,12 +73,6 @@
   color-scheme: light;
 }
 
-/*
- * Тёмная тема. Цвета те же, что у ассистента поручений
- * (tazalyk-assistant/web/src/shared/styles/_tokens.scss): поверхности сине-серые,
- * фирменный синий остаётся акцентом. Тема ставится на <html data-theme>,
- * выбор хранится в браузере (src/hooks/useTheme.ts, public/theme-init.js).
- */
 [data-theme='dark'] {
   --color-brand: #3044c0;
   --color-brand-hover: #3a50d6;
@@ -147,7 +132,6 @@
   box-sizing: border-box;
 }
 
-/* значки не сжимаются, когда рядом длинный текст */
 .lucide {
   flex-shrink: 0;
 }

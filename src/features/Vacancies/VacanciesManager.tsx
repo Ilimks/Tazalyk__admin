@@ -9,6 +9,7 @@ import { Modal } from '@/components/common/Modal';
 import { Pagination } from '@/components/common/Pagination/Pagination';
 import { PageHeader } from '@/components/common/PageHeader';
 import { EmptyState } from '@/components/common/EmptyState';
+import { LoadError } from '@/components/common/LoadError';
 import { ConfirmModal } from '@/components/common/ConfirmModal';
 import { TableSkeleton } from '@/components/common/Skeleton';
 import { SearchBox } from '@/components/common/SearchBox';
@@ -40,6 +41,11 @@ export const VacanciesManager: React.FC = () => {
     deleteVacancy,
     goToPage,
   } = useVacanciesStore();
+  const loadError = useVacanciesStore((state) => state.loadError);
+  const retryLoad = () => {
+    const { currentPage, pageSize, fetchPage } = useVacanciesStore.getState();
+    fetchPage(currentPage, pageSize);
+  };
   const { canCreate, canEdit, canDelete } = useAuthStore();
 
   const { showNotification } = useNotificationStore();
@@ -49,7 +55,6 @@ export const VacanciesManager: React.FC = () => {
   const [isDeleting, setIsDeleting] = useState(false);
   const [status, setStatus] = useState<StatusFilter>('');
   const [searchValue, setSearchValue] = useState('');
-  // запрос уходит, когда сотрудник перестал печатать
   const search = useDebounce(searchValue.trim(), 400);
 
   const allowCreate = canCreate('vacancies');
@@ -116,11 +121,14 @@ export const VacanciesManager: React.FC = () => {
   );
 
   const renderContent = () => {
-    // первая загрузка: шапка остаётся на месте, заглушка — вместо таблицы
     if (loading && vacancies.length === 0) {
       return (
         <TableSkeleton />
       );
+    }
+
+    if (loadError) {
+      return <LoadError message={loadError} onRetry={retryLoad} />;
     }
 
     if (vacancies.length === 0 && search) {

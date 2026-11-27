@@ -1,6 +1,3 @@
-// Экран входа. Те же размеры и цвета у ассистента поручений:
-// tazalyk-assistant/web/src/features/auth/Login.scss — меняйте вместе
-
 $navy: #102382;
 $navy-light: #16299b;
 $navy-deep: #0b1a66;
@@ -11,7 +8,6 @@ $muted: #64748b;
 $line: #e3e8f1;
 $field-line: #d8dfeb;
 
-// цвета правой половины — переменными, чтобы тёмная тема меняла их одним блоком
 .page {
   --g-bg: #f4f6fb;
   --g-dots: rgba(16, 35, 130, 0.07);
@@ -50,7 +46,7 @@ $field-line: #d8dfeb;
   --g-field-line: #33405a;
   --g-field-hover: #46557a;
   --g-ink: var(--color-text);
-  --g-muted: #7f8899; // экран входа не меняем: прежний оттенок
+  --g-muted: #7f8899;
   --g-placeholder: #6b7486;
   --g-focus: #7d8ff5;
   --g-ring: rgba(125, 143, 245, 0.2);
@@ -63,7 +59,6 @@ $field-line: #d8dfeb;
   --g-error: var(--color-danger-text);
 }
 
-// ---------- левая фирменная панель ----------
 .brand {
   position: relative;
   isolation: isolate;
@@ -78,7 +73,6 @@ $field-line: #d8dfeb;
     radial-gradient(760px 560px at -20% 115%, rgba(59, 130, 246, 0.3), transparent 60%),
     linear-gradient(155deg, $navy-light 0%, $navy 48%, $navy-deep 100%);
 
-  // тонкая сетка, затухающая к краям
   &::before {
     content: '';
     position: absolute;
@@ -255,7 +249,6 @@ $field-line: #d8dfeb;
   color: rgba(255, 255, 255, 0.58);
 }
 
-// ---------- форма ----------
 .formSide {
   position: relative;
   display: flex;
@@ -282,7 +275,6 @@ $field-line: #d8dfeb;
   overflow: hidden;
   animation: fadeUp 0.5s 0.1s cubic-bezier(0.2, 0.7, 0.3, 1) backwards;
 
-  // фирменная полоса сверху
   &::before {
     content: '';
     position: absolute;
@@ -556,7 +548,6 @@ $field-line: #d8dfeb;
   }
 }
 
-// ---------- планшет и телефон: панель становится шапкой ----------
 @media (max-width: 960px) {
   .page {
     grid-template-columns: 1fr;

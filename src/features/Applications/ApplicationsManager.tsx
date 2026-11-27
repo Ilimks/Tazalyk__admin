@@ -9,6 +9,7 @@ import { useListSearch } from '@/hooks/useListSearch';
 import { Button } from '@/components/common/Button';
 import { ConfirmModal } from '@/components/common/ConfirmModal';
 import { EmptyState } from '@/components/common/EmptyState';
+import { LoadError } from '@/components/common/LoadError';
 import { TableSkeleton } from '@/components/common/Skeleton';
 import { SearchBox } from '@/components/common/SearchBox';
 import { Modal } from '@/components/common/Modal';
@@ -19,6 +20,7 @@ import { ApplicationDetails } from './components/ApplicationDetails';
 import { ApplicationTable } from './components/ApplicationTable';
 import { APPLICATION_FILTER_LABELS, APPLICATION_STATUSES } from './statuses';
 import type { ApplicationStatus, VacancyApplication } from '@/types';
+import { localToday } from '@/utils/date';
 
 const PAGE_SIZE = 10;
 
@@ -45,12 +47,16 @@ export const ApplicationsManager: React.FC = () => {
     deleteApplication,
     goToPage,
   } = useApplicationsStore();
+  const loadError = useApplicationsStore((state) => state.loadError);
+  const retryLoad = () => {
+    const { currentPage, pageSize, fetchPage } = useApplicationsStore.getState();
+    fetchPage(currentPage, pageSize);
+  };
   const { canEdit, canDelete } = useAuthStore();
   const searchBox = useListSearch(search, setSearch);
   const { showNotification } = useNotificationStore();
 
   const [selected, setSelected] = useState<VacancyApplication | null>(null);
-  // отдельно от selected: карточку под окном подтверждения можно отменить
   const [toDelete, setToDelete] = useState<VacancyApplication | null>(null);
   const [isDeleting, setIsDeleting] = useState(false);
   const [isExporting, setIsExporting] = useState(false);
@@ -60,7 +66,6 @@ export const ApplicationsManager: React.FC = () => {
     fetchNewCount();
   }, [fetchPage, fetchNewCount]);
 
-  // пришли с «Обзора» за конкретной записью
   useEffect(() => {
     const record = useOpenRecordStore.getState().take('applications');
     if (record) setSelected(record);
@@ -82,7 +87,7 @@ export const ApplicationsManager: React.FC = () => {
     setIsExporting(true);
     try {
       const file = await applicationsService.exportToExcel();
-      const today = new Date().toISOString().slice(0, 10);
+      const today = localToday();
       saveBlob(file, `Отклики ТАЗАЛЫК ${today}.xlsx`);
       showNotification('Файл Excel с откликами сохранён', 'success');
     } catch {
@@ -111,6 +116,10 @@ export const ApplicationsManager: React.FC = () => {
       return (
         <TableSkeleton />
       );
+    }
+
+    if (loadError) {
+      return <LoadError message={loadError} onRetry={retryLoad} />;
     }
 
     if (applications.length === 0 && search) {

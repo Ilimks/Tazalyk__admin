@@ -6,11 +6,8 @@ import type { Vacancy } from '@/types';
 
 interface VacancyTableProps {
   vacancies: Vacancy[];
-  // идёт перезагрузка списка (фильтр, смена страницы, удаление) — таблица приглушается
   busy?: boolean;
-  // id вакансий, у которых сейчас сохраняется переключатель
   toggling: string[];
-  // без обработчика переключатель только показывает состояние, кнопки не показываются (нет прав)
   onToggle?: (vacancy: Vacancy) => void;
   onEdit?: (vacancy: Vacancy) => void;
   onDelete?: (id: string) => void;

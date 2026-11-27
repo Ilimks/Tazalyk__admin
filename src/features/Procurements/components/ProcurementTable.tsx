@@ -6,9 +6,7 @@ import type { Procurement } from '@/types';
 
 interface ProcurementTableProps {
   procurements: Procurement[];
-  // идёт перезагрузка списка (смена страницы, удаление) — таблица приглушается
   busy?: boolean;
-  // без обработчика кнопка не показывается (нет прав)
   onEdit?: (procurement: Procurement) => void;
   onDelete?: (id: string) => void;
 }

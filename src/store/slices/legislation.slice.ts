@@ -1,34 +1,34 @@
-// src/store/slices/legislation.slice.ts
+import { isMissingPage, toLoadError, toSaveError } from '@/utils/apiErrors';
 import { create } from 'zustand';
 import { devtools } from 'zustand/middleware';
 import { legislationService } from '@/api/services/legislation.service';
-import type { Legislation } from '@/types';
+import type { Legislation, SaveResult } from '@/types';
 
 interface LegislationState {
   items: Legislation[];
   loading: boolean;
+  loadError: string | null;
   error: string | null;
   totalCount: number;
   currentPage: number;
   pageSize: number;
-  // строка поиска, '' — все записи
   search: string;
   fetchPage: (page?: number, pageSize?: number) => Promise<void>;
   setSearch: (search: string) => void;
-  addItem: (item: Omit<Legislation, 'id' | 'created_at'>) => Promise<boolean>;
-  updateItem: (id: string, item: Partial<Legislation>) => Promise<boolean>;
+  addItem: (item: Omit<Legislation, 'id' | 'created_at'>) => Promise<SaveResult<Legislation>>;
+  updateItem: (id: string, item: Partial<Legislation>) => Promise<SaveResult<Legislation>>;
   deleteItem: (id: string) => Promise<boolean>;
   goToPage: (page: number) => void;
   changePageSize: (size: number) => void;
 }
 
-// при быстром наборе ответ на старый запрос не должен затереть новый
 let lastRequest = 0;
 
 export const useLegislationStore = create<LegislationState>()(
   devtools((set, get) => ({
     items: [],
     loading: false,
+    loadError: null,
     error: null,
     totalCount: 0,
     currentPage: 1,
@@ -37,7 +37,7 @@ export const useLegislationStore = create<LegislationState>()(
 
     fetchPage: async (page = 1, pageSize = 10) => {
       const requestId = ++lastRequest;
-      set({ loading: true, error: null });
+      set({ loading: true, error: null, loadError: null });
       try {
         const response = await legislationService.getPage(page, pageSize, get().search);
         if (requestId !== lastRequest) return;
@@ -50,46 +50,40 @@ export const useLegislationStore = create<LegislationState>()(
         });
       } catch (error) {
         if (requestId !== lastRequest) return;
+        if (isMissingPage(error) && page > 1) {
+          get().fetchPage(page - 1, pageSize);
+          return;
+        }
         console.error('Failed to fetch legislation:', error);
-        set({ error: 'Failed to fetch legislation', loading: false, items: [] });
+        set({ loadError: toLoadError(error), loading: false, items: [] });
       }
     },
 
     addItem: async (item) => {
       set({ loading: true });
       try {
-        const newItem = await legislationService.create(item);
-        if (newItem) {
-          await get().fetchPage(1, get().pageSize);
-          set({ loading: false });
-          return true;
-        }
+        const created = await legislationService.create(item);
+        await get().fetchPage(1, get().pageSize);
         set({ loading: false });
-        return false;
+        return { success: true, data: created };
       } catch (error) {
-        console.error('Failed to add legislation:', error);
-        set({ error: 'Failed to add legislation', loading: false });
-        return false;
+        set({ loading: false });
+        return toSaveError(error);
       }
     },
 
     updateItem: async (id, item) => {
       set({ loading: true });
       try {
-        const updatedItem = await legislationService.update(id, item);
-        if (updatedItem) {
-          set((state) => ({
-            items: state.items.map((i) => (i.id === id ? updatedItem : i)),
-            loading: false,
-          }));
-          return true;
-        }
-        set({ loading: false });
-        return false;
+        const updated = await legislationService.update(id, item);
+        set((state) => ({
+          items: state.items.map((i) => (i.id === id ? updated : i)),
+          loading: false,
+        }));
+        return { success: true, data: updated };
       } catch (error) {
-        console.error('Failed to update legislation:', error);
-        set({ error: 'Failed to update legislation', loading: false });
-        return false;
+        set({ loading: false });
+        return toSaveError(error);
       }
     },
 

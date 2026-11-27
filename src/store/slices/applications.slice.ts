@@ -1,20 +1,19 @@
 import { create } from 'zustand';
 import { devtools } from 'zustand/middleware';
 import { applicationsService } from '@/api/services/applications.service';
-import { toSaveError } from '@/utils/apiErrors';
+import { isMissingPage, toLoadError, toSaveError } from '@/utils/apiErrors';
 import type { ApplicationStatus, ApplicationUpdate, SaveResult, VacancyApplication } from '@/types';
 
 interface ApplicationsState {
   applications: VacancyApplication[];
   loading: boolean;
+  loadError: string | null;
+  newCountError: boolean;
   totalCount: number;
   currentPage: number;
   pageSize: number;
-  // фильтр по статусу, '' — все отклики
   status: ApplicationStatus | '';
-  // строка поиска, '' — без поиска
   search: string;
-  // сколько новых откликов ждут ответа (бейдж в меню и на «Обзоре»)
   newCount: number | null;
   fetchPage: (page?: number, pageSize?: number) => Promise<void>;
   setStatus: (status: ApplicationStatus | '') => void;
@@ -26,13 +25,14 @@ interface ApplicationsState {
   goToPage: (page: number) => void;
 }
 
-// при быстром переключении фильтров ответ на старый запрос не должен затереть новый
 let lastRequest = 0;
 
 export const useApplicationsStore = create<ApplicationsState>()(
   devtools((set, get) => ({
     applications: [],
     loading: false,
+    loadError: null,
+    newCountError: false,
     totalCount: 0,
     currentPage: 1,
     pageSize: 10,
@@ -43,8 +43,20 @@ export const useApplicationsStore = create<ApplicationsState>()(
     fetchPage: async (page = 1, pageSize = 10) => {
       const requestId = ++lastRequest;
       const { status, search } = get();
-      set({ loading: true });
-      const response = await applicationsService.getPage(page, pageSize, { status, search });
+      set({ loading: true, loadError: null });
+      let response: Awaited<ReturnType<typeof applicationsService.getPage>>;
+      try {
+        response = await applicationsService.getPage(page, pageSize, { status, search });
+      } catch (error) {
+        if (requestId !== lastRequest) return;
+        if (isMissingPage(error) && page > 1) {
+          get().fetchPage(page - 1, pageSize);
+          return;
+        }
+        console.error('Failed to fetch applications page:', error);
+        set({ loadError: toLoadError(error), loading: false, applications: [] });
+        return;
+      }
       if (requestId !== lastRequest) return;
       set({
         applications: response.results,
@@ -52,7 +64,6 @@ export const useApplicationsStore = create<ApplicationsState>()(
         currentPage: page,
         pageSize,
         loading: false,
-        // список новых откликов заодно обновляет счётчик
         ...(status === 'new' && !search ? { newCount: response.count } : {}),
       });
     },
@@ -73,8 +84,12 @@ export const useApplicationsStore = create<ApplicationsState>()(
     },
 
     fetchNewCount: async () => {
-      const response = await applicationsService.getPage(1, 1, { status: 'new' });
-      set({ newCount: response.count });
+      try {
+        const response = await applicationsService.getPage(1, 1, { status: 'new' });
+        set({ newCount: response.count, newCountError: false });
+      } catch {
+        set({ newCountError: true });
+      }
     },
 
     updateApplication: async (id, data) => {
@@ -82,7 +97,6 @@ export const useApplicationsStore = create<ApplicationsState>()(
         const updated = await applicationsService.patch(id, data);
         const { status, currentPage, pageSize } = get();
         if (status && updated.status !== status) {
-          // отклик ушёл из отфильтрованного списка
           await get().fetchPage(currentPage, pageSize);
         } else {
           set((state) => ({

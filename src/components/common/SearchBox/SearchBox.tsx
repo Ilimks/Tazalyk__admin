@@ -6,11 +6,9 @@ interface SearchBoxProps {
   value: string;
   onChange: (value: string) => void;
   placeholder: string;
-  // полное название для программ экранного чтения
   label: string;
 }
 
-// Поиск над списком. Один вид во всех разделах
 export const SearchBox: React.FC<SearchBoxProps> = ({ value, onChange, placeholder, label }) => (
   <div className={styles.box} role="search">
     <Input

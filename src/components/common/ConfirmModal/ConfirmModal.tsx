@@ -65,7 +65,6 @@ export const ConfirmModal: React.FC<ConfirmModalProps> = ({
                     <p id="confirm-message">{message}</p>
                 </div>
 
-                {/* фокус начинается с «Отмена»: Enter сразу после открытия ничего не удалит */}
                 <div className={styles.footer} data-dialog-first>
                     <Button variant="outline" onClick={onCancel} disabled={isLoading}>
                         {cancelText}

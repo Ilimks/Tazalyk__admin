@@ -7,7 +7,6 @@ import type { Order } from '@/types';
 
 interface OrderTableProps {
   orders: Order[];
-  // идёт перезагрузка списка (фильтр, смена страницы) — таблица приглушается
   busy?: boolean;
   onOpen: (order: Order) => void;
 }

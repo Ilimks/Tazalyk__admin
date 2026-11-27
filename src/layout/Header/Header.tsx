@@ -19,7 +19,6 @@ export const Header: React.FC<HeaderProps> = ({ title, onMenuClick }) => {
   const { serverStatus, checkServer } = useAuthStore();
   const { theme, toggleTheme } = useTheme();
   const themeLabel = theme === 'dark' ? 'Светлая тема' : 'Тёмная тема';
-  // дата меняется раз в сутки — секундный таймер не нужен
   const today = new Date().toLocaleDateString('ru-RU', { weekday: 'long', day: 'numeric', month: 'long' });
 
   return (

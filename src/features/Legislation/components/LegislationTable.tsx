@@ -4,9 +4,7 @@ import type { Legislation } from '@/types';
 
 interface LegislationTableProps {
     documents: Legislation[];
-    // идёт перезагрузка списка (смена страницы, удаление) — таблица приглушается
     busy?: boolean;
-    // без обработчика кнопка не показывается (нет прав)
     onEdit?: (doc: Legislation) => void;
     onDelete?: (id: string) => void;
 }
@@ -21,7 +19,6 @@ const formatFileSize = (bytes: number) => {
 
 const formatDate = (date: string) => new Date(date).toLocaleDateString('ru-RU');
 
-// цвет плашки и иконка — по расширению файла
 const getFileKind = (fileName = '') => {
     const ext = fileName.split('.').pop()?.toLowerCase() || '';
     if (ext === 'pdf') return { className: styles.filePdf, icon: <FileText size={18} /> };

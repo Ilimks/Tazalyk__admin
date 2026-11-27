@@ -12,6 +12,7 @@ import { Modal } from '@/components/common/Modal';
 import { Pagination } from '@/components/common/Pagination/Pagination';
 import { PageHeader } from '@/components/common/PageHeader';
 import { EmptyState } from '@/components/common/EmptyState';
+import { LoadError } from '@/components/common/LoadError';
 import { ConfirmModal } from '@/components/common/ConfirmModal';
 import { TableSkeleton } from '@/components/common/Skeleton';
 import { SearchBox } from '@/components/common/SearchBox';
@@ -19,6 +20,7 @@ import { OrderTable } from './components/OrderTable';
 import { OrderDetails } from './components/OrderDetails';
 import { ORDER_FILTER_LABELS, ORDER_STATUSES } from './statuses';
 import type { Order, OrderStatus } from '@/types';
+import { localToday } from '@/utils/date';
 
 const PAGE_SIZE = 10;
 
@@ -45,12 +47,16 @@ export const OrdersManager: React.FC = () => {
     deleteOrder,
     goToPage,
   } = useOrdersStore();
+  const loadError = useOrdersStore((state) => state.loadError);
+  const retryLoad = () => {
+    const { currentPage, pageSize, fetchPage } = useOrdersStore.getState();
+    fetchPage(currentPage, pageSize);
+  };
   const { canEdit, canDelete } = useAuthStore();
 
   const searchBox = useListSearch(search, setSearch);
   const { showNotification } = useNotificationStore();
   const [selectedOrder, setSelectedOrder] = useState<Order | null>(null);
-  // отдельно от selectedOrder: карточку под окном подтверждения могут закрыть клавишей Esc
   const [orderToDelete, setOrderToDelete] = useState<Order | null>(null);
   const [isDeleting, setIsDeleting] = useState(false);
   const [isExporting, setIsExporting] = useState(false);
@@ -63,7 +69,6 @@ export const OrdersManager: React.FC = () => {
     fetchNewCount();
   }, [fetchPage, fetchNewCount]);
 
-  // пришли с «Обзора» за конкретной записью
   useEffect(() => {
     const record = useOpenRecordStore.getState().take('orders');
     if (record) setSelectedOrder(record);
@@ -87,7 +92,7 @@ export const OrdersManager: React.FC = () => {
     setIsExporting(true);
     try {
       const file = await ordersService.exportToExcel();
-      const today = new Date().toISOString().slice(0, 10);
+      const today = localToday();
       saveBlob(file, `Продажи ТАЗАЛЫК ${today}.xlsx`);
       showNotification('Файл Excel с товарами сохранён', 'success');
     } catch {
@@ -112,11 +117,14 @@ export const OrdersManager: React.FC = () => {
   };
 
   const renderContent = () => {
-    // первая загрузка: шапка остаётся на месте, заглушка — вместо таблицы
     if (loading && orders.length === 0) {
       return (
         <TableSkeleton />
       );
+    }
+
+    if (loadError) {
+      return <LoadError message={loadError} onRetry={retryLoad} />;
     }
 
     if (orders.length === 0 && search) {

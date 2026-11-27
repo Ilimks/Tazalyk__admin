@@ -2,7 +2,6 @@
   position: relative;
   margin-bottom: 16px;
 
-  // два класса — сильнее отступа .formGroup из общих полей
   .field {
     margin-bottom: 0;
   }
@@ -10,7 +9,6 @@
   input {
     padding-right: 48px;
 
-    // свой крестик вместо крестика браузера: одинаковый везде и нажимается пальцем
     &::-webkit-search-cancel-button {
       display: none;
     }

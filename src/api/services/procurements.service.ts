@@ -10,14 +10,14 @@ class ProcurementsService extends BaseService<Procurement> {
   async getPage(page: number = 1, pageSize: number = 10, search = ''): Promise<PaginatedResponse<Procurement>> {
     return this.getPaginated({ page, page_size: pageSize, search });
   }
-  // все закупки файлом Excel, независимо от страницы списка
   exportToExcel(): Promise<Blob> {
     return apiClient.download(`${this.endpoint}export/`);
   }
 
-  async create(data: Partial<Procurement>): Promise<Procurement | null> {
-    const { number, ...dataWithoutNumber } = data;
-    return super.create(dataWithoutNumber);
+  create(data: Partial<Procurement>): Promise<Procurement> {
+    const withoutNumber = { ...data };
+    delete withoutNumber.number;
+    return super.create(withoutNumber);
   }
 }
 

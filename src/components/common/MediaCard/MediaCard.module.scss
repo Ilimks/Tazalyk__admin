@@ -1,4 +1,3 @@
-// Сетка карточек для разделов «Фото» и «Видео»
 .grid {
   display: grid;
   grid-template-columns: repeat(auto-fill, minmax(220px, 1fr));
@@ -130,7 +129,6 @@
   align-items: center;
   justify-content: space-between;
   gap: 8px;
-  // в ряду карточки с подписью и без неё: дата и кнопки на одной линии
   margin-top: auto;
   padding: 8px 8px 8px 14px;
 }
@@ -187,7 +185,6 @@
   }
 }
 
-// на телефоне карточка узкая: дата сверху, кнопки под ней и под палец
 @media (max-width: 600px) {
   .footer {
     flex-wrap: wrap;

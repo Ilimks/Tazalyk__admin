@@ -4,7 +4,6 @@ import type { ApplicationStatus } from '@/types';
 
 type BadgeStatus = ComponentProps<typeof StatusBadge>['status'];
 
-// порядок — как кандидат проходит отбор
 export const APPLICATION_STATUSES: ApplicationStatus[] = ['new', 'in_review', 'invited', 'hired', 'rejected'];
 
 export const APPLICATION_STATUS_LABELS: Record<ApplicationStatus, string> = {
@@ -15,7 +14,6 @@ export const APPLICATION_STATUS_LABELS: Record<ApplicationStatus, string> = {
   rejected: 'Отказ',
 };
 
-// подписи кнопок-фильтров во множественном числе
 export const APPLICATION_FILTER_LABELS: Record<ApplicationStatus, string> = {
   new: 'Новые',
   in_review: 'На рассмотрении',

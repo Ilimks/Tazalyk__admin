@@ -1,7 +1,3 @@
-// Обработка медиа в браузере до отправки на сервер.
-// Сервер хранит файлы строками base64 в базе, поэтому чем меньше файл, тем быстрее
-// работают и админка, и сайт.
-
 const readAsDataUrl = (blob: Blob): Promise<string> =>
   new Promise((resolve, reject) => {
     const reader = new FileReader();
@@ -37,8 +33,6 @@ interface CompressOptions {
   quality: number;
 }
 
-// Уменьшает фото до maxDimension по длинной стороне и сохраняет в JPEG.
-// GIF не трогаем (анимация пропала бы), а если сжатие не дало выигрыша — оставляем оригинал.
 export const compressImage = async (file: File, { maxDimension, quality }: CompressOptions): Promise<string> => {
   const original = await readAsDataUrl(file);
   if (file.type === 'image/gif') return original;
@@ -54,7 +48,6 @@ export const compressImage = async (file: File, { maxDimension, quality }: Compr
     const ctx = canvas.getContext('2d');
     if (!ctx) return original;
 
-    // белый фон вместо прозрачности PNG — JPEG её не поддерживает
     ctx.fillStyle = '#ffffff';
     ctx.fillRect(0, 0, width, height);
     ctx.drawImage(img, 0, 0, width, height);
@@ -68,8 +61,6 @@ export const compressImage = async (file: File, { maxDimension, quality }: Compr
   }
 };
 
-// Снимает кадр из видео (около 1-й секунды) и возвращает JPEG data URL для превью.
-// source — File, data URL или адрес видео на сервере.
 export const captureVideoThumbnail = (source: File | string, maxDimension = 960, quality = 0.8): Promise<string | null> =>
   new Promise((resolve) => {
     const url = typeof source === 'string' ? source : URL.createObjectURL(source);
@@ -85,13 +76,11 @@ export const captureVideoThumbnail = (source: File | string, maxDimension = 960,
       resolve(result);
     };
 
-    // если браузер не смог прочитать видео за 15 секунд — обходимся без превью
     const timer = window.setTimeout(() => finish(null), 15000);
 
     video.muted = true;
     video.playsInline = true;
     video.preload = 'auto';
-    // файл с сервера API: без этого браузер не даст прочитать кадр на canvas
     if (typeof source === 'string' && source.startsWith('http')) video.crossOrigin = 'anonymous';
 
     video.onloadedmetadata = () => {
@@ -126,7 +115,6 @@ export const captureVideoThumbnail = (source: File | string, maxDimension = 960,
     video.src = url;
   });
 
-// Размер строки base64 в человекочитаемом виде (для подсказок в форме)
 export const formatDataUrlSize = (dataUrl: string): string => {
   const base64Length = dataUrl.length - dataUrl.indexOf(',') - 1;
   const bytes = Math.round((base64Length * 3) / 4);

@@ -1,4 +1,3 @@
-// src/features/News/components/NewsTable.tsx
 import React from 'react';
 import { ImageOff, Pencil, Trash2 } from 'lucide-react';
 import styles from '../NewsManager.module.scss';
@@ -6,9 +5,7 @@ import type { News } from '@/types';
 
 interface NewsTableProps {
     news: News[];
-    // идёт перезагрузка списка (смена страницы, удаление) — таблица приглушается
     busy?: boolean;
-    // без обработчика кнопка не показывается (нет прав)
     onEdit?: (news: News) => void;
     onDelete?: (id: string) => void;
 }

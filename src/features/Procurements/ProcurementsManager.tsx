@@ -11,12 +11,14 @@ import { Modal } from '@/components/common/Modal';
 import { Pagination } from '@/components/common/Pagination/Pagination';
 import { PageHeader } from '@/components/common/PageHeader';
 import { EmptyState } from '@/components/common/EmptyState';
+import { LoadError } from '@/components/common/LoadError';
 import { ConfirmModal } from '@/components/common/ConfirmModal';
 import { TableSkeleton } from '@/components/common/Skeleton';
 import { SearchBox } from '@/components/common/SearchBox';
 import { ProcurementForm } from './components/ProcurementForm';
 import { ProcurementTable } from './components/ProcurementTable';
 import type { Procurement } from '@/types';
+import { localToday } from '@/utils/date';
 
 export const ProcurementsManager: React.FC = () => {
   const {
@@ -31,6 +33,11 @@ export const ProcurementsManager: React.FC = () => {
     deleteProcurement,
     goToPage,
   } = useProcurementsStore();
+  const loadError = useProcurementsStore((state) => state.loadError);
+  const retryLoad = () => {
+    const { currentPage, pageSize, fetchPage } = useProcurementsStore.getState();
+    fetchPage(currentPage, pageSize);
+  };
   const { canCreate, canEdit, canDelete } = useAuthStore();
 
   const searchBox = useListSearch(search, setSearch);
@@ -72,7 +79,7 @@ export const ProcurementsManager: React.FC = () => {
     setIsExporting(true);
     try {
       const file = await procurementsService.exportToExcel();
-      const today = new Date().toISOString().slice(0, 10);
+      const today = localToday();
       saveBlob(file, `Закупки ТАЗАЛЫК ${today}.xlsx`);
       showNotification('Файл Excel с закупками сохранён', 'success');
     } catch {
@@ -139,11 +146,14 @@ export const ProcurementsManager: React.FC = () => {
   );
 
   const renderContent = () => {
-    // первая загрузка: шапка остаётся на месте, заглушка — вместо таблицы
     if (loading && procurements.length === 0) {
       return (
         <TableSkeleton />
       );
+    }
+
+    if (loadError) {
+      return <LoadError message={loadError} onRetry={retryLoad} />;
     }
 
     if (procurements.length === 0 && search) {

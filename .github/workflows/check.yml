@@ -1,0 +1,43 @@
+name: Проверка
+
+on:
+  push:
+  pull_request:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: check-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  check:
+    name: Админка
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: "22"
+          cache: npm
+      - name: Зависимости
+        run: npm ci
+      - name: Проверка кода
+        run: npm run lint
+      - name: Тесты
+        run: npm test
+      - name: Типы и сборка
+        run: npm run build
+        env:
+          VITE_API_URL: https://api.mptazalyk.kg/api
+
+  image:
+    name: Сборка образа
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@v4
+      - name: Docker-образ собирается
+        run: docker build --tag tazalyk-admin:check .

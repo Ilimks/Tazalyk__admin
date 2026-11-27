@@ -14,20 +14,17 @@ interface VacancyFormProps {
 }
 
 type FormState = Omit<VacancyInput, 'salary_from' | 'salary_to'> & {
-  // как введено в поле: «30 000» или пусто
   salary_from: string;
   salary_to: string;
 };
 
 const MAX_SALARY = 10_000_000;
 
-// поля, у которых форма сама показывает ошибку сервера
 const FORM_FIELDS = new Set([
   'title_ru', 'title_ky', 'description_ru', 'description_ky', 'requirements_ru', 'requirements_ky',
   'schedule_ru', 'schedule_ky', 'salary_from', 'salary_to',
 ]);
 
-// «30 000» → 30000, пусто → null, не число → NaN
 const parseSalary = (raw: string): number | null => {
   const value = raw.replace(/\s/g, '');
   if (!value) return null;
@@ -115,7 +112,6 @@ export const VacancyForm: React.FC<VacancyFormProps> = ({ initialData, onSuccess
 
   return (
     <form onSubmit={handleSubmit} className={styles.form} noValidate>
-      {/* Должность, зарплата, график */}
       <section className={styles.formSection}>
         <div className={styles.formSectionHead}>
           <span className={styles.sectionIcon}>
@@ -180,7 +176,6 @@ export const VacancyForm: React.FC<VacancyFormProps> = ({ initialData, onSuccess
         </div>
       </section>
 
-      {/* Обязанности и требования на двух языках */}
       <section className={styles.formSection}>
         <div className={styles.formSectionHead}>
           <span className={styles.sectionIcon}>
@@ -228,7 +223,6 @@ export const VacancyForm: React.FC<VacancyFormProps> = ({ initialData, onSuccess
         </div>
       </section>
 
-      {/* Публикация */}
       <section className={styles.formSection}>
         <div className={styles.formSectionHead}>
           <span className={styles.sectionIcon}>

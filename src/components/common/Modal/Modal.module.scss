@@ -12,7 +12,6 @@
 }
 
 .modal {
-  // отступы внутри окна: от них же считает ширину липкая панель кнопок (src/styles/_form.scss)
   --modal-pad: 24px;
 
   background: var(--color-surface);
@@ -94,7 +93,6 @@
   overflow-y: auto;
   overscroll-behavior: contain;
   flex: 1;
-  // секции формы — белые карточки на слегка подкрашенном поле
   background: var(--color-surface-muted);
 }
 
@@ -128,7 +126,6 @@
   }
 }
 
-// телефон: окно на весь экран
 @media (max-width: 767px) {
   .overlay {
     padding: 0;

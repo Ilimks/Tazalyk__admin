@@ -3,11 +3,8 @@ import styles from './MediaCard.module.scss';
 
 interface MediaCardProps {
   kind: 'photo' | 'video';
-  // картинка для карточки: фото или кадр-превью видео. Само видео в сетке не загружается
   previewSrc?: string | null;
-  // подпись, если задана: по ней карточки и различают
   caption?: string;
-  // сколько ещё файлов в галерее, кроме главного
   extraCount?: number;
   date: string;
   onOpen: () => void;
@@ -39,7 +36,6 @@ export const MediaCard: React.FC<MediaCardProps> = ({
         {previewSrc ? (
           <img src={previewSrc} alt="" loading="lazy" decoding="async" />
         ) : (
-          // у видео в центре кнопка «play», поэтому подпись уходит вниз
           <span className={`${styles.placeholder} ${isVideo ? styles.placeholderVideo : ''}`}>
             {!isVideo && <Images size={32} strokeWidth={1.5} />}
             <span>{isVideo ? 'Нет превью' : 'Нет фото'}</span>

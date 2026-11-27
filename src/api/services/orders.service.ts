@@ -2,7 +2,6 @@ import { BaseService } from './base.service';
 import { apiClient } from '../client';
 import type { Order, OrderFilters, OrderUpdate, PaginatedResponse } from '@/types';
 
-// заказы оформляют покупатели на сайте; админка их только смотрит, меняет статус и заметку
 class OrdersService extends BaseService<Order> {
   constructor() {
     super('/shop/orders');
@@ -17,16 +16,14 @@ class OrdersService extends BaseService<Order> {
       return await apiClient.get<PaginatedResponse<Order>>(`${this.endpoint}?${params.toString()}`);
     } catch (error) {
       this.handleError(error);
-      return { count: 0, next: null, previous: null, results: [] };
+      throw error;
     }
   }
 
-  // проданные и отклонённые товары файлом Excel, независимо от фильтра в списке
   exportToExcel(): Promise<Blob> {
     return apiClient.download(`${this.endpoint}export/`);
   }
 
-  // ошибки пробрасываются, чтобы показать текст сервера
   patch(id: number, data: OrderUpdate): Promise<Order> {
     return apiClient.patch<Order>(`${this.endpoint}${id}/`, data);
   }

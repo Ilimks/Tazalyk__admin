@@ -21,10 +21,8 @@ interface ApplicationDetailsProps {
   onClose: () => void;
 }
 
-// для ссылки tel: оставляем только цифры и плюс
 const phoneHref = (phone: string) => `tel:${phone.replace(/[^\d+]/g, '')}`;
 
-// WhatsApp принимает номер только с кодом страны: в Кыргызстане часто пишут 0700… или 700…
 const whatsappHref = (phone: string) => {
   const digits = phone.replace(/\D/g, '').replace(/^00/, '');
   const local = digits.length === 10 && digits.startsWith('0') ? digits.slice(1) : digits;
@@ -92,7 +90,6 @@ export const ApplicationDetails: React.FC<ApplicationDetailsProps> = ({
         </span>
       </div>
 
-      {/* обработка — первой: длинный текст ниже не приходится прокручивать ради статуса */}
       <section className={styles.formSection}>
         <div className={styles.formSectionHead}>
           <span className={styles.sectionIcon}>

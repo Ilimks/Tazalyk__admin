@@ -8,12 +8,11 @@ import { Dashboard } from '@/features/Dashboard/Dashboard';
 import { Login } from '@/features/Auth/Login';
 import { Loader } from '@/components/common/Loader';
 import { EmptyState } from '@/components/common/EmptyState';
-import { useAuthStore } from '@/store';
+import { signOut, useAuthStore } from '@/store';
 import { useSectionRoute } from '@/hooks/useSectionRoute';
 import { ProtectedRoute } from '../common/Protected/ProtectedRoute';
 import type { ActiveTab } from '@/types';
 
-// разделы грузятся отдельными чанками — экран входа открывается быстрее
 const SECTION_COMPONENTS: Record<Section, React.LazyExoticComponent<React.FC>> = {
   videos: lazy(() => import('@/features/Videos/VideosManager').then((m) => ({ default: m.VideosManager }))),
   photos: lazy(() => import('@/features/Photos/PhotosManager').then((m) => ({ default: m.PhotosManager }))),
@@ -37,7 +36,7 @@ const SECTION_COMPONENTS: Record<Section, React.LazyExoticComponent<React.FC>> =
 };
 
 export const AdminPanel: React.FC = () => {
-  const { isAuthenticated, checkServer, refreshPermissions, canView, logout } = useAuthStore();
+  const { isAuthenticated, checkServer, refreshPermissions, canView, setServerStatus } = useAuthStore();
   const { tab: activeTab, go, fix } = useSectionRoute();
   const [menuOpen, setMenuOpen] = useState(false);
 
@@ -45,21 +44,25 @@ export const AdminPanel: React.FC = () => {
     if (isAuthenticated) checkServer();
   }, [isAuthenticated, checkServer]);
 
-  // сессия восстановлена из браузера: права могли устареть (сменили группы, обновилась админка).
-  // Сразу после входа не нужно — права только что пришли с сервера
+  useEffect(() => {
+    const handleServer = (event: Event) => {
+      const status = (event as CustomEvent<'online' | 'offline'>).detail;
+      if (status === 'online' || status === 'offline') setServerStatus(status);
+    };
+    window.addEventListener('api:server', handleServer);
+    return () => window.removeEventListener('api:server', handleServer);
+  }, [setServerStatus]);
+
   useEffect(() => {
     if (useAuthStore.getState().isAuthenticated) refreshPermissions();
-    // только при открытии страницы
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
-  // refresh-токен тоже истёк — возвращаемся на экран входа
   useEffect(() => {
     const handleExpired = () => {
-      logout();
+      signOut();
       useAuthStore.setState({ loginError: 'Сессия истекла — войдите снова.' });
     };
-    // выход в соседней вкладке: здесь не должны оставаться данные заказов и откликов
     const handleStorage = (event: StorageEvent) => {
       if (event.key === 'current_user' && !event.newValue) handleExpired();
     };
@@ -69,9 +72,8 @@ export const AdminPanel: React.FC = () => {
       window.removeEventListener('auth:expired', handleExpired);
       window.removeEventListener('storage', handleStorage);
     };
-  }, [logout]);
+  }, []);
 
-  // меню на телефоне не должно прокручивать страницу под собой
   useEffect(() => {
     document.body.style.overflow = menuOpen ? 'hidden' : '';
     return () => {
@@ -82,7 +84,6 @@ export const AdminPanel: React.FC = () => {
   const availableTabs: ActiveTab[] = ['dashboard', ...SECTIONS.filter((section) => canView(section))];
   const currentTab = availableTabs.includes(activeTab) ? activeTab : 'dashboard';
 
-  // до входа адрес не меняем: после входа откроется раздел, на который вела ссылка
   useEffect(() => {
     if (!isAuthenticated) return;
     fix(currentTab);

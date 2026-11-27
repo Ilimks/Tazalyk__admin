@@ -1,8 +1,9 @@
-import React, { useEffect } from 'react';
+import React, { useEffect, useRef, useState } from 'react';
 import { createPortal } from 'react-dom';
 import { X } from 'lucide-react';
 import styles from './Modal.module.scss';
 import { Button } from '../Button';
+import { ConfirmModal } from '../ConfirmModal';
 import { useDialog } from '@/hooks/useDialog';
 
 interface ModalProps {
@@ -28,7 +29,24 @@ export const Modal: React.FC<ModalProps> = ({
   confirmText = 'Сохранить',
   isLoading = false,
 }) => {
-  const dialogRef = useDialog<HTMLDivElement>(isOpen, onClose);
+  const [dirty, setDirty] = useState(false);
+  const [askClose, setAskClose] = useState(false);
+  const pressedOnOverlay = useRef(false);
+
+  useEffect(() => {
+    if (isOpen) {
+      setDirty(false);
+      setAskClose(false);
+    }
+  }, [isOpen]);
+
+  const requestClose = () => {
+    if (dirty) setAskClose(true);
+    else onClose();
+  };
+
+  const dialogRef = useDialog<HTMLDivElement>(isOpen, requestClose);
+  const markDirty = () => setDirty(true);
 
   useEffect(() => {
     if (isOpen) document.body.style.overflow = 'hidden';
@@ -39,13 +57,25 @@ export const Modal: React.FC<ModalProps> = ({
 
   if (!isOpen) return null;
 
-  return createPortal(
-    <div className={styles.overlay} onClick={onClose}>
+  const dialog = (
+    <div
+      className={styles.overlay}
+      onMouseDown={(e) => {
+        pressedOnOverlay.current = e.target === e.currentTarget;
+      }}
+      onClick={(e) => {
+        if (e.target === e.currentTarget && pressedOnOverlay.current) requestClose();
+        pressedOnOverlay.current = false;
+      }}
+    >
       <div
         ref={dialogRef}
         tabIndex={-1}
         className={`${styles.modal} ${styles[size]}`}
         onClick={(e) => e.stopPropagation()}
+        onInput={markDirty}
+        onChange={markDirty}
+        onDrop={markDirty}
         role="dialog"
         aria-modal="true"
         aria-label={title}
@@ -53,7 +83,7 @@ export const Modal: React.FC<ModalProps> = ({
         <div className={styles.header}>
           <h3>{title}</h3>
           {showCloseButton && (
-            <button type="button" className={styles.closeBtn} onClick={onClose} aria-label="Закрыть" title="Закрыть">
+            <button type="button" className={styles.closeBtn} onClick={requestClose} aria-label="Закрыть" title="Закрыть">
               <X size={20} />
             </button>
           )}
@@ -69,7 +99,25 @@ export const Modal: React.FC<ModalProps> = ({
           </div>
         )}
       </div>
-    </div>,
-    document.body
+    </div>
+  );
+
+  return (
+    <>
+      {createPortal(dialog, document.body)}
+      <ConfirmModal
+        isOpen={askClose}
+        type="warning"
+        title="Закрыть без сохранения?"
+        message="Введённые данные пропадут. Чтобы их сохранить, вернитесь к форме и нажмите «Сохранить»."
+        confirmText="Закрыть"
+        cancelText="Вернуться к форме"
+        onConfirm={() => {
+          setAskClose(false);
+          onClose();
+        }}
+        onCancel={() => setAskClose(false)}
+      />
+    </>
   );
 };

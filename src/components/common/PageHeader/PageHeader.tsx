@@ -5,11 +5,9 @@ interface PageHeaderProps {
   title: string;
   description?: string;
   icon?: LucideIcon;
-  // кнопки справа: «Добавить», фильтры и т.п.
   actions?: React.ReactNode;
 }
 
-// Шапка раздела админки: иконка, заголовок, пояснение и действия
 export const PageHeader: React.FC<PageHeaderProps> = ({ title, description, icon: Icon, actions }) => (
   <div className={styles.pageHeader}>
     <div className={styles.titleBlock}>

@@ -1,3 +1,4 @@
+import { splitSaveErrors } from '@/utils/apiErrors';
 import React, { useEffect, useState } from 'react';
 import { CalendarDays, Captions, Clapperboard, ImageOff } from 'lucide-react';
 import styles from '../VideosManager.module.scss';
@@ -8,6 +9,7 @@ import { VideoUpload } from '@/components/common/FileUpload/VideoUpload';
 import { FormError } from '@/components/common/FormError';
 import { captureVideoThumbnail } from '@/utils/media';
 import type { Video } from '@/types';
+import { localToday } from '@/utils/date';
 
 interface VideoFormProps {
   initialData?: Video;
@@ -25,7 +27,7 @@ export const VideoForm: React.FC<VideoFormProps> = ({
   const [errors, setErrors] = useState<{ video?: string; date?: string; form?: string }>({});
   const [formData, setFormData] = useState({
     id: initialData?.id || Date.now().toString(),
-    date: initialData?.date || new Date().toISOString().split('T')[0],
+    date: initialData?.date || localToday(),
     main_video_url: initialData?.main_video_url || '',
     gallery_videos: initialData?.gallery_videos || [],
     thumbnail: initialData?.thumbnail || '',
@@ -33,8 +35,6 @@ export const VideoForm: React.FC<VideoFormProps> = ({
     caption_ky: initialData?.caption_ky || '',
   });
 
-  // у старых видео нет превью — снимаем кадр из уже загруженного ролика,
-  // и оно сохранится вместе с видео
   useEffect(() => {
     if (!initialData || initialData.thumbnail || !initialData.main_video_url) return;
     let cancelled = false;
@@ -59,17 +59,13 @@ export const VideoForm: React.FC<VideoFormProps> = ({
 
     setLoading(true);
 
-    let success = false;
-    if (initialData) {
-      success = await updateVideo(initialData.id, formData);
-    } else {
-      success = await addVideo(formData);
-    }
+    const result = initialData ? await updateVideo(initialData.id, formData) : await addVideo(formData);
 
-    if (success) {
+    if (result.success) {
       onSuccess();
     } else {
-      setErrors({ form: 'Не удалось сохранить. Проверьте поля и связь с сервером и попробуйте ещё раз.' });
+      const { fieldErrors, message } = splitSaveErrors(result, { main_video_url: 'video', date: 'date' });
+      setErrors({ ...fieldErrors, form: message });
     }
     setLoading(false);
   };

@@ -1,4 +1,3 @@
-// Раздел «Новости»: общий вид — src/styles, здесь только колонки и секции формы.
 @use '@/styles/list';
 @use '@/styles/form';
 
@@ -10,7 +9,6 @@
     max-width: 0;
   }
 
-  // телефон: «фото | заголовок / дата + действия»
   @media (max-width: 767px) {
     min-width: 0;
 
@@ -39,14 +37,11 @@
   }
 }
 
-// ---------- форма ----------
-
 .langBadgeKy {
   background: var(--color-accent-soft);
   color: var(--color-success-text);
 }
 
-// секция «Кыргызча» раскрывается кнопкой-заголовком
 .formSectionCollapsible {
   padding: 0;
 }

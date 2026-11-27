@@ -4,7 +4,6 @@ import type { ComplaintStatus, ComplaintType } from '@/types';
 
 type BadgeStatus = ComponentProps<typeof StatusBadge>['status'];
 
-// порядок — как жалоба проходит обработку
 export const COMPLAINT_STATUSES: ComplaintStatus[] = ['new', 'in_progress', 'resolved', 'rejected'];
 
 export const COMPLAINT_STATUS_LABELS: Record<ComplaintStatus, string> = {
@@ -14,7 +13,6 @@ export const COMPLAINT_STATUS_LABELS: Record<ComplaintStatus, string> = {
   rejected: 'Отклонена',
 };
 
-// подписи кнопок-фильтров во множественном числе
 export const COMPLAINT_FILTER_LABELS: Record<ComplaintStatus, string> = {
   new: 'Новые',
   in_progress: 'В работе',
@@ -34,7 +32,6 @@ export const COMPLAINT_STATUS_OPTIONS = COMPLAINT_STATUSES.map((value) => ({
   label: COMPLAINT_STATUS_LABELS[value],
 }));
 
-// те же подписи, что в форме на сайте; в карточке берём type_label с сервера
 export const COMPLAINT_TYPES: ComplaintType[] = [
   'waste_issue',
   'billing_error',

@@ -1,21 +1,20 @@
 import { create } from 'zustand';
 import { devtools } from 'zustand/middleware';
 import { complaintsService } from '@/api/services/complaints.service';
-import { toSaveError } from '@/utils/apiErrors';
+import { isMissingPage, toLoadError, toSaveError } from '@/utils/apiErrors';
 import type { Complaint, ComplaintStatus, ComplaintType, ComplaintUpdate, SaveResult } from '@/types';
 
 interface ComplaintsState {
   complaints: Complaint[];
   loading: boolean;
+  loadError: string | null;
+  newCountError: boolean;
   totalCount: number;
   currentPage: number;
   pageSize: number;
-  // фильтры списка, '' — все. По умолчанию показываются все жалобы любого типа
   status: ComplaintStatus | '';
   complaintType: ComplaintType | '';
-  // строка поиска, '' — без поиска
   search: string;
-  // сколько новых жалоб ждут ответа (бейдж в меню и на «Обзоре»)
   newCount: number | null;
   fetchPage: (page?: number, pageSize?: number) => Promise<void>;
   setStatus: (status: ComplaintStatus | '') => void;
@@ -28,13 +27,14 @@ interface ComplaintsState {
   goToPage: (page: number) => void;
 }
 
-// при быстром переключении фильтров ответ на старый запрос не должен затереть новый
 let lastRequest = 0;
 
 export const useComplaintsStore = create<ComplaintsState>()(
   devtools((set, get) => ({
     complaints: [],
     loading: false,
+    loadError: null,
+    newCountError: false,
     totalCount: 0,
     currentPage: 1,
     pageSize: 10,
@@ -46,8 +46,20 @@ export const useComplaintsStore = create<ComplaintsState>()(
     fetchPage: async (page = 1, pageSize = 10) => {
       const requestId = ++lastRequest;
       const { status, complaintType, search } = get();
-      set({ loading: true });
-      const response = await complaintsService.getPage(page, pageSize, { status, complaint_type: complaintType, search });
+      set({ loading: true, loadError: null });
+      let response: Awaited<ReturnType<typeof complaintsService.getPage>>;
+      try {
+        response = await complaintsService.getPage(page, pageSize, { status, complaint_type: complaintType, search });
+      } catch (error) {
+        if (requestId !== lastRequest) return;
+        if (isMissingPage(error) && page > 1) {
+          get().fetchPage(page - 1, pageSize);
+          return;
+        }
+        console.error('Failed to fetch complaints page:', error);
+        set({ loadError: toLoadError(error), loading: false, complaints: [] });
+        return;
+      }
       if (requestId !== lastRequest) return;
       set({
         complaints: response.results,
@@ -55,7 +67,6 @@ export const useComplaintsStore = create<ComplaintsState>()(
         currentPage: page,
         pageSize,
         loading: false,
-        // список новых жалоб без фильтра по типу заодно обновляет счётчик
         ...(status === 'new' && !complaintType && !search ? { newCount: response.count } : {}),
       });
     },
@@ -81,8 +92,12 @@ export const useComplaintsStore = create<ComplaintsState>()(
     },
 
     fetchNewCount: async () => {
-      const response = await complaintsService.getPage(1, 1, { status: 'new' });
-      set({ newCount: response.count });
+      try {
+        const response = await complaintsService.getPage(1, 1, { status: 'new' });
+        set({ newCount: response.count, newCountError: false });
+      } catch {
+        set({ newCountError: true });
+      }
     },
 
     updateComplaint: async (id, data) => {
@@ -90,7 +105,6 @@ export const useComplaintsStore = create<ComplaintsState>()(
         const updated = await complaintsService.patch(id, data);
         const { status, currentPage, pageSize } = get();
         if (status && updated.status !== status) {
-          // жалоба ушла из отфильтрованного списка; тип в админке не меняется
           await get().fetchPage(currentPage, pageSize);
         } else {
           set((state) => ({

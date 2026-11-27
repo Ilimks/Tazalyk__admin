@@ -1,8 +1,10 @@
-import React, { useRef, useState } from 'react';
+import React, { useEffect, useRef, useState } from 'react';
 import { ImagePlus, LoaderCircle, Trash2, X } from 'lucide-react';
 import styles from './FileUpload.module.scss';
 import { config } from '@/config';
 import { compressImage, formatDataUrlSize } from '@/utils/media';
+import { checkFile, dataUrlToBlob, formatLimit, loadUploadLimit, uploadFile, type UploadLimit, type UploadSection } from '@/api/uploads';
+import { UploadProgress } from '@/components/common/UploadProgress';
 
 interface ImageUploadProps {
   value?: string | string[];
@@ -11,6 +13,7 @@ interface ImageUploadProps {
   label?: string;
   required?: boolean;
   multiple?: boolean;
+  section?: UploadSection;
 }
 
 const acceptedLabel = config.upload.acceptedImageTypes.map((t) => t.split('/')[1].toUpperCase()).join(', ');
@@ -23,14 +26,22 @@ export const ImageUpload: React.FC<ImageUploadProps> = ({
   label = 'Изображение',
   required = false,
   multiple = false,
+  section,
 }) => {
   const [isDragging, setIsDragging] = useState(false);
   const [isProcessing, setIsProcessing] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [galleryImages, setGalleryImages] = useState<string[]>(Array.isArray(value) ? value : []);
   const fileInputRef = useRef<HTMLInputElement>(null);
+  const [limit, setLimit] = useState<UploadLimit>();
+  const [progress, setProgress] = useState<{ ratio: number; index: number; total: number } | null>(null);
 
-  const validateFile = (file: File): string | null => {
+  useEffect(() => {
+    if (section) loadUploadLimit('image').then(setLimit);
+  }, [section]);
+
+  const validateFile = (file: File, serverLimit: UploadLimit | undefined): string | null => {
+    if (serverLimit) return checkFile(file, serverLimit);
     if (!config.upload.acceptedImageTypes.includes(file.type)) {
       return `«${file.name}»: выберите изображение (${acceptedLabel})`;
     }
@@ -40,7 +51,6 @@ export const ImageUpload: React.FC<ImageUploadProps> = ({
     return null;
   };
 
-  // фото уменьшаются до 1920 px и пересохраняются в JPEG — так они загружаются в разы быстрее
   const processFiles = async (files: File[]) => {
     if (files.length === 0) return;
     setError(null);
@@ -48,20 +58,39 @@ export const ImageUpload: React.FC<ImageUploadProps> = ({
 
     const errors: string[] = [];
     const results: string[] = [];
-    for (const file of multiple ? files : files.slice(0, 1)) {
-      const problem = validateFile(file);
+    const chosen = multiple ? files : files.slice(0, 1);
+    const serverLimit = section ? await loadUploadLimit('image') : undefined;
+    for (const [index, file] of chosen.entries()) {
+      const problem = validateFile(file, serverLimit);
       if (problem) {
         errors.push(problem);
         continue;
       }
-      results.push(
-        await compressImage(file, {
-          maxDimension: config.upload.imageMaxDimension,
-          quality: config.upload.imageQuality,
-        })
-      );
+      const compressed = await compressImage(file, {
+        maxDimension: config.upload.imageMaxDimension,
+        quality: config.upload.imageQuality,
+      });
+      if (!section) {
+        results.push(compressed);
+        continue;
+      }
+      try {
+        setProgress({ ratio: 0, index: index + 1, total: chosen.length });
+        const blob = dataUrlToBlob(compressed);
+        const name = blob.type === file.type ? file.name : file.name.replace(/\.[^.]+$/, '') + '.jpg';
+        const { url } = await uploadFile(blob, {
+          section,
+          kind: 'image',
+          name,
+          onProgress: (ratio) => setProgress({ ratio, index: index + 1, total: chosen.length }),
+        });
+        results.push(url);
+      } catch (uploadError) {
+        errors.push(`«${file.name}»: ${(uploadError as Error).message}`);
+      }
     }
 
+    setProgress(null);
     setIsProcessing(false);
     if (errors.length) setError(errors.join('. '));
     if (!results.length) return;
@@ -83,7 +112,6 @@ export const ImageUpload: React.FC<ImageUploadProps> = ({
 
   const handleChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
     await processFiles(Array.from(e.target.files || []));
-    // очищаем input, чтобы можно было выбрать тот же файл снова
     if (fileInputRef.current) fileInputRef.current.value = '';
   };
 
@@ -133,7 +161,7 @@ export const ImageUpload: React.FC<ImageUploadProps> = ({
           {isProcessing ? 'Обрабатываем фото…' : multiple ? 'Нажмите или перетащите фото' : 'Нажмите или перетащите файл'}
         </span>
         <span className={styles.uploadHint}>
-          {acceptedLabel} до {maxSizeMb} МБ · большие фото уменьшаются автоматически
+          {acceptedLabel} до {limit ? formatLimit(limit) : `${maxSizeMb} МБ`} · большие фото уменьшаются автоматически
         </span>
       </div>
     </div>
@@ -177,7 +205,6 @@ export const ImageUpload: React.FC<ImageUploadProps> = ({
         <div className={styles.previewContainer}>
           <img src={value} alt="Выбранное фото" className={styles.preview} decoding="async" />
           <div className={styles.previewBar}>
-            {/* у уже загруженного фото вместо data URL — ссылка, размер по ней не посчитать */}
             <span className={styles.previewSize}>{value.startsWith('data:') ? formatDataUrlSize(value) : 'Текущее фото'}</span>
             <button type="button" className={styles.previewRemove} onClick={handleRemoveSingle}>
               <Trash2 size={16} />
@@ -189,7 +216,13 @@ export const ImageUpload: React.FC<ImageUploadProps> = ({
         dropzone
       )}
 
-      {error && <span className={styles.errorMessage}>{error}</span>}
+      {progress && (
+        <UploadProgress
+          ratio={progress.ratio}
+          label={progress.total > 1 ? `Загрузка фото ${progress.index} из ${progress.total}` : 'Загрузка фото'}
+        />
+      )}
+      {error && <span className={styles.errorMessage} role="alert">{error}</span>}
     </div>
   );
 };

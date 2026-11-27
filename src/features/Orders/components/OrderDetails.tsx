@@ -12,16 +12,13 @@ import type { Order, OrderStatus, OrderUpdate } from '@/types';
 
 interface OrderDetailsProps {
   order: Order;
-  // без прав на изменение блок «Обработка» только для чтения
   allowEdit: boolean;
-  // удалять заказы может только администратор
   allowDelete: boolean;
   onSaved: (order: Order) => void;
   onDelete: () => void;
   onClose: () => void;
 }
 
-// для ссылки tel: оставляем только цифры и плюс
 const phoneHref = (phone: string) => `tel:${phone.replace(/[^\d+]/g, '')}`;
 
 export const OrderDetails: React.FC<OrderDetailsProps> = ({ order, allowEdit, allowDelete, onSaved, onDelete, onClose }) => {
@@ -80,7 +77,6 @@ export const OrderDetails: React.FC<OrderDetailsProps> = ({ order, allowEdit, al
         </div>
       )}
 
-      {/* обработка — первой: длинный текст ниже не приходится прокручивать ради статуса */}
       <section className={styles.formSection}>
         <div className={styles.formSectionHead}>
           <span className={styles.sectionIcon}>

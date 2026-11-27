@@ -7,8 +7,6 @@ export default defineConfig(({ mode }) => {
   
   return {
     plugins: [react()],
-    // в браузер попадают только адрес и таймаут API. zustand/devtools читает import.meta.env целиком,
-    // и без этого ограничения в сборку уходили все VITE_* из .env, включая пароли
     envPrefix: ['VITE_API_'],
     resolve: {
       alias: {
@@ -34,7 +32,6 @@ export default defineConfig(({ mode }) => {
     },
     build: {
       outDir: 'dist',
-      // карты исходников в боевой сборке раскрывают весь код админки
       sourcemap: mode !== 'production',
     },
     define: {

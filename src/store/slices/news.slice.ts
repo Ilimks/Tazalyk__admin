@@ -1,33 +1,34 @@
 import { create } from 'zustand';
+import { isMissingPage, toLoadError, toSaveError } from '@/utils/apiErrors';
 import { devtools } from 'zustand/middleware';
 import { newsService } from '@/api/services/news.service';
-import type { News } from '@/types';
+import type { News, SaveResult } from '@/types';
 
 interface NewsState {
   news: News[];
   loading: boolean;
+  loadError: string | null;
   error: string | null;
   totalCount: number;
   currentPage: number;
   pageSize: number;
-  // строка поиска, '' — все записи
   search: string;
   fetchPage: (page?: number, pageSize?: number) => Promise<void>;
   setSearch: (search: string) => void;
-  addNews: (newsItem: Omit<News, 'id' | 'createdAt'>) => Promise<boolean>;
-  updateNews: (id: string, newsItem: Partial<News>) => Promise<boolean>;
+  addNews: (newsItem: Omit<News, 'id' | 'createdAt'>) => Promise<SaveResult<News>>;
+  updateNews: (id: string, newsItem: Partial<News>) => Promise<SaveResult<News>>;
   deleteNews: (id: string) => Promise<boolean>;
   goToPage: (page: number) => void;
   changePageSize: (size: number) => void;
 }
 
-// при быстром наборе ответ на старый запрос не должен затереть новый
 let lastRequest = 0;
 
 export const useNewsStore = create<NewsState>()(
   devtools((set, get) => ({
     news: [],
     loading: false,
+    loadError: null,
     error: null,
     totalCount: 0,
     currentPage: 1,
@@ -36,7 +37,7 @@ export const useNewsStore = create<NewsState>()(
 
     fetchPage: async (page = 1, pageSize = 12) => {
       const requestId = ++lastRequest;
-      set({ loading: true, error: null });
+      set({ loading: true, error: null, loadError: null });
       try {
         const response = await newsService.getPage(page, pageSize, get().search);
         if (requestId !== lastRequest) return;
@@ -49,46 +50,40 @@ export const useNewsStore = create<NewsState>()(
         });
       } catch (error) {
         if (requestId !== lastRequest) return;
+        if (isMissingPage(error) && page > 1) {
+          get().fetchPage(page - 1, pageSize);
+          return;
+        }
         console.error('Failed to fetch news page:', error);
-        set({ error: 'Failed to fetch news', loading: false, news: [] });
+        set({ loadError: toLoadError(error), loading: false, news: [] });
       }
     },
 
     addNews: async (newsItem) => {
       set({ loading: true });
       try {
-        const newNews = await newsService.create(newsItem);
-        if (newNews) {
-          await get().fetchPage(1, get().pageSize);
-          set({ loading: false });
-          return true;
-        }
+        const created = await newsService.create(newsItem);
+        await get().fetchPage(1, get().pageSize);
         set({ loading: false });
-        return false;
+        return { success: true, data: created };
       } catch (error) {
-        console.error('Failed to add news:', error);
-        set({ error: 'Failed to add news', loading: false });
-        return false;
+        set({ loading: false });
+        return toSaveError(error);
       }
     },
 
     updateNews: async (id, newsItem) => {
       set({ loading: true });
       try {
-        const updatedNews = await newsService.update(id, newsItem);
-        if (updatedNews) {
-          set((state) => ({
-            news: state.news.map((n) => (n.id === id ? updatedNews : n)),
-            loading: false,
-          }));
-          return true;
-        }
-        set({ loading: false });
-        return false;
+        const updated = await newsService.update(id, newsItem);
+        set((state) => ({
+          news: state.news.map((n) => (n.id === id ? updated : n)),
+          loading: false,
+        }));
+        return { success: true, data: updated };
       } catch (error) {
-        console.error('Failed to update news:', error);
-        set({ error: 'Failed to update news', loading: false });
-        return false;
+        set({ loading: false });
+        return toSaveError(error);
       }
     },
 

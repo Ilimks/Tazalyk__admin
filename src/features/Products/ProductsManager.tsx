@@ -9,6 +9,7 @@ import { Modal } from '@/components/common/Modal';
 import { Pagination } from '@/components/common/Pagination/Pagination';
 import { PageHeader } from '@/components/common/PageHeader';
 import { EmptyState } from '@/components/common/EmptyState';
+import { LoadError } from '@/components/common/LoadError';
 import { ConfirmModal } from '@/components/common/ConfirmModal';
 import { TableSkeleton } from '@/components/common/Skeleton';
 import { Input, Select } from '@/components/common/Form';
@@ -32,6 +33,11 @@ export const ProductsManager: React.FC = () => {
     deleteProduct,
     goToPage,
   } = useProductsStore();
+  const loadError = useProductsStore((state) => state.loadError);
+  const retryLoad = () => {
+    const { currentPage, pageSize, fetchPage } = useProductsStore.getState();
+    fetchPage(currentPage, pageSize);
+  };
   const { canCreate, canEdit, canDelete } = useAuthStore();
 
   const { showNotification } = useNotificationStore();
@@ -42,7 +48,6 @@ export const ProductsManager: React.FC = () => {
   const [isDeleting, setIsDeleting] = useState(false);
   const [search, setSearch] = useState('');
   const [material, setMaterial] = useState<ProductMaterial | ''>('');
-  // запрос уходит, когда пользователь перестал печатать
   const debouncedSearch = useDebounce(search.trim(), 400);
 
   const allowCreate = canCreate('products');
@@ -115,11 +120,14 @@ export const ProductsManager: React.FC = () => {
   );
 
   const renderContent = () => {
-    // первая загрузка: шапка остаётся на месте, заглушка — вместо таблицы
     if (loading && products.length === 0) {
       return (
         <TableSkeleton withThumb />
       );
+    }
+
+    if (loadError) {
+      return <LoadError message={loadError} onRetry={retryLoad} />;
     }
 
     if (products.length === 0 && hasFilters) {

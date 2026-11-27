@@ -1,21 +1,20 @@
 import { create } from 'zustand';
 import { devtools } from 'zustand/middleware';
 import { ordersService } from '@/api/services/orders.service';
-import { toSaveError } from '@/utils/apiErrors';
+import { isMissingPage, toLoadError, toSaveError } from '@/utils/apiErrors';
 import type { Order, OrderStatus, OrderUpdate, SaveResult } from '@/types';
 
 interface OrdersState {
   orders: Order[];
   loading: boolean;
+  loadError: string | null;
+  newCountError: boolean;
   error: string | null;
   totalCount: number;
   currentPage: number;
   pageSize: number;
-  // фильтр по статусу, '' — все заказы
   status: OrderStatus | '';
-  // строка поиска, '' — без поиска
   search: string;
-  // сколько новых заказов ждут ответа (бейдж в меню и на «Обзоре»), null — ещё не загружено
   newCount: number | null;
   fetchPage: (page?: number, pageSize?: number) => Promise<void>;
   setStatus: (status: OrderStatus | '') => void;
@@ -28,13 +27,14 @@ interface OrdersState {
   changePageSize: (size: number) => void;
 }
 
-// при быстром переключении фильтров ответ на старый запрос не должен затереть новый
 let lastRequest = 0;
 
 export const useOrdersStore = create<OrdersState>()(
   devtools((set, get) => ({
     orders: [],
     loading: false,
+    loadError: null,
+    newCountError: false,
     error: null,
     totalCount: 0,
     currentPage: 1,
@@ -46,7 +46,7 @@ export const useOrdersStore = create<OrdersState>()(
     fetchPage: async (page = 1, pageSize = 10) => {
       const requestId = ++lastRequest;
       const { status, search } = get();
-      set({ loading: true, error: null });
+      set({ loading: true, error: null, loadError: null });
       try {
         const response = await ordersService.getPage(page, pageSize, { status, search });
         if (requestId !== lastRequest) return;
@@ -56,13 +56,16 @@ export const useOrdersStore = create<OrdersState>()(
           currentPage: page,
           pageSize: pageSize,
           loading: false,
-          // список новых заказов заодно обновляет счётчик
           ...(status === 'new' && !search ? { newCount: response.count } : {}),
         });
       } catch (error) {
         if (requestId !== lastRequest) return;
+        if (isMissingPage(error) && page > 1) {
+          get().fetchPage(page - 1, pageSize);
+          return;
+        }
         console.error('Failed to fetch orders page:', error);
-        set({ error: 'Failed to fetch orders', loading: false, orders: [] });
+        set({ loadError: toLoadError(error), loading: false, orders: [] });
       }
     },
 
@@ -82,8 +85,12 @@ export const useOrdersStore = create<OrdersState>()(
     },
 
     fetchNewCount: async () => {
-      const response = await ordersService.getPage(1, 1, { status: 'new' });
-      set({ newCount: response.count });
+      try {
+        const response = await ordersService.getPage(1, 1, { status: 'new' });
+        set({ newCount: response.count, newCountError: false });
+      } catch {
+        set({ newCountError: true });
+      }
     },
 
     updateOrder: async (id, data) => {
@@ -91,7 +98,6 @@ export const useOrdersStore = create<OrdersState>()(
         const updated = await ordersService.patch(id, data);
         const { status, currentPage, pageSize } = get();
         if (status && updated.status !== status) {
-          // заказ ушёл из отфильтрованного списка
           await get().fetchPage(currentPage, pageSize);
         } else {
           set((state) => ({

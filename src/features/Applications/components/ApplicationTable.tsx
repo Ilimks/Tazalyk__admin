@@ -7,7 +7,6 @@ import type { VacancyApplication } from '@/types';
 
 interface ApplicationTableProps {
   applications: VacancyApplication[];
-  // идёт перезагрузка списка (фильтр, смена страницы)
   busy?: boolean;
   onOpen: (application: VacancyApplication) => void;
 }

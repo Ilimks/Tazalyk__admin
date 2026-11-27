@@ -26,10 +26,8 @@ interface ComplaintDetailsProps {
   onClose: () => void;
 }
 
-// для ссылки tel: оставляем только цифры и плюс
 const phoneHref = (phone: string) => `tel:${phone.replace(/[^\d+]/g, '')}`;
 
-// '2026-05-01' → '01.05.2026' без new Date: это полночь по UTC, и западнее Гринвича показался бы прошлый день
 const formatDay = (value: string) => value.split('-').reverse().join('.');
 
 export const ComplaintDetails: React.FC<ComplaintDetailsProps> = ({
@@ -66,7 +64,6 @@ export const ComplaintDetails: React.FC<ComplaintDetailsProps> = ({
       onSaved(result.data);
       return;
     }
-    // ошибки по другим полям в форме не показать — добавляем их к уведомлению
     const fieldErrors = result.fieldErrors || {};
     setErrors(fieldErrors);
     const other = Object.entries(fieldErrors)
@@ -87,7 +84,6 @@ export const ComplaintDetails: React.FC<ComplaintDetailsProps> = ({
         </span>
       </div>
 
-      {/* обработка — первой: длинный текст ниже не приходится прокручивать ради статуса */}
       <section className={styles.formSection}>
         <div className={styles.formSectionHead}>
           <span className={styles.sectionIcon}>

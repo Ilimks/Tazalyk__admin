@@ -9,10 +9,12 @@ import { Pagination } from '@/components/common/Pagination';
 import { ConfirmModal } from '@/components/common/ConfirmModal';
 import { PageHeader } from '@/components/common/PageHeader';
 import { EmptyState } from '@/components/common/EmptyState';
+import { LoadError } from '@/components/common/LoadError';
 import { MediaCard, mediaCardStyles, useMediaGrid } from '@/components/common/MediaCard';
 import { VideoForm } from './components/VideoForm';
 import { GridSkeleton } from '@/components/common/Skeleton';
 import { captureVideoThumbnail } from '@/utils/media';
+import { dataUrlToBlob, uploadFile } from '@/api/uploads';
 import type { Video } from '@/types';
 
 export const VideosManager: React.FC = () => {
@@ -27,6 +29,11 @@ export const VideosManager: React.FC = () => {
     deleteVideo,
     goToPage,
   } = useVideosStore();
+  const loadError = useVideosStore((state) => state.loadError);
+  const retryLoad = () => {
+    const { currentPage, pageSize, fetchPage } = useVideosStore.getState();
+    fetchPage(currentPage, pageSize);
+  };
   const { canCreate, canEdit, canDelete } = useAuthStore();
 
   const { showNotification } = useNotificationStore();
@@ -35,7 +42,6 @@ export const VideosManager: React.FC = () => {
   const [deleteModalOpen, setDeleteModalOpen] = useState(false);
   const [videoToDelete, setVideoToDelete] = useState<Video | null>(null);
   const [isDeleting, setIsDeleting] = useState(false);
-  // просмотр: видео создаётся только здесь, а в сетке — лишь картинка-превью
   const [viewing, setViewing] = useState<{ video: Video; index: number } | null>(null);
   const [creatingThumbnails, setCreatingThumbnails] = useState(false);
 
@@ -43,7 +49,6 @@ export const VideosManager: React.FC = () => {
   const allowEdit = canEdit('videos');
   const allowDelete = canDelete('videos');
 
-  // сколько видео на странице, решает ширина сетки: последний ряд всегда полный
   const grid = useMediaGrid<HTMLDivElement>(fetchPage, { currentPage, pageSize });
 
   const totalPages = Math.ceil(totalCount / pageSize);
@@ -91,14 +96,16 @@ export const VideosManager: React.FC = () => {
     showNotification(wasEditing ? 'Видео обновлено' : 'Видео добавлено', 'success');
   };
 
-  // кадр снимает браузер: на сервере нет программы для работы с видео
   const handleCreateThumbnails = async () => {
     const missing = videos.filter((video) => !video.thumbnail);
     setCreatingThumbnails(true);
     let created = 0;
     for (const video of missing) {
-      const thumbnail = await captureVideoThumbnail(video.main_video_url);
-      if (thumbnail && (await updateVideo(video.id, { ...video, thumbnail }))) created += 1;
+      const preview = await captureVideoThumbnail(video.main_video_url);
+      const thumbnail = preview
+        ? (await uploadFile(dataUrlToBlob(preview), { section: 'videos', kind: 'image', name: 'preview.jpg' }).catch(() => null))?.url
+        : null;
+      if (thumbnail && (await updateVideo(video.id, { ...video, thumbnail })).success) created += 1;
     }
     setCreatingThumbnails(false);
     showNotification(`Создано превью: ${created} из ${missing.length}`, created === missing.length ? 'success' : 'error');
@@ -138,9 +145,10 @@ export const VideosManager: React.FC = () => {
         </div>
       )}
 
-      {/* первая загрузка: шапка на месте, вместо карточек — заглушки */}
       {loading && videos.length === 0 ? (
         <GridSkeleton />
+      ) : loadError ? (
+        <LoadError message={loadError} onRetry={retryLoad} />
       ) : videos.length === 0 ? (
         <EmptyState
           icon={Clapperboard}

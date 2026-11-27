@@ -1,3 +1,4 @@
+import { splitSaveErrors } from '@/utils/apiErrors';
 import React, { useState } from 'react';
 import { CalendarDays, Camera, Captions } from 'lucide-react';
 import styles from '../PhotosManager.module.scss';
@@ -7,6 +8,7 @@ import { Input } from '@/components/common/Form/Input';
 import { ImageUpload } from '@/components/common/FileUpload/ImageUpload';
 import { FormError } from '@/components/common/FormError';
 import type { Photo } from '@/types';
+import { localToday } from '@/utils/date';
 
 interface PhotoFormProps {
   initialData?: Photo;
@@ -23,7 +25,7 @@ export const PhotoForm: React.FC<PhotoFormProps> = ({
   const [loading, setLoading] = useState(false);
   const [errors, setErrors] = useState<{ image?: string; date?: string; form?: string }>({});
   const [formData, setFormData] = useState({
-    date: initialData?.date || new Date().toISOString().split('T')[0],
+    date: initialData?.date || localToday(),
     main_image: initialData?.main_image || '',
     caption_ru: initialData?.caption_ru || '',
     caption_ky: initialData?.caption_ky || '',
@@ -40,24 +42,19 @@ export const PhotoForm: React.FC<PhotoFormProps> = ({
 
     setLoading(true);
 
-    let success = false;
-    if (initialData) {
-      success = await updatePhoto(initialData.id, formData);
-    } else {
-      success = await addPhoto(formData);
-    }
+    const result = initialData ? await updatePhoto(initialData.id, formData) : await addPhoto(formData);
 
-    if (success) {
+    if (result.success) {
       onSuccess();
     } else {
-      setErrors({ form: 'Не удалось сохранить. Проверьте поля и связь с сервером и попробуйте ещё раз.' });
+      const { fieldErrors, message } = splitSaveErrors(result, { main_image: 'image', date: 'date' });
+      setErrors({ ...fieldErrors, form: message });
     }
     setLoading(false);
   };
 
   return (
     <form onSubmit={handleSubmit} className={styles.form} noValidate>
-      {/* одна запись — одно фото: дополнительных фото у записи больше нет */}
       <section className={styles.formSection}>
         <div className={styles.formSectionHead}>
           <span className={styles.sectionIcon}>
@@ -69,11 +66,12 @@ export const PhotoForm: React.FC<PhotoFormProps> = ({
           </div>
         </div>
         <ImageUpload
+          section="photos"
           label="Фото"
           value={formData.main_image}
           onChange={(url) => {
             if (typeof url === 'string') {
-              setFormData({ ...formData, main_image: url });
+              setFormData((prev) => ({ ...prev, main_image: url }));
               if (url) setErrors((prev) => ({ ...prev, image: undefined }));
             }
           }}
@@ -123,7 +121,7 @@ export const PhotoForm: React.FC<PhotoFormProps> = ({
           label="Дата публикации"
           type="date"
           value={formData.date}
-          onChange={(e) => setFormData({ ...formData, date: e.target.value })}
+          onChange={(e) => setFormData((prev) => ({ ...prev, date: e.target.value }))}
           error={errors.date}
           required
         />

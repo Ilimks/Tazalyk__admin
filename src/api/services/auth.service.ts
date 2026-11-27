@@ -10,29 +10,22 @@ interface Access {
   permissions: string[];
 }
 
-// view/create/edit/delete для каждого раздела
 const crud = (...sections: string[]) =>
   sections.flatMap((section) => ['view', 'create', 'edit', 'delete'].map((action) => `${action}_${section}`));
 
-// права групп Django. Сотрудник может состоять в нескольких группах — права складываются
 const GROUP_PERMISSIONS: Record<string, string[]> = {
   content_managers: crud('videos', 'photos', 'news'),
   procurement_managers: crud('procurements'),
   legal_managers: crud('local_acts', 'legislation'),
-  // удалять заказы может только суперпользователь: это история продаж
   shop_managers: [...crud('products'), 'view_orders', 'edit_orders'],
-  // отдел кадров видит только вакансии
   hr_managers: crud('vacancies'),
-  // удалять жалобы может только суперпользователь: это история обращений граждан
   complaints_managers: ['view_complaints', 'edit_complaints'],
-  // заказы и жалобы не показываем: в них личные данные покупателей и заявителей
   viewers: [
     'view_videos', 'view_photos', 'view_news', 'view_procurements',
     'view_local_acts', 'view_legislation', 'view_products',
   ],
 };
 
-// роль для подписи в меню — по первой подходящей группе
 const GROUP_ROLES: [string, Role][] = [
   ['content_managers', 'content_manager'],
   ['procurement_managers', 'procurement_manager'],
@@ -62,7 +55,6 @@ const toUser = ({ username, role, permissions }: Access): User => ({
 });
 
 class AuthService {
-  // права по только что полученному входу. null — входить нельзя
   private async loadAccess(): Promise<Access | null> {
     try {
       const response = await fetch(`${config.api.baseUrl}/me/`, {
@@ -86,7 +78,6 @@ class AuthService {
       });
 
       if (response.ok) {
-        // роль и права выдаёт сервер по группам сотрудника (GET /me/)
         const access = await this.loadAccess();
         if (!access) {
           return { success: false, message: 'Не удалось получить права учётной записи. Попробуйте войти позже.' };
@@ -102,7 +93,6 @@ class AuthService {
       }
 
       const errorData = await response.json().catch(() => ({}));
-      // сервер отвечает по-английски («No active account…»), показываем понятный текст
       if (response.status === 400 || response.status === 401) {
         return { success: false, message: 'Неверный логин или пароль' };
       }
@@ -116,9 +106,6 @@ class AuthService {
     }
   }
 
-  // Перечитывает права уже вошедшего сотрудника: группы могли поменять, а сохранённые
-  // в браузере права могли остаться от старой версии админки.
-  // 'expired' — вход недействителен (нужно войти заново), null — сервер недоступен, оставить как есть
   async refreshCurrentUser(): Promise<User | 'expired' | null> {
     try {
       const me = await apiClient.get<MeResponse>('/me/');
@@ -132,7 +119,6 @@ class AuthService {
     }
   }
 
-  // Сервер отзывает токен: скопированная сессия перестаёт работать сразу, а не через сутки
   async logout(): Promise<void> {
     localStorage.removeItem('access_token');
     localStorage.removeItem('refresh_token');

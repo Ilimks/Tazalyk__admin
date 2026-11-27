@@ -1,14 +1,15 @@
-import React, { useRef, useState } from 'react';
+import React, { useEffect, useRef, useState } from 'react';
 import { Clapperboard, LoaderCircle, Trash2, X } from 'lucide-react';
 import styles from './FileUpload.module.scss';
 import { config } from '@/config';
 import { captureVideoThumbnail, formatDataUrlSize } from '@/utils/media';
+import { checkFile, dataUrlToBlob, formatLimit, loadUploadLimit, uploadFile, type UploadLimit } from '@/api/uploads';
+import { UploadProgress } from '@/components/common/UploadProgress';
 
 interface VideoUploadProps {
   value?: string | string[];
   onChange: (url: string | string[]) => void;
   onRemove?: () => void;
-  // кадр-превью из выбранного файла (только для одиночного видео)
   onThumbnail?: (thumbnail: string | null) => void;
   label?: string;
   required?: boolean;
@@ -16,14 +17,6 @@ interface VideoUploadProps {
 }
 
 const maxSizeMb = config.upload.maxVideoSize / (1024 * 1024);
-
-const fileToDataUrl = (file: File): Promise<string> =>
-  new Promise((resolve, reject) => {
-    const reader = new FileReader();
-    reader.onload = (e) => resolve(e.target?.result as string);
-    reader.onerror = reject;
-    reader.readAsDataURL(file);
-  });
 
 export const VideoUpload: React.FC<VideoUploadProps> = ({
   value,
@@ -39,8 +32,15 @@ export const VideoUpload: React.FC<VideoUploadProps> = ({
   const [error, setError] = useState<string | null>(null);
   const [galleryVideos, setGalleryVideos] = useState<string[]>(Array.isArray(value) ? value : []);
   const fileInputRef = useRef<HTMLInputElement>(null);
+  const [limit, setLimit] = useState<UploadLimit>();
+  const [progress, setProgress] = useState<{ ratio: number; index: number; total: number } | null>(null);
 
-  const validateVideoFile = (file: File): string | null => {
+  useEffect(() => {
+    loadUploadLimit('video').then(setLimit);
+  }, []);
+
+  const validateVideoFile = (file: File, serverLimit: UploadLimit | undefined): string | null => {
+    if (serverLimit) return checkFile(file, serverLimit);
     if (!config.upload.acceptedVideoTypes.includes(file.type)) {
       return `«${file.name}»: выберите видео (MP4, WebM, OGG, MOV)`;
     }
@@ -57,19 +57,33 @@ export const VideoUpload: React.FC<VideoUploadProps> = ({
 
     const errors: string[] = [];
     const results: string[] = [];
-    for (const file of multiple ? files : files.slice(0, 1)) {
-      const problem = validateVideoFile(file);
+    const chosen = multiple ? files : files.slice(0, 1);
+    const serverLimit = await loadUploadLimit('video');
+    for (const [index, file] of chosen.entries()) {
+      const problem = validateVideoFile(file, serverLimit);
       if (problem) {
         errors.push(problem);
         continue;
       }
-      if (!multiple && onThumbnail) {
-        // кадр снимаем из локального файла — это быстро и не требует загрузки на сервер
-        onThumbnail(await captureVideoThumbnail(file));
+      try {
+        setProgress({ ratio: 0, index: index + 1, total: chosen.length });
+        const { url } = await uploadFile(file, {
+          section: 'videos',
+          kind: 'video',
+          name: file.name,
+          onProgress: (ratio) => setProgress({ ratio, index: index + 1, total: chosen.length }),
+        });
+        results.push(url);
+        if (!multiple && onThumbnail) {
+          const preview = await captureVideoThumbnail(file);
+          onThumbnail(preview ? (await uploadFile(dataUrlToBlob(preview), { section: 'videos', kind: 'image', name: 'preview.jpg' })).url : null);
+        }
+      } catch (uploadError) {
+        errors.push(`«${file.name}»: ${(uploadError as Error).message}`);
       }
-      results.push(await fileToDataUrl(file));
     }
 
+    setProgress(null);
     setIsProcessing(false);
     if (errors.length) setError(errors.join('. '));
     if (!results.length) return;
@@ -140,7 +154,7 @@ export const VideoUpload: React.FC<VideoUploadProps> = ({
         <span className={styles.uploadTitle}>
           {isProcessing ? 'Читаем видео…' : 'Нажмите или перетащите видео'}
         </span>
-        <span className={styles.uploadHint}>MP4, WebM, OGG, MOV до {maxSizeMb} МБ</span>
+        <span className={styles.uploadHint}>MP4, WebM, OGG, MOV до {limit ? formatLimit(limit) : `${maxSizeMb} МБ`}</span>
       </div>
     </div>
   );
@@ -160,7 +174,6 @@ export const VideoUpload: React.FC<VideoUploadProps> = ({
             <div className={styles.galleryPreviewGrid}>
               {galleryVideos.map((video, index) => (
                 <div key={index} className={styles.galleryPreviewItem}>
-                  {/* preload="metadata": браузер читает только первый кадр, а не всё видео */}
                   <video src={video} className={styles.videoPreview} muted preload="metadata" />
                   <button
                     type="button"
@@ -184,7 +197,6 @@ export const VideoUpload: React.FC<VideoUploadProps> = ({
         <div className={styles.previewContainer}>
           <video src={value} controls preload="metadata" className={styles.videoPreview} />
           <div className={styles.previewBar}>
-            {/* у сохранённого видео в форме только адрес, размер известен лишь у нового файла */}
             <span className={styles.previewSize}>{value.startsWith('data:') ? formatDataUrlSize(value) : ''}</span>
             <button type="button" className={styles.previewRemove} onClick={handleRemoveSingle}>
               <Trash2 size={16} />
@@ -196,7 +208,13 @@ export const VideoUpload: React.FC<VideoUploadProps> = ({
         dropzone
       )}
 
-      {error && <span className={styles.errorMessage}>{error}</span>}
+      {progress && (
+        <UploadProgress
+          ratio={progress.ratio}
+          label={progress.total > 1 ? `Загрузка видео ${progress.index} из ${progress.total}` : 'Загрузка видео'}
+        />
+      )}
+      {error && <span className={styles.errorMessage} role="alert">{error}</span>}
     </div>
   );
 };
